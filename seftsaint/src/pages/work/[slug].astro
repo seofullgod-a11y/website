@@ -27,6 +27,7 @@ const i = all.findIndex((x) => x.slug === p.slug);
 const next = all.length > 1 ? all[(i + 1) % all.length] : undefined;
 
 const updates = getUpdatesFor(p.slug); // oldest → newest
+const latestUpdate = updates.at(-1);
 const total = updates.length;
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -101,6 +102,8 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
         sizes="(min-width: 1440px) 1328px, 100vw"
         aspectSmall="4 / 3"
         parallax
+        title={latestUpdate?.title ?? p.title}
+        meta={latestUpdate ? `${formatDate(latestUpdate.date)} · ${latestUpdate.label ?? latestUpdate.title}` : undefined}
       />
     </div>
 
@@ -164,7 +167,13 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
                     </div>
                     {u.media && (
                       <div class="tl__media" data-reveal>
-                        <Media item={u.media} mode="player" sizes="(min-width: 1440px) 1000px, (min-width: 1000px) 72vw, 100vw" />
+                        <Media
+                          item={u.media}
+                          mode="player"
+                          title={u.title}
+                          meta={`${formatDate(u.date)} · ${u.label ?? u.title}`}
+                          sizes="(min-width: 1440px) 1000px, (min-width: 1000px) 72vw, 100vw"
+                        />
                       </div>
                     )}
                     <div class="tl__text" data-reveal>

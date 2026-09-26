@@ -12,6 +12,8 @@ export const site = {
   name: 'seftsaint',
   handle: '@seftsaint',
   xUrl: 'https://x.com/seftsaint',
+  /** Contact email — shown in Partner + Connect. Set to '' to hide it everywhere. */
+  email: 'seftsaint1@gmail.com',
 
   /**
    * Your live URL once deployed, e.g. 'https://seftsaint.com' (no trailing slash).
@@ -51,6 +53,36 @@ export const site = {
 
   connect: {
     heading: 'Follow along',
-    text: 'X is the best place to follow the work or reach me.',
+    text: 'Follow the work on X, or write to me directly.',
+  },
+
+  /**
+   * PARTNER / INVESTORS section on the home page.
+   * Keep it factual: what you're building, what would help, how to reach you.
+   * Set `enabled: false` to hide the whole section (and the hero link).
+   */
+  partner: {
+    enabled: true,
+    /** Small link under the hero buttons. */
+    heroLink: 'Open to partners & investors',
+    headline: ['Back the', 'next world.'],
+    lead: 'I’m looking for investors and partners who want to back games and 3D worlds built with AI.',
+    body: [
+      'Right now the limit is hardware. My 16GB MacBook started to struggle with Unreal — a MacBook Pro or Mac Studio with more memory would let me keep pushing the visuals, and keep building in public.',
+    ],
+    needs: [
+      { label: 'Hardware', text: 'A MacBook Pro or Mac Studio with more memory — to keep making good-looking games with AI.' },
+      { label: 'Investment', text: 'Open to talking with investors who want to back the next project.' },
+    ],
+    /** Only real numbers. Update `proofNote` (the date) whenever you change them. */
+    proof: [
+      { value: '4', label: 'public demos in 12 days' },
+      { value: '930K+', label: 'views on those four posts' },
+      { value: '8.7K+', label: 'likes on those four posts' },
+    ],
+    proofNote: 'Counts from the four demo posts on X, as of 26 Sep 2026.',
+    emailSubject: 'Partnership — seftsaint',
+    ctaEmail: 'Email me',
+    ctaX: 'Message on X',
   },
 } as const;

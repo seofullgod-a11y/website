@@ -13,6 +13,7 @@ export const ui = {
     work: 'Work',
     journal: 'Journal',
     about: 'About',
+    partner: 'Partner',
     x: 'X',
     home: 'Home',
   },
@@ -30,6 +31,7 @@ export const ui = {
     now: 'Now',
     about: 'About',
     connect: 'Connect',
+    partner: 'Partner',
   },
 
   status: {
@@ -70,6 +72,11 @@ export const ui = {
     pausePreview: 'Pause preview',
     playPreview: 'Play preview',
     watchOnX: 'Watch on X',
+    playDemo: 'Play demo',
+    moreOnX: 'More on X',
+    replay: 'Watch again',
+    close: 'Close',
+    playerNote: 'The post, the thread and the replies are on X.',
     pending: 'Media not added yet',
     unavailable: 'Video unavailable',
   },
@@ -87,7 +94,7 @@ export const ui = {
 
   journal: {
     intro: 'Short notes on what I’m making, testing, pausing and coming back to.',
-    viewPost: 'View post',
+    viewPost: 'More on X',
     project: 'Project',
     updated: 'Updated',
     older: 'Older notes on X',

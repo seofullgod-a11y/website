@@ -1,0 +1,137 @@
+---
+/**
+ * "Play demo" — opens the video player overlay when a local video exists.
+ * No local video yet? It becomes a "Watch on X" link to the original post.
+ * No video and no post? Renders nothing.
+ */
+import { getImage } from 'astro:assets';
+import type { MediaItem } from '../data/types';
+import { ui } from '../data/ui';
+import { resolveImage, resolveVideo } from '../lib/media';
+
+interface Props {
+  item: MediaItem;
+  /** Shown as the player title, e.g. "Last update — setting it aside" */
+  title: string;
+  /** Small line above the title, e.g. "25 Sep 2026 · Unreal" */
+  meta?: string;
+  /** 'pill' = text + icon on a frame, 'round' = icon only, 'text' = inline like a link */
+  variant?: 'pill' | 'round' | 'text';
+  /** Show a "Watch on X" link when there is no local video (default true). */
+  fallback?: boolean;
+  class?: string;
+}
+const { item, title, meta = '', variant = 'pill', fallback = true, class: className } = Astro.props;
+
+const video = resolveVideo(item.video);
+const img = resolveImage(item.image);
+const poster = video && img ? (await getImage({ src: img, width: 1280, format: 'webp', quality: 80 })).src : '';
+const label = video ? ui.media.playDemo : ui.media.watchOnX;
+---
+
+{
+  video ? (
+    <button
+      type="button"
+      class:list={['play', `play--${variant}`, className]}
+      data-play-src={video}
+      data-play-poster={poster}
+      data-play-title={title}
+      data-play-meta={meta}
+      data-play-post={item.sourceUrl ?? ''}
+      aria-label={`${ui.media.playDemo}: ${title}`}
+      aria-haspopup="dialog"
+    >
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M5.5 3.5v9l7-4.5z" fill="currentColor" />
+      </svg>
+      {variant === 'pill' && <span class="mono">{label}</span>}
+      {variant === 'text' && <span>{label}</span>}
+    </button>
+  ) : fallback && item.sourceUrl ? (
+    <a
+      class:list={['play', `play--${variant}`, 'play--x', className]}
+      href={item.sourceUrl}
+      target="_blank"
+      rel="noopener"
+      aria-label={`${ui.media.watchOnX}: ${title} (opens in a new tab)`}
+    >
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M5.5 3.5v9l7-4.5z" fill="currentColor" />
+      </svg>
+      {variant === 'pill' && (
+        <span class="mono">
+          {label} <span class="arrow arrow--ne">↗</span>
+        </span>
+      )}
+    </a>
+  ) : null
+}
+
+<style>
+  .play {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: var(--ink);
+    background: rgb(13 14 15 / 0.62);
+    box-shadow: inset 0 0 0 1px rgb(236 233 226 / 0.2);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    transition:
+      background-color var(--t-fast) var(--ease),
+      box-shadow var(--t-fast) var(--ease),
+      transform var(--t-fast) var(--ease);
+  }
+  .play:hover {
+    background: rgb(13 14 15 / 0.86);
+    box-shadow: inset 0 0 0 1px rgb(236 233 226 / 0.4);
+  }
+  .play:active {
+    transform: scale(0.97);
+  }
+  .play svg {
+    width: 11px;
+    height: 11px;
+    flex: none;
+  }
+  .play--pill {
+    min-height: 36px;
+    padding: 0 0.9rem 0 0.75rem;
+    border-radius: 999px;
+  }
+  .play--round {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+  }
+  .play--text {
+    gap: 0.45rem;
+    min-height: 32px;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    color: var(--ink);
+    font-size: inherit;
+  }
+  .play--text:hover {
+    background: none;
+    box-shadow: none;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+  .play--text svg {
+    width: 9px;
+    height: 9px;
+    color: var(--accent);
+  }
+  .play--round svg {
+    width: 13px;
+    height: 13px;
+    margin-left: 2px;
+  }
+</style>

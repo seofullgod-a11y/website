@@ -9,8 +9,11 @@ export type Status = 'in-progress' | 'experiment' | 'paused' | 'released';
 /**
  * One piece of media: an image, a video, or both (video + poster image).
  *
- * - `image` is a path inside `src/assets/media/`  → optimised automatically (AVIF/WebP, responsive sizes).
- * - `video` is a path inside `public/media/`       → served as-is. Use H.264 MP4, muted-friendly.
+ * - `image`   is a path inside `src/assets/media/` → optimised automatically (AVIF/WebP, responsive sizes).
+ * - `preview` is a path inside `public/media/`     → short muted loop (6–10 s) that plays on hover / in view.
+ * - `video`   is a path inside `public/media/`     → the full demo, played on click (with sound, controls).
+ *
+ * `npm run media` creates all three from your original recordings — see README.
  *
  * If a file doesn't exist yet the site still builds: it falls back to the poster,
  * then to a quiet placeholder with a link to `sourceUrl`. Missing files are listed
@@ -19,7 +22,9 @@ export type Status = 'in-progress' | 'experiment' | 'paused' | 'released';
 export interface MediaItem {
   /** e.g. 'forest-concept/cover.jpg' (inside src/assets/media/) */
   image?: string;
-  /** e.g. 'forest-concept/preview.mp4' (inside public/media/) */
+  /** Short muted loop, e.g. 'forest-concept/demo-preview.mp4' (inside public/media/) */
+  preview?: string;
+  /** Full video, e.g. 'forest-concept/demo.mp4' (inside public/media/) */
   video?: string;
   /** Describe what is visible — used by screen readers and when the image fails. */
   alt: string;

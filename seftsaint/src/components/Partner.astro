@@ -1,0 +1,214 @@
+---
+/** Partner / investors — content lives in src/data/site.ts → partner */
+import { site } from '../data/site';
+
+const p = site.partner;
+const [line1, line2] = p.headline;
+const mailto = site.email ? `mailto:${site.email}?subject=${encodeURIComponent(p.emailSubject)}` : '';
+---
+
+<div class="partner">
+  <div class="partner__intro" data-reveal>
+    <h3 class="partner__title">
+      <span>{line1}</span>
+      {line2 && <span class="serif-italic">{line2}</span>}
+    </h3>
+    <p class="partner__lead">{p.lead}</p>
+    {p.body.map((t) => <p class="partner__body">{t}</p>)}
+
+    <div class="partner__cta">
+      {
+        mailto && (
+          <a class="btn-light" href={mailto}>
+            {p.ctaEmail}
+            <span class="arrow arrow--e" aria-hidden="true">→</span>
+          </a>
+        )
+      }
+      <a class="link link--quiet partner__x" href={site.xUrl} target="_blank" rel="noopener me">
+        {p.ctaX} <span class="arrow arrow--ne" aria-hidden="true">↗</span>
+        <span class="visually-hidden">(opens in a new tab)</span>
+      </a>
+    </div>
+    {site.email && <p class="partner__email mono">{site.email}</p>}
+  </div>
+
+  <div class="partner__side" data-reveal style="--reveal-delay:60ms">
+    <dl class="needs">
+      {
+        p.needs.map((n) => (
+          <div class="needs__row">
+            <dt class="mono">{n.label}</dt>
+            <dd>{n.text}</dd>
+          </div>
+        ))
+      }
+    </dl>
+
+    <div class="proof">
+      <ul class="proof__list" role="list">
+        {
+          p.proof.map((x) => (
+            <li class="proof__item">
+              <span class="proof__value">{x.value}</span>
+              <span class="proof__label">{x.label}</span>
+            </li>
+          ))
+        }
+      </ul>
+      {p.proofNote && <p class="proof__note">{p.proofNote}</p>}
+    </div>
+  </div>
+</div>
+
+<style>
+  .partner {
+    display: grid;
+    gap: 3rem var(--gap);
+  }
+  @media (min-width: 1000px) {
+    .partner {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      align-items: start;
+    }
+    .partner__intro {
+      grid-column: 1 / span 6;
+    }
+    .partner__side {
+      grid-column: 8 / -1;
+    }
+  }
+
+  .partner__title {
+    font-size: var(--text-2xl);
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    line-height: 0.98;
+  }
+  .partner__title span {
+    display: block;
+  }
+  .partner__title .serif-italic {
+    font-size: 1.08em;
+    letter-spacing: -0.02em;
+  }
+  .partner__lead {
+    margin-top: 1.75rem;
+    font-size: var(--text-xl);
+    line-height: 1.35;
+    letter-spacing: -0.015em;
+    max-width: 30ch;
+  }
+  .partner__body {
+    margin-top: 1rem;
+    color: var(--ink-2);
+    font-size: var(--text-md);
+    max-width: 52ch;
+  }
+
+  .partner__cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.5rem;
+    margin-top: 2rem;
+  }
+  .btn-light {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 44px;
+    padding: 0 1.15rem;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background-color var(--t-fast) var(--ease);
+  }
+  .btn-light:hover {
+    background: #fff;
+  }
+  .partner__x {
+    font-size: 0.875rem;
+    min-height: 44px;
+  }
+  .partner__email {
+    margin-top: 0.9rem;
+    color: var(--ink-3);
+    text-transform: none;
+    user-select: all;
+  }
+
+  /* What would help */
+  .needs {
+    border-top: 1px solid var(--line);
+  }
+  .needs__row {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    gap: 1rem;
+    padding-block: 1rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .needs dt {
+    color: var(--ink-3);
+    padding-top: 0.2em;
+  }
+  .needs dd {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+  }
+  @media (max-width: 480px) {
+    .needs__row {
+      grid-template-columns: 1fr;
+      gap: 0.35rem;
+    }
+  }
+
+  /* Proof — real numbers only */
+  .proof {
+    margin-top: 2.5rem;
+  }
+  .proof__list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--gap);
+  }
+  .proof__item {
+    display: grid;
+    gap: 0.4rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--line-2);
+  }
+  .proof__value {
+    font-size: clamp(1.75rem, 1.2rem + 1.6vw, 2.5rem);
+    font-weight: 500;
+    letter-spacing: -0.035em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .proof__label {
+    color: var(--ink-2);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+  }
+  .proof__note {
+    margin-top: 1rem;
+    color: var(--ink-3);
+    font-size: 0.8125rem;
+  }
+  @media (max-width: 420px) {
+    .proof__list {
+      gap: 0.75rem;
+    }
+    .proof__value {
+      font-size: 1.5rem;
+    }
+    .proof__label {
+      font-size: 0.75rem;
+    }
+  }
+</style>

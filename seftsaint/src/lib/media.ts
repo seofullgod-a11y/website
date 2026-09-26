@@ -43,21 +43,26 @@ export function resolveVideo(p?: string): string | undefined {
 
 export interface ResolvedMedia {
   image?: ImageMetadata;
+  preview?: string;
   video?: string;
   /** Declared in data but file not found — show the pending state in dev. */
   missingImage?: string;
   missingVideo?: string;
+  missingPreview?: string;
   item: MediaItem;
 }
 
 export function resolveMedia(item: MediaItem): ResolvedMedia {
   const image = resolveImage(item.image);
+  const preview = resolveVideo(item.preview);
   const video = resolveVideo(item.video);
   return {
     image,
+    preview,
     video,
     missingImage: item.image && !image ? `src/assets/media/${clean(item.image)}` : undefined,
     missingVideo: item.video && !video ? `public/media/${clean(item.video)}` : undefined,
+    missingPreview: item.preview && !preview ? `public/media/${clean(item.preview)}` : undefined,
     item,
   };
 }

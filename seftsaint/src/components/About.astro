@@ -16,6 +16,13 @@ import { ui } from '../data/ui';
       <span class="arrow arrow--ne" aria-hidden="true">↗</span>
       <span class="visually-hidden">on X (opens in a new tab)</span>
     </a>
+    {
+      site.email && (
+        <a class="about__email link link--quiet" href={`mailto:${site.email}`}>
+          {site.email}
+        </a>
+      )
+    }
   </div>
 </div>
 
@@ -84,6 +91,12 @@ import { ui } from '../data/ui';
   .about__handle:hover {
     background-size: 0% 1px;
     background-position: 100% 100%;
+  }
+  .about__email {
+    display: flex;
+    width: fit-content;
+    margin-top: 1rem;
+    font-size: 0.9375rem;
   }
   .about__handle .arrow {
     font-size: 0.7em;

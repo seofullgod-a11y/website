@@ -8,6 +8,7 @@ import { getImage } from 'astro:assets';
 import Media from './Media.astro';
 import MetaList from './MetaList.astro';
 import Evolution from './Evolution.astro';
+import PlayButton from './PlayButton.astro';
 import StatusTag from './StatusTag.astro';
 import type { Project } from '../data/types';
 import { ui } from '../data/ui';
@@ -79,31 +80,45 @@ if (effects.hoverPreview) {
               />
             </div>
           ) : (
-            <a
+            <div
               class:list={['gallery__item', `gallery__item--${i + 1}`]}
-              href={`${href}#${u.id}`}
               data-reveal
-              data-evo-sync={useEvolution ? stageIndex.get(u.id) : undefined}
               style={`--reveal-delay:${i * 50}ms`}
             >
-              <Media
-                item={u.media!}
-                mode="still"
-                class={i === 0 ? 'media--fill' : undefined}
-                sizes={
-                  i === 0
-                    ? '(min-width: 1440px) 880px, (min-width: 900px) 64vw, 100vw'
-                    : '(min-width: 1440px) 432px, (min-width: 900px) 32vw, 50vw'
-                }
+              <a
+                class="gallery__link"
+                href={`${href}#${u.id}`}
+                data-evo-sync={useEvolution ? stageIndex.get(u.id) : undefined}
               >
-                <figcaption slot="caption" class="gallery__caption">
-                  <time class="mono" datetime={u.date}>
-                    {formatDateNumeric(u.date)}
-                  </time>
-                  <span class="gallery__label">{u.label ?? u.title}</span>
-                </figcaption>
-              </Media>
-            </a>
+                <Media
+                  item={u.media!}
+                  mode="still"
+                  title={u.title}
+                  class={i === 0 ? 'media--fill' : undefined}
+                  sizes={
+                    i === 0
+                      ? '(min-width: 1440px) 880px, (min-width: 900px) 64vw, 100vw'
+                      : '(min-width: 1440px) 432px, (min-width: 900px) 32vw, 50vw'
+                  }
+                >
+                  <figcaption slot="caption" class="gallery__caption">
+                    <time class="mono" datetime={u.date}>
+                      {formatDateNumeric(u.date)}
+                    </time>
+                    <span class="gallery__label">{u.label ?? u.title}</span>
+                  </figcaption>
+                </Media>
+              </a>
+              <div class="gallery__play">
+                <PlayButton
+                  item={u.media!}
+                  title={u.title}
+                  meta={`${formatDate(u.date)} · ${u.label ?? u.title}`}
+                  variant="round"
+                  fallback={false}
+                />
+              </div>
+            </div>
           ),
         )}
 
@@ -218,8 +233,19 @@ if (effects.hoverPreview) {
     gap: 2rem var(--gap);
   }
   .gallery__item {
+    position: relative;
     display: block;
     color: inherit;
+  }
+  .gallery__link {
+    display: block;
+    color: inherit;
+  }
+  .gallery__play {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 5;
   }
   .gallery__item--1 {
     grid-column: 1 / -1;
@@ -263,6 +289,10 @@ if (effects.hoverPreview) {
       grid-column: 1 / -1;
     }
     /* The big frame stretches to match the two stacked frames beside it */
+    .gallery__item--1 > .gallery__link {
+      display: flex;
+      flex: 1;
+    }
     .gallery__item--1 :global(.media--fill) {
       display: flex;
       flex-direction: column;
@@ -298,7 +328,7 @@ if (effects.hoverPreview) {
     color: var(--ink-2);
     transition: color var(--t-fast) var(--ease);
   }
-  .gallery__item:hover .gallery__label {
+  .gallery__link:hover .gallery__label {
     color: var(--ink);
   }
 
@@ -310,10 +340,10 @@ if (effects.hoverPreview) {
   .gallery__item :global(.media__frame) {
     transition: box-shadow var(--t) var(--ease);
   }
-  .gallery__item.is-synced :global(.media__frame) {
+  .gallery__link.is-synced :global(.media__frame) {
     box-shadow: 0 0 0 1px var(--accent);
   }
-  .gallery__item.is-synced .gallery__label {
+  .gallery__link.is-synced .gallery__label {
     color: var(--ink);
   }
 

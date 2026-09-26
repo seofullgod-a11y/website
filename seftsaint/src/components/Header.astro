@@ -5,9 +5,10 @@ import { effects } from '../data/effects';
 
 const isHome = Astro.url.pathname === '/' || Astro.url.pathname === '';
 const nav = [
-  { href: '/#work', label: ui.nav.work },
-  { href: '/#journal', label: ui.nav.journal },
-  { href: '/#about', label: ui.nav.about },
+  { key: 'work', href: '/#work', label: ui.nav.work },
+  { key: 'journal', href: '/#journal', label: ui.nav.journal },
+  ...(site.partner.enabled ? [{ key: 'partner', href: '/#partner', label: ui.nav.partner }] : []),
+  { key: 'about', href: '/#about', label: ui.nav.about },
 ];
 ---
 
@@ -21,7 +22,7 @@ const nav = [
       <ul role="list">
         {
           nav.map((item) => (
-            <li>
+            <li class={`nav__item nav__item--${item.key}`}>
               <a class="nav__link" href={item.href}>
                 {item.label}
               </a>
@@ -126,13 +127,25 @@ const nav = [
     color: var(--ink);
   }
 
-  @media (max-width: 380px) {
+  @media (max-width: 420px) {
+    .wordmark {
+      gap: 0.5rem;
+    }
     .wordmark__text {
       font-size: 0.875rem;
     }
+    .nav ul {
+      gap: 0;
+    }
     .nav__link {
-      padding-inline: 0.35rem;
+      padding-inline: 0.3rem;
       font-size: 0.8125rem;
+    }
+  }
+  /* Very narrow phones: Journal is one scroll away, keep the bar on one line */
+  @media (max-width: 374px) {
+    .nav__item--journal {
+      display: none;
     }
   }
 </style>

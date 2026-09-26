@@ -1,20 +1,23 @@
 ---
 /**
- * Media frame — image, video, or a quiet placeholder.
+ * Media frame — image, short preview loop, full video, or a quiet placeholder.
  *
- * mode="still"    image only (use inside links / cards)
- * mode="preview"  short muted loop; plays only while visible, on devices with a
- *                 mouse and no reduced-motion preference. Elsewhere: poster + play button.
- * mode="player"   poster + play button → loads the video on click, with controls.
+ * mode="still"    image; if a `preview` exists it plays muted while hovered (mouse only).
+ *                 Safe to put inside a link — no buttons are rendered.
+ * mode="preview"  hero / cover: the `preview` loop plays muted while visible (mouse devices,
+ *                 no reduced motion), with a pause button. "Play demo" opens the full `video`
+ *                 in the player overlay — or links to X when there is no local video.
+ * mode="player"   timeline: `preview` plays on hover; the big play button plays the full
+ *                 `video` right here, with sound and controls. When it ends: watch again / more on X.
  *
- * No file? The frame falls back to the poster, then to a placeholder that links
- * to the original post. Nothing on the page breaks.
+ * Missing files never break the page — see src/lib/media.ts.
  */
 import { Picture } from 'astro:assets';
 import type { MediaItem } from '../data/types';
 import { resolveMedia } from '../lib/media';
 import { ui } from '../data/ui';
 import { effects } from '../data/effects';
+import PlayButton from './PlayButton.astro';
 
 interface Props {
   item: MediaItem;
@@ -31,6 +34,9 @@ interface Props {
   vtName?: string;
   /** Subtle cursor parallax (if enabled in src/data/effects.ts). */
   parallax?: boolean;
+  /** Title + meta line for the video player, e.g. "Last update" / "25 Sep 2026 · Unreal". */
+  title?: string;
+  meta?: string;
   class?: string;
 }
 
@@ -43,12 +49,18 @@ const {
   marks = false,
   vtName,
   parallax = false,
+  title,
+  meta,
   class: className,
 } = Astro.props;
 
 const m = resolveMedia(item);
-const hasVideo = mode !== 'still' && !!m.video;
-const showWatch = mode !== 'still' && !m.video && !!item.sourceUrl;
+const loop = m.preview;
+const loopMode = loop ? (mode === 'preview' ? 'view' : 'hover') : undefined;
+const inlineFull = mode === 'player' && !!m.video;
+const showWatch = mode === 'player' && !m.video && !!item.sourceUrl;
+const label = title ?? item.caption ?? item.alt;
+
 const aspect = item.aspect ?? '16 / 9';
 const style = [
   `--aspect:${aspect}`,
@@ -63,6 +75,7 @@ const dev = import.meta.env.DEV;
 const devNotes = [
   item.interim ? 'interim frame' : '',
   m.missingImage ? `missing ${m.missingImage}` : '',
+  m.missingPreview ? `missing ${m.missingPreview}` : '',
   m.missingVideo && mode !== 'still' ? `missing ${m.missingVideo}` : '',
 ].filter(Boolean);
 ---
@@ -70,8 +83,10 @@ const devNotes = [
 <figure
   class:list={['media', `media--${mode}`, { 'media--placeholder': !m.image }, className]}
   style={style}
-  data-media={hasVideo ? mode : undefined}
-  data-state="idle"
+  data-loop={loopMode}
+  data-loop-state={loopMode ? 'idle' : undefined}
+  data-full={inlineFull ? '' : undefined}
+  data-full-state={inlineFull ? 'idle' : undefined}
   data-parallax={parallax && effects.parallax && m.image ? '' : undefined}
 >
   <div class="media__frame">
@@ -81,7 +96,7 @@ const devNotes = [
           src={m.image}
           alt={item.alt}
           formats={['avif', 'webp']}
-          widths={[480, 768, 1024, 1280].filter((w) => w <= (m.image?.width ?? 1280))}
+          widths={[480, 768, 1024, 1280, 1600, 1920, 2560].filter((w) => w <= (m.image?.width ?? 1280))}
           sizes={sizes}
           loading={priority ? 'eager' : 'lazy'}
           decoding={priority ? 'sync' : 'async'}
@@ -98,24 +113,25 @@ const devNotes = [
     }
 
     {
-      hasVideo && (
+      loop && (
         <video
-          class="media__video"
-          data-src={m.video}
+          class="media__video media__loop"
+          data-src={loop}
           muted
+          loop
           playsinline
           preload="none"
-          disablepictureinpicture={mode === 'preview'}
-          loop={mode === 'preview'}
-          aria-hidden={mode === 'preview' ? 'true' : undefined}
-          aria-label={mode === 'player' ? item.alt : undefined}
-          tabindex={mode === 'preview' ? '-1' : undefined}
+          disablepictureinpicture
+          aria-hidden="true"
+          tabindex="-1"
         />
       )
     }
 
+    {inlineFull && <video class="media__video media__full" data-src={m.video} playsinline preload="none" aria-label={label} />}
+
     {
-      hasVideo && mode === 'preview' && (
+      loopMode === 'view' && (
         <button
           class="media__toggle"
           type="button"
@@ -135,15 +151,44 @@ const devNotes = [
     }
 
     {
-      hasVideo && mode === 'player' && (
-        <button class="media__play" type="button" data-play aria-label={`${ui.media.playVideo}: ${item.alt}`}>
+      mode === 'preview' && (
+        <div class="media__corner">
+          <PlayButton item={item} title={label} meta={meta} />
+        </div>
+      )
+    }
+
+    {
+      inlineFull && (
+        <button class="media__play" type="button" data-play-inline aria-label={`${ui.media.playVideo}: ${label}`}>
           <span class="media__play-ring" aria-hidden="true">
             <svg viewBox="0 0 16 16">
               <path d="M5.5 3.5v9l7-4.5z" fill="currentColor" />
             </svg>
           </span>
-          <span class="media__play-label mono" aria-hidden="true">{ui.media.play}</span>
+          <span class="media__play-label mono" aria-hidden="true">
+            {ui.media.play}
+          </span>
         </button>
+      )
+    }
+
+    {
+      inlineFull && (
+        <div class="media__end" data-end hidden>
+          <button type="button" class="media__end-btn" data-replay>
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M3 8a5 5 0 1 0 1.5-3.6M3 2.5v2.5h2.5" stroke="currentColor" stroke-width="1.4" fill="none" />
+            </svg>
+            {ui.media.replay}
+          </button>
+          {item.sourceUrl && (
+            <a class="media__end-btn media__end-btn--light" href={item.sourceUrl} target="_blank" rel="noopener">
+              {ui.media.moreOnX} <span class="arrow arrow--ne">↗</span>
+              <span class="visually-hidden">(opens in a new tab)</span>
+            </a>
+          )}
+        </div>
       )
     }
 
@@ -154,14 +199,16 @@ const devNotes = [
             <path d="M5.5 3.5v9l7-4.5z" fill="currentColor" />
           </svg>
           {ui.media.watchOnX}
-          <span class="arrow arrow--ne" aria-hidden="true">↗</span>
-          <span class="visually-hidden">: {item.caption ?? item.alt} (opens in a new tab)</span>
+          <span class="arrow arrow--ne" aria-hidden="true">
+            ↗
+          </span>
+          <span class="visually-hidden">: {label} (opens in a new tab)</span>
         </a>
       )
     }
 
     {
-      hasVideo && item.sourceUrl && (
+      inlineFull && item.sourceUrl && (
         <a class="media__fallback mono" href={item.sourceUrl} target="_blank" rel="noopener">
           {ui.media.unavailable} — {ui.media.watchOnX} ↗
         </a>
@@ -242,21 +289,35 @@ const devNotes = [
     transform: scale(1.02);
   }
 
+  /* Videos sit over the poster and fade in once they actually play */
   .media__video {
     z-index: 1;
     opacity: 0;
     transition: opacity var(--t-slow) var(--ease);
     background: transparent;
+    pointer-events: none;
   }
-  .media[data-state='playing'] .media__video,
-  .media[data-state='paused'] .media__video {
+  .media[data-loop-state='playing'] .media__loop,
+  .media[data-loop-state='paused'] .media__loop {
     opacity: 1;
   }
-  .media:has(.mark) .media__watch,
+  .media__full {
+    z-index: 2;
+    object-fit: contain;
+    background: #000;
+  }
+  .media[data-full-state='playing'] .media__full,
+  .media[data-full-state='paused'] .media__full,
+  .media[data-full-state='ended'] .media__full {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .media:has(.mark) .media__corner,
   .media:has(.mark) .media__toggle {
     bottom: 24px;
   }
-  .media:has(.mark) .media__watch {
+  .media:has(.mark) .media__corner {
     left: 24px;
   }
   .media:has(.mark) .media__toggle {
@@ -284,7 +345,21 @@ const devNotes = [
     background: var(--bg);
   }
 
-  /* Preview toggle (pause / play) */
+  /* Hero / cover: "Play demo" in the corner */
+  .media__corner {
+    position: absolute;
+    left: 12px;
+    bottom: 12px;
+    z-index: 4;
+  }
+  .media--placeholder .media__corner {
+    left: 50%;
+    bottom: auto;
+    top: calc(50% + 1.75rem);
+    transform: translateX(-50%);
+  }
+
+  /* Preview loop toggle (pause / play) */
   .media__toggle {
     position: absolute;
     right: 12px;
@@ -314,15 +389,14 @@ const devNotes = [
   .media__toggle .icon-pause {
     display: none;
   }
-  .media[data-state='playing'] .media__toggle .icon-pause {
+  .media[data-loop-state='playing'] .media__toggle .icon-pause {
     display: block;
   }
-  .media[data-state='playing'] .media__toggle .icon-play {
+  .media[data-loop-state='playing'] .media__toggle .icon-play {
     display: none;
   }
-  /* On pointer devices the toggle stays quiet until hover / focus */
   @media (hover: hover) and (pointer: fine) {
-    .media[data-state='playing'] .media__toggle {
+    .media[data-loop-state='playing'] .media__toggle {
       opacity: 0;
     }
     .media:hover .media__toggle,
@@ -330,8 +404,14 @@ const devNotes = [
       opacity: 1 !important;
     }
   }
-  .media[data-state='loading'] .media__toggle {
-    opacity: 1;
+  .media[data-loop-state='error'] .media__toggle {
+    display: none;
+  }
+  /* Touch screens: the preview doesn't autoplay, so "Play demo" is the only control needed */
+  @media not ((hover: hover) and (pointer: fine)) {
+    .media:has(.media__corner [data-play-src]) .media__toggle {
+      display: none;
+    }
   }
 
   /* Big play button (player mode) */
@@ -373,9 +453,55 @@ const devNotes = [
   .media__play-label {
     color: var(--ink-2);
   }
-  .media--player:not([data-state='idle']) .media__play {
+  .media[data-full-state]:not([data-full-state='idle']) .media__play {
     opacity: 0;
     pointer-events: none;
+  }
+
+  /* End card */
+  .media__end {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    background: rgb(8 9 10 / 0.7);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+  .media__end[hidden] {
+    display: none;
+  }
+  .media__end-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 44px;
+    padding: 0 1.1rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px rgb(236 233 226 / 0.3);
+    transition: background-color var(--t-fast) var(--ease);
+  }
+  .media__end-btn:hover {
+    background: rgb(236 233 226 / 0.08);
+  }
+  .media__end-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+  .media__end-btn--light {
+    background: var(--ink);
+    color: var(--bg);
+    box-shadow: none;
+  }
+  .media__end-btn--light:hover {
+    background: #fff;
   }
 
   /* "Watch on X" pill when there is no local video */
@@ -411,24 +537,24 @@ const devNotes = [
     transform: translateX(-50%);
   }
 
-  /* Error fallback — shown only if a video fails to load */
+  /* Error fallback — shown only if the full video fails to load */
   .media__fallback {
     display: none;
     position: absolute;
     left: 12px;
     bottom: 12px;
-    z-index: 4;
+    z-index: 6;
     padding: 0.45rem 0.75rem;
     border-radius: 999px;
     background: rgb(13 14 15 / 0.75);
     color: var(--ink-2);
   }
-  .media[data-state='error'] .media__fallback {
+  .media[data-full-state='error'] .media__fallback {
     display: inline-flex;
   }
-  .media[data-state='error'] .media__toggle,
-  .media[data-state='error'] .media__play,
-  .media[data-state='error'] .media__video {
+  .media[data-full-state='error'] .media__play,
+  .media[data-full-state='error'] .media__full,
+  .media[data-loop-state='error'] .media__loop {
     display: none;
   }
 
@@ -472,7 +598,7 @@ const devNotes = [
     position: absolute;
     top: 8px;
     left: 8px;
-    z-index: 6;
+    z-index: 7;
     max-width: calc(100% - 16px);
     padding: 0.25rem 0.5rem;
     border-radius: 2px;

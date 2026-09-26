@@ -15,6 +15,7 @@ npm run dev        # เปิด http://localhost:4321 — แก้ไฟล�
 npm run build      # สร้างเว็บจริงไว้ในโฟลเดอร์ dist/
 npm run preview    # เปิดดูผลจาก dist/ ก่อนอัปโหลด
 npm start          # เสิร์ฟ dist/ แบบเดียวกับบน Railway (ต้อง build ก่อน)
+npm run media      # แปลงวิดีโอต้นฉบับใน media-src/ เป็นไฟล์สำหรับเว็บ
 npm run check      # ตรวจ TypeScript / Astro
 ```
 
@@ -33,6 +34,7 @@ Deploy: ดูหัวข้อ **"ขึ้น GitHub + Railway"** ด้า�
 | Journal และกล่อง "Now" | `src/data/updates.ts` |
 | สี ฟอนต์ และระยะห่าง | `src/styles/global.css` (ดูตัวแปรใน `:root`) |
 | เปิด/ปิดเอฟเฟกต์ | `src/data/effects.ts` |
+| ส่วน Partner (นักลงทุน), อีเมลติดต่อ | `src/data/site.ts` → `partner`, `email` |
 
 **เปลี่ยนเป็นภาษาไทย:** แปลข้อความใน `site.ts`, `ui.ts`, `projects.ts` และ `updates.ts`
 จากนั้นตั้ง `lang: 'th'` และ `locale: 'th-TH'` ใน `site.ts` (วันที่จะเป็น พ.ศ. เอง)
@@ -58,36 +60,51 @@ Deploy: ดูหัวข้อ **"ขึ้น GitHub + Railway"** ด้า�
 
 ## สื่อ (ภาพ / วิดีโอ)
 
-| ชนิด | ที่วางไฟล์ | สเปกแนะนำ |
+แต่ละผลงานใช้ไฟล์ได้ 3 แบบ:
+
+| ชนิด | ใช้ตรงไหน | ที่อยู่ไฟล์ |
 |---|---|---|
-| ภาพปก / poster | `src/assets/media/<slug>/` | JPG หรือ PNG กว้าง 1920–2560px, 16:9 — ระบบย่อและแปลงเป็น AVIF/WebP ให้เอง |
-| วิดีโอ preview (หน้าแรก) | `public/media/<slug>/preview.mp4` | 8–15 วินาที, วนต่อกันได้, กว้าง 1600px, H.264, ไม่มีเสียง, ขนาดประมาณ 2–5MB |
-| วิดีโอเดโมเต็ม | `public/media/<slug>/<date>-<name>.mp4` | H.264 + AAC, กว้าง 1920px |
+| **poster** (ภาพนิ่ง) | ทุกกรอบภาพ | `src/assets/media/<slug>/<name>.jpg` |
+| **preview** (คลิปสั้น 8 วิ ไม่มีเสียง วนซ้ำ) | Hero และเวลา hover บนกรอบภาพ | `public/media/<slug>/<name>-preview.mp4` |
+| **video** (เดโมเต็ม มีเสียง) | กดปุ่ม ▶ Play บนเว็บ | `public/media/<slug>/<name>.mp4` |
 
-พฤติกรรมของวิดีโอ:
-- ไม่เล่นเสียงเองทุกกรณี
-- preview จะเล่นแบบ mute เฉพาะตอนมองเห็นบนคอมที่ใช้เมาส์ และหยุดเมื่อเลื่อนพ้นหรือสลับแท็บ
-- บนมือถือ, เมื่อเปิด reduced motion หรือ Data Saver จะแสดง poster และปุ่ม Play โดยไม่โหลดวิดีโอล่วงหน้า
-- เดโมในหน้าโปรเจกต์จะโหลดเมื่อกด Play เท่านั้น
-- ถ้าไม่มีไฟล์ จะแสดง poster และปุ่ม "Watch on X" ถ้าไฟล์เสีย จะแสดงลิงก์สำรองไปยังโพสต์ต้นฉบับ
+### วิธีที่ง่ายที่สุด: `npm run media`
 
-คำสั่ง ffmpeg ที่ใช้เตรียมไฟล์ได้:
+1. วางไฟล์วิดีโอต้นฉบับ (.mov / .mp4 / .mkv) ไว้ที่ `media-src/<slug>/`
+   และตั้งชื่อให้ตรงกับรายการในข้อมูล เช่น
+   ```
+   media-src/forest-concept/2026-09-14-godot.mov
+   media-src/forest-concept/2026-09-20-unreal.mov
+   media-src/forest-concept/2026-09-23-luna.mov
+   media-src/forest-concept/2026-09-25-last-update.mov
+   ```
+2. รัน `npm run media -- --posters` (ต้องมี ffmpeg ติดตั้งไว้ ถ้ายังไม่มีใช้ `brew install ffmpeg`)
+   สคริปต์จะสร้างไฟล์ทั้ง 3 แบบให้ครบ:
+   - เดโมเต็ม กว้างไม่เกิน 1920px
+   - preview 8 วินาที ขนาดราว 1–2MB
+   - poster คมชัดจากเฟรมจริง ซึ่งจะเขียนทับภาพชั่วคราวเดิม
+3. ลบ `interim: true` ใน `projects.ts` และ `updates.ts`
+4. รัน `npm run dev` เพื่อเช็ก แล้ว push ขึ้น GitHub
+   ไฟล์ต้นฉบับใน `media-src/` จะไม่ถูก push (อยู่ใน .gitignore)
 
-```bash
-# preview loop 12 วินาที (เริ่มวินาทีที่ 5) ไม่มีเสียง
-ffmpeg -ss 5 -t 12 -i input.mov -vf "scale=1600:-2,fps=30" -an \
-  -c:v libx264 -crf 24 -preset slow -pix_fmt yuv420p -movflags +faststart preview.mp4
+ถ้าอยากเลือกช่วงของ preview เอง ให้สร้างไฟล์ JSON ชื่อเดียวกันไว้ข้างวิดีโอ
+เช่น `media-src/forest-concept/2026-09-25-last-update.json` ที่มีค่า `{ "previewStart": 31.5, "previewLength": 8 }`
 
-# เดโมเต็ม
-ffmpeg -i input.mov -vf "scale=1920:-2" -c:v libx264 -crf 22 -preset slow \
-  -pix_fmt yuv420p -c:a aac -b:a 128k -movflags +faststart 2026-09-25-last-update.mp4
+### พฤติกรรมบนเว็บ
+- วิดีโอไม่เล่นเสียงเองทุกกรณี เสียงจะดังเฉพาะตอนผู้ชมกด Play
+- **Hero:** preview เล่นแบบ mute ตอนมองเห็น (เฉพาะคอมที่ใช้เมาส์) ปุ่ม **▶ Play demo** เปิดเดโมเต็มในหน้าต่างเล่นวิดีโอ พร้อมปุ่ม **More on X ↗**
+- **กรอบภาพเล็ก:** hover แล้ว preview จะเล่น ส่วนปุ่ม ▶ มุมขวาบนเปิดเดโมเต็ม
+- **Evolution viewer:** ปุ่ม ▶ Play จะเล่นเดโมของช่วงที่เลือกอยู่
+- **Journal:** แต่ละรายการมี ▶ Play demo และ More on X
+- **หน้าโปรเจกต์:** hover แล้ว preview จะเล่น กด ▶ เพื่อเล่นเดโมเต็มในกรอบ พอจบจะมีปุ่ม Watch again และ More on X
+- เล่นได้ทีละวิดีโอเดียว และหยุดเองเมื่อเลื่อนพ้นหรือสลับแท็บ
+- บนมือถือ, เมื่อเปิด reduced motion หรือ Data Saver จะไม่โหลดวิดีโอจนกว่าจะกด
+- ถ้ายังไม่มีไฟล์ ปุ่มจะเปลี่ยนเป็น **Watch on X ↗** เอง ถ้าไฟล์เสีย จะแสดงลิงก์สำรองไปยังโพสต์
 
-# ดึงเฟรมจากวินาทีที่ 5 มาเป็น poster
-ffmpeg -ss 5 -i input.mov -frames:v 1 -q:v 2 2026-09-25-last-update.jpg
-```
+**GitHub:** รับไฟล์ได้ไม่เกิน 100MB ต่อไฟล์ และจะเตือนเมื่อเกิน 50MB สคริปต์จะเตือนถ้าไฟล์ใหญ่เกิน
 
 ตอนรัน `npm run dev` หรือ `npm run build` terminal จะแสดงรายชื่อไฟล์ที่ยังขาด
-และในโหมด dev จะมีป้ายสีเหลืองบนภาพที่เป็นภาพชั่วคราวหรือยังไม่มีวิดีโอ ป้ายนี้ไม่แสดงบนเว็บจริง
+และในโหมด dev จะมีป้ายสีเหลืองบนภาพที่ยังเป็นภาพชั่วคราวหรือยังไม่มีวิดีโอ ป้ายนี้ไม่แสดงบนเว็บจริง
 
 ---
 
@@ -164,23 +181,17 @@ preview ควรอยู่ราว 2–5MB ส่วนเดโมเต็
 
 ## สิ่งที่ยังขาดจากคุณ
 
-**วิดีโอ** (ชื่อไฟล์ตั้งไว้ในข้อมูลแล้ว วางไฟล์ตามชื่อนี้ได้เลย)
-- `public/media/forest-concept/preview.mp4` — loop สั้นสำหรับ Hero (สำคัญที่สุด)
-- `public/media/forest-concept/2026-09-14-godot.mp4`
-- `public/media/forest-concept/2026-09-20-unreal.mp4`
-- `public/media/forest-concept/2026-09-23-luna.mp4`
-- `public/media/forest-concept/2026-09-25-last-update.mp4`
-
-**ภาพต้นฉบับ** — ภาพ 4 ภาพใน `src/assets/media/forest-concept/` เป็นเฟรมปกที่จับจากโพสต์ X
-ขนาด 1280×720 (`interim: true`) ใช้ได้ แต่ภาพต้นฉบับจะคมกว่า
-ให้วางทับด้วยชื่อไฟล์เดิม แล้วลบ `interim: true` ใน `projects.ts` และ `updates.ts`
+**วิดีโอต้นฉบับ 4 ไฟล์** วางใน `media-src/forest-concept/` ตามชื่อด้านล่าง แล้วรัน `npm run media -- --posters`
+- `2026-09-14-godot.*`
+- `2026-09-20-unreal.*`
+- `2026-09-23-luna.*`
+- `2026-09-25-last-update.*` (ไฟล์นี้ใช้เป็น preview ของ Hero ด้วย)
 
 **ข้อมูลที่ควรยืนยัน**
 - ชื่อโปรเจกต์: โพสต์ไม่ได้ระบุชื่อ จึงใช้ "Forest Concept" เป็นชื่อชั่วคราว (`workingTitle: true`)
-- การรวม 4 โพสต์เป็นโปรเจกต์เดียว: โพสต์ 20 ก.ย. บอกว่าย้าย concept จาก Godot ไป Unreal และ HUD, ป้าย "Sunward Valley" และนกในโพสต์ 23 กับ 25 ก.ย. ตรงกัน
-- ประโยค "A little bird guides you along the trail." มาจากข้อความ HUD ในเดโม ("Follow the little white bird along the trail.")
-- ข้อความ Hero และ About เขียนจากคำอธิบายที่คุณให้มา ควรอ่านอีกรอบให้ตรงกับน้ำเสียงของคุณ
-- URL เว็บหลัง deploy → `site.ts` → `url`
+- ส่วน Partner: ยอดวิวและยอดไลก์นับจาก 4 โพสต์บน X ณ 26 ก.ย. 2026 ถ้าจะอัปเดตตัวเลข ให้เปลี่ยนวันที่ใน `proofNote` ด้วย
+- ข้อความ Hero, About และ Partner ควรอ่านอีกรอบให้ตรงกับน้ำเสียงของคุณ
+- ถ้าจะใช้โดเมนของตัวเอง → `site.ts` → `url`
 
 ---
 
@@ -192,8 +203,10 @@ src/
   assets/media ← ภาพผลงาน (ระบบปรับขนาดให้)
   components/  ← Hero, FeaturedProject, Journal, Media (ภาพ/วิดีโอ), ...
   pages/       ← index, work/[slug], 404
-  scripts/     ← site.ts (header, fade-in, วิดีโอ) + fx.ts (เอฟเฟกต์)
+  scripts/     ← site.ts (header, fade-in, วิดีโอ, หน้าต่างเล่นวิดีโอ) + fx.ts (เอฟเฟกต์)
   styles/      ← global.css (สี, ฟอนต์, ตัวแปร)
+scripts/media.mjs ← npm run media (เตรียมวิดีโอ/poster จากไฟล์ต้นฉบับ)
+media-src/     ← วิดีโอต้นฉบับ (ไม่ขึ้น GitHub)
 server.mjs     ← server สำหรับ production (npm start)
 railway.json   ← ค่าตั้ง Railway
 public/

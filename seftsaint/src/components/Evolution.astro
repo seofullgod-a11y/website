@@ -5,11 +5,11 @@
  * Touch / keyboard: the segment buttons under the frame.
  * Leaving the frame returns to the latest stage.
  */
-import { Picture } from 'astro:assets';
+import { Picture, getImage } from 'astro:assets';
 import type { Update } from '../data/types';
 import { ui } from '../data/ui';
-import { resolveImage } from '../lib/media';
-import { formatDateNumeric } from '../lib/format';
+import { resolveImage, resolveVideo } from '../lib/media';
+import { formatDate, formatDateNumeric } from '../lib/format';
 
 interface Props {
   /** Oldest → newest. Only entries with an image are used. */
@@ -22,11 +22,26 @@ interface Props {
 }
 const { stages: all, href, projectTitle, sizes, class: className } = Astro.props;
 
-const stages = all
+const label = (u: Update) => u.label ?? u.title;
+const withImages = all
   .map((u) => ({ u, img: resolveImage(u.media?.image) }))
   .filter((s): s is { u: Update; img: NonNullable<ReturnType<typeof resolveImage>> } => !!s.img);
+
+// Per stage: the full video (if any), a poster for the player, and the post link.
+const stages = await Promise.all(
+  withImages.map(async (s) => {
+    const video = resolveVideo(s.u.media?.video) ?? '';
+    const poster = video ? (await getImage({ src: s.img, width: 1280, format: 'webp', quality: 80 })).src : '';
+    return {
+      ...s,
+      video,
+      poster,
+      post: s.u.sourceUrl ?? s.u.media?.sourceUrl ?? '',
+      meta: `${formatDate(s.u.date)} · ${label(s.u)}`,
+    };
+  }),
+);
 const last = stages.length - 1;
-const label = (u: Update) => u.label ?? u.title;
 const pad = (n: number) => String(n).padStart(2, '0');
 ---
 
@@ -58,6 +73,10 @@ const pad = (n: number) => String(n).padStart(2, '0');
                 'data-date': formatDateNumeric(s.u.date),
                 'data-iso': s.u.date,
                 'data-label': label(s.u),
+                'data-video': s.video,
+                'data-poster': s.poster,
+                'data-post': s.post,
+                'data-meta': s.meta,
               }}
             />
           ))}
@@ -85,6 +104,27 @@ const pad = (n: number) => String(n).padStart(2, '0');
             {label(stages[last].u)}
           </span>
         </p>
+        <div class="evo__actions">
+          <button
+            type="button"
+            class="evo__play"
+            data-evo-play
+            data-play-src={stages[last].video || undefined}
+            data-play-poster={stages[last].poster}
+            data-play-title={stages[last].u.title}
+            data-play-meta={stages[last].meta}
+            data-play-post={stages[last].post}
+            aria-haspopup="dialog"
+            hidden={!stages[last].video}
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M5.5 3.5v9l7-4.5z" fill="currentColor" />
+            </svg>
+            <span class="mono">{ui.media.play}</span>
+          </button>
+          <a class="evo__x mono" data-evo-x href={stages[last].post || undefined} target="_blank" rel="noopener" hidden={!!stages[last].video || !stages[last].post}>
+            {ui.media.watchOnX} <span class="arrow arrow--ne" aria-hidden="true">↗</span>
+          </a>
         <div class="evo__steps" role="group" aria-label={ui.fx.stages}>
           {stages.map((s, i) => (
             <button
@@ -97,6 +137,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
               <span class="evo__step-bar" aria-hidden="true" />
             </button>
           ))}
+        </div>
         </div>
       </div>
     </div>
@@ -223,9 +264,10 @@ const pad = (n: number) => String(n).padStart(2, '0');
   /* Caption + stage buttons */
   .evo__caption {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 0 1rem;
     margin-top: 0.35rem;
     min-height: 44px;
   }
@@ -244,6 +286,49 @@ const pad = (n: number) => String(n).padStart(2, '0');
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  .evo__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: none;
+  }
+  @media (max-width: 560px) {
+    .evo__now {
+      min-height: 36px;
+      align-items: center;
+    }
+    .evo__actions {
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
+  .evo__play,
+  .evo__x {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 32px;
+    padding: 0 0.75rem 0 0.65rem;
+    border-radius: 999px;
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--line-2);
+    transition:
+      background-color var(--t-fast) var(--ease),
+      box-shadow var(--t-fast) var(--ease);
+  }
+  .evo__play:hover,
+  .evo__x:hover {
+    background: rgb(236 233 226 / 0.06);
+    box-shadow: inset 0 0 0 1px rgb(236 233 226 / 0.35);
+  }
+  .evo__play[hidden],
+  .evo__x[hidden] {
+    display: none;
+  }
+  .evo__play svg {
+    width: 10px;
+    height: 10px;
   }
   .evo__steps {
     display: flex;

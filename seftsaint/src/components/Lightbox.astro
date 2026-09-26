@@ -1,0 +1,230 @@
+---
+/**
+ * Video player overlay — one per page, filled in by src/scripts/site.ts
+ * from the button that opened it (data-play-*). Uses the native <dialog>,
+ * so Esc, focus trapping and focus return are handled by the browser.
+ */
+import { ui } from '../data/ui';
+---
+
+<dialog class="lb" data-lightbox aria-labelledby="lb-title">
+  <div class="lb__inner">
+    <header class="lb__head">
+      <div class="lb__heading">
+        <p class="lb__meta mono" data-lb-meta></p>
+        <h2 id="lb-title" class="lb__title" data-lb-title></h2>
+      </div>
+      <button class="lb__close" type="button" data-lb-close aria-label={ui.media.close}>
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" stroke-width="1.4" fill="none" />
+        </svg>
+      </button>
+    </header>
+
+    <div class="lb__stage" data-lb-stage>
+      <video class="lb__video" data-lb-video controls playsinline preload="none"></video>
+      <div class="lb__end" data-lb-end hidden>
+        <button type="button" class="lb__btn" data-lb-replay>
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M3 8a5 5 0 1 0 1.5-3.6M3 2.5v2.5h2.5" stroke="currentColor" stroke-width="1.4" fill="none" />
+          </svg>
+          <span>{ui.media.replay}</span>
+        </button>
+        <a class="lb__btn lb__btn--light" data-lb-post href="#" target="_blank" rel="noopener">
+          <span>{ui.media.moreOnX}</span>
+          <span class="arrow arrow--ne" aria-hidden="true">↗</span>
+        </a>
+      </div>
+      <a class="lb__error mono" data-lb-error href="#" target="_blank" rel="noopener" hidden>
+        {ui.media.unavailable} — {ui.media.watchOnX} ↗
+      </a>
+    </div>
+
+    <footer class="lb__foot" data-lb-foot>
+      <p class="lb__note">{ui.media.playerNote}</p>
+      <a class="link lb__more" data-lb-post href="#" target="_blank" rel="noopener">
+        {ui.media.moreOnX}
+        <span class="arrow arrow--ne" aria-hidden="true">↗</span>
+        <span class="visually-hidden">(opens in a new tab)</span>
+      </a>
+    </footer>
+  </div>
+</dialog>
+
+<style>
+  .lb {
+    width: min(1200px, calc(100vw - 2 * var(--gutter)));
+    max-width: none;
+    max-height: calc(100dvh - 32px);
+    margin: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    overflow: visible;
+  }
+  .lb::backdrop {
+    background: rgb(8 9 10 / 0.88);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+  .lb[open] {
+    animation: lb-in 260ms var(--ease);
+  }
+  .lb[open]::backdrop {
+    animation: lb-fade 260ms var(--ease);
+  }
+  @keyframes lb-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.985);
+    }
+  }
+  @keyframes lb-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  .lb__inner {
+    display: grid;
+    gap: 1rem;
+  }
+  .lb__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .lb__meta {
+    color: var(--ink-3);
+    margin-bottom: 0.35rem;
+  }
+  .lb__title {
+    font-size: var(--text-lg);
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+  }
+  .lb__close {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--line-2);
+    transition:
+      background-color var(--t-fast) var(--ease),
+      box-shadow var(--t-fast) var(--ease);
+  }
+  .lb__close:hover {
+    background: rgb(236 233 226 / 0.08);
+    box-shadow: inset 0 0 0 1px rgb(236 233 226 / 0.35);
+  }
+  .lb__close svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .lb__stage {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    max-height: calc(100dvh - 200px);
+    width: 100%;
+    margin-inline: auto;
+    background: #000;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px rgb(236 233 226 / 0.08),
+      0 30px 80px rgb(0 0 0 / 0.6);
+  }
+  .lb__video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+  }
+
+  .lb__end {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    background: rgb(8 9 10 / 0.72);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+  .lb__end[hidden] {
+    display: none;
+  }
+  .lb__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 44px;
+    padding: 0 1.1rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px rgb(236 233 226 / 0.3);
+    transition: background-color var(--t-fast) var(--ease);
+  }
+  .lb__btn:hover {
+    background: rgb(236 233 226 / 0.08);
+  }
+  .lb__btn svg {
+    width: 14px;
+    height: 14px;
+  }
+  .lb__btn--light {
+    background: var(--ink);
+    color: var(--bg);
+    box-shadow: none;
+  }
+  .lb__btn--light:hover {
+    background: #fff;
+  }
+
+  .lb__error {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    padding: 0.6rem 1rem;
+    border-radius: 999px;
+    background: rgb(13 14 15 / 0.85);
+    color: var(--ink-2);
+  }
+  .lb__error[hidden] {
+    display: none;
+  }
+
+  .lb__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    font-size: 0.875rem;
+  }
+  .lb__note {
+    color: var(--ink-3);
+  }
+  .lb__more {
+    font-size: 0.9375rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lb[open],
+    .lb[open]::backdrop {
+      animation: none;
+    }
+  }
+</style>

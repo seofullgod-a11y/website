@@ -4,6 +4,7 @@ import { site } from '../data/site';
 import { ui } from '../data/ui';
 import { getUpdates, getProjects } from '../lib/content';
 import { formatDate } from '../lib/format';
+import PlayButton from './PlayButton.astro';
 
 interface Props {
   /** How many entries to show on the home page. */
@@ -64,6 +65,15 @@ const projectTitle = new Map(getProjects().map((p) => [p.slug, p.title]));
                   <p class="entry__text">{para}</p>
                 ))}
                 <p class="entry__meta">
+                  {u.media && (
+                    <PlayButton
+                      item={u.media}
+                      title={u.title}
+                      meta={`${formatDate(u.date)} · ${u.label ?? u.title}`}
+                      variant="text"
+                      fallback={false}
+                    />
+                  )}
                   {u.project && projectTitle.has(u.project) && (
                     <a class="link link--quiet" href={`/work/${u.project}/#${u.id}`}>
                       <span class="mono entry__meta-label">{ui.journal.project}</span>

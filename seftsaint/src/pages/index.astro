@@ -6,6 +6,7 @@ import FeaturedProject from '../components/FeaturedProject.astro';
 import ProjectList from '../components/ProjectList.astro';
 import Journal from '../components/Journal.astro';
 import About from '../components/About.astro';
+import Partner from '../components/Partner.astro';
 import { site } from '../data/site';
 import { ui } from '../data/ui';
 import { getProjects, getUpdates } from '../lib/content';
@@ -38,8 +39,17 @@ const jsonLd = {
     <Journal />
   </section>
 
+  {
+    site.partner.enabled && (
+      <section id="partner" class="section container" aria-labelledby="partner-title">
+        <SectionHead index="03" title={ui.sections.partner} id="partner-title" />
+        <Partner />
+      </section>
+    )
+  }
+
   <section id="about" class="section container" aria-labelledby="about-title">
-    <SectionHead index="03" title={ui.sections.about} id="about-title" />
+    <SectionHead index={site.partner.enabled ? '04' : '03'} title={ui.sections.about} id="about-title" />
     <About />
   </section>
 </Base>

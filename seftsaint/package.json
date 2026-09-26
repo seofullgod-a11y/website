@@ -12,6 +12,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "start": "node server.mjs",
+    "media": "node scripts/media.mjs",
     "check": "astro check"
   },
   "dependencies": {

@@ -103,6 +103,8 @@ if (fx.has('evolution')) {
     const labelEl = evo.querySelector<HTMLElement>('[data-evo-label]');
     const countEl = evo.querySelector<HTMLElement>('[data-evo-count]');
     const syncs = [...document.querySelectorAll<HTMLElement>('[data-evo-sync]')];
+    const playBtn = evo.querySelector<HTMLButtonElement>('[data-evo-play]');
+    const xLink = evo.querySelector<HTMLAnchorElement>('[data-evo-x]');
     const n = pics.length;
     const def = Number(evo.dataset.default ?? n - 1);
     if (!link || !frame || n < 2) return;
@@ -125,6 +127,22 @@ if (fx.has('evolution')) {
       if (labelEl) labelEl.textContent = d.label ?? '';
       if (countEl) countEl.textContent = `${pad(i + 1)} / ${pad(n)}`;
       link.href = `${link.dataset.base ?? ''}#${d.id ?? ''}`;
+      if (playBtn) {
+        if (d.video) {
+          playBtn.dataset.playSrc = d.video;
+          playBtn.dataset.playPoster = d.poster ?? '';
+          playBtn.dataset.playTitle = d.title ?? '';
+          playBtn.dataset.playMeta = d.meta ?? '';
+          playBtn.dataset.playPost = d.post ?? '';
+        } else {
+          delete playBtn.dataset.playSrc;
+        }
+        playBtn.hidden = !d.video;
+      }
+      if (xLink) {
+        if (d.post) xLink.href = d.post;
+        xLink.hidden = !!d.video || !d.post;
+      }
       link.setAttribute('aria-label', `${d.title ?? ''} — ${evo.dataset.project ?? ''}`);
       syncs.forEach((a) => a.classList.toggle('is-synced', Number(a.dataset.evoSync) === i && i !== def));
     };

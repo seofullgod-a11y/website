@@ -13,7 +13,8 @@ interface Props {
 const { project } = Astro.props;
 
 const updates = project ? getUpdatesFor(project.slug) : [];
-const lastDate = updates.at(-1)?.date ?? project?.period?.end ?? project?.period?.start;
+const latest = updates.at(-1);
+const lastDate = latest?.date ?? project?.period?.end ?? project?.period?.start;
 const [line1, line2] = site.hero.headline;
 ---
 
@@ -37,6 +38,17 @@ const [line1, line2] = site.hero.headline;
           <span class="visually-hidden">(opens in a new tab)</span>
         </a>
       </div>
+      {
+        site.partner.enabled && (
+          <a class="hero__partner" href="#partner">
+            <span class="hero__partner-dot" aria-hidden="true" />
+            {site.partner.heroLink}
+            <span class="arrow arrow--e" aria-hidden="true">
+              →
+            </span>
+          </a>
+        )
+      }
     </div>
 
     {
@@ -51,6 +63,8 @@ const [line1, line2] = site.hero.headline;
             sizes="(min-width: 1440px) 776px, (min-width: 1024px) 56vw, 100vw"
             aspectSmall="4 / 3"
             parallax
+            title={latest?.title ?? project.title}
+            meta={latest ? `${formatDate(latest.date)} · ${latest.label ?? latest.title}` : undefined}
           />
           <a class="hero__caption" href={`/work/${project.slug}/`} data-decode-area>
             <span class="mono hero__caption-label" data-decode>{ui.hero.latest}</span>
@@ -151,6 +165,27 @@ const [line1, line2] = site.hero.headline;
   .hero__x {
     font-size: 0.875rem;
     min-height: 44px;
+  }
+
+  .hero__partner {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 32px;
+    margin-top: 1.25rem;
+    font-size: 0.8125rem;
+    color: var(--ink-2);
+    transition: color var(--t-fast) var(--ease);
+  }
+  .hero__partner:hover {
+    color: var(--ink);
+  }
+  .hero__partner-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
   }
 
   /* Caption row under the frame */
