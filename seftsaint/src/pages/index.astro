@@ -1,0 +1,45 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import SectionHead from '../components/SectionHead.astro';
+import FeaturedProject from '../components/FeaturedProject.astro';
+import ProjectList from '../components/ProjectList.astro';
+import Journal from '../components/Journal.astro';
+import About from '../components/About.astro';
+import { site } from '../data/site';
+import { ui } from '../data/ui';
+import { getProjects, getUpdates } from '../lib/content';
+
+const projects = getProjects();
+const featured = projects.find((p) => p.featured) ?? projects[0];
+const others = projects.filter((p) => p !== featured);
+const updateCount = getUpdates().length;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: site.name,
+  ...(site.url ? { url: site.url } : {}),
+  sameAs: [site.xUrl],
+};
+---
+
+<Base jsonLd={jsonLd}>
+  <Hero project={featured} />
+
+  <section id="work" class="section container" aria-labelledby="work-title">
+    <SectionHead index="01" title={ui.sections.work} id="work-title" aside={ui.count.project(projects.length)} />
+    {featured && <FeaturedProject project={featured} />}
+    <ProjectList projects={others} startIndex={2} />
+  </section>
+
+  <section id="journal" class="section container" aria-labelledby="journal-title">
+    <SectionHead index="02" title={ui.sections.journal} id="journal-title" aside={ui.count.update(updateCount)} />
+    <Journal />
+  </section>
+
+  <section id="about" class="section container" aria-labelledby="about-title">
+    <SectionHead index="03" title={ui.sections.about} id="about-title" />
+    <About />
+  </section>
+</Base>

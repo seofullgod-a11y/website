@@ -1,0 +1,120 @@
+---
+import { site } from '../data/site';
+import { ui } from '../data/ui';
+
+const isHome = Astro.url.pathname === '/' || Astro.url.pathname === '';
+const nav = [
+  { href: '/#work', label: ui.nav.work },
+  { href: '/#journal', label: ui.nav.journal },
+  { href: '/#about', label: ui.nav.about },
+];
+---
+
+<header class="header" data-header>
+  <div class="container header__inner">
+    <a class="wordmark" href="/" aria-label={`${site.name} — ${ui.nav.home}`} aria-current={isHome ? 'page' : undefined}>
+      <span class="wordmark__dot" aria-hidden="true"></span>
+      <span class="wordmark__text">{site.name}</span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <ul role="list">
+        {
+          nav.map((item) => (
+            <li>
+              <a class="nav__link" href={item.href}>
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+        <li>
+          <a class="nav__link nav__link--x" href={site.xUrl} target="_blank" rel="noopener me">
+            {ui.nav.x}
+            <span class="arrow arrow--ne" aria-hidden="true">↗</span>
+            <span class="visually-hidden">(opens in a new tab)</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    height: var(--header-h);
+    border-bottom: 1px solid transparent;
+    transition:
+      background-color var(--t) var(--ease),
+      border-color var(--t) var(--ease);
+  }
+  .header:global(.is-scrolled) {
+    background-color: rgb(13 14 15 / 0.86);
+    border-bottom-color: var(--line);
+    -webkit-backdrop-filter: saturate(140%) blur(14px);
+    backdrop-filter: saturate(140%) blur(14px);
+  }
+  .header__inner {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    padding-block: 0.5rem;
+  }
+  .wordmark__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+    transition: box-shadow var(--t-slow) var(--ease);
+  }
+  .wordmark:hover .wordmark__dot {
+    box-shadow: 0 0 0 5px var(--accent-dim);
+  }
+
+  .nav ul {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.25rem, 0.1rem + 1vw, 1.25rem);
+    list-style: none;
+  }
+  .nav__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: 44px;
+    padding-inline: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--ink-2);
+    transition: color var(--t-fast) var(--ease);
+  }
+  .nav__link:hover {
+    color: var(--ink);
+  }
+  .nav__link--x {
+    color: var(--ink);
+  }
+
+  @media (max-width: 380px) {
+    .wordmark__text {
+      font-size: 0.875rem;
+    }
+    .nav__link {
+      padding-inline: 0.35rem;
+      font-size: 0.8125rem;
+    }
+  }
+</style>

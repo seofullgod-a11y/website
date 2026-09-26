@@ -1,0 +1,72 @@
+---
+import { site } from '../data/site';
+import { ui } from '../data/ui';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <p class="footer__brand">
+      <span class="footer__name">{site.name}</span>
+      <span class="footer__note">{ui.footer.note}</span>
+    </p>
+    <ul class="footer__links mono" role="list">
+      <li>
+        <a class="link link--quiet" href={site.xUrl} target="_blank" rel="noopener me">
+          {site.handle} <span class="arrow arrow--ne" aria-hidden="true">↗</span>
+          <span class="visually-hidden">(opens in a new tab)</span>
+        </a>
+      </li>
+      <li>
+        <a class="link link--quiet" href="#top">
+          {ui.footer.top} <span class="arrow" aria-hidden="true">↑</span>
+        </a>
+      </li>
+      <li class="footer__year">© {year}</li>
+    </ul>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    margin-top: var(--section-space);
+    border-top: 1px solid var(--line);
+    padding-block: 2rem 2.5rem;
+    padding-bottom: max(2.5rem, env(safe-area-inset-bottom));
+  }
+  .footer__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+  }
+  .footer__brand {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 1rem;
+  }
+  .footer__name {
+    font-weight: 500;
+  }
+  .footer__note {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+  }
+  .footer__links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.5rem;
+    list-style: none;
+    color: var(--ink-3);
+  }
+  .footer__links a {
+    min-height: 32px;
+  }
+  .footer__links li:first-child {
+    text-transform: none;
+  }
+</style>

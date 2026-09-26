@@ -1,0 +1,38 @@
+---
+import Base from '../layouts/Base.astro';
+import { ui } from '../data/ui';
+---
+
+<Base title="404">
+  <section class="container nf">
+    <p class="mono nf__code">404</p>
+    <h1 class="nf__title">{ui.notFound.title}</h1>
+    <p class="nf__body">{ui.notFound.body}</p>
+    <a class="link" href="/">
+      <span class="arrow arrow--w" aria-hidden="true">←</span>
+      {ui.notFound.back}
+    </a>
+  </section>
+</Base>
+
+<style>
+  .nf {
+    min-height: 60vh;
+    display: grid;
+    align-content: center;
+    justify-items: start;
+    gap: 1.25rem;
+    padding-block: 6rem;
+  }
+  .nf__code {
+    color: var(--ink-3);
+  }
+  .nf__title {
+    font-size: var(--text-2xl);
+    letter-spacing: -0.035em;
+  }
+  .nf__body {
+    color: var(--ink-2);
+    margin-bottom: 1rem;
+  }
+</style>

@@ -1,0 +1,656 @@
+---
+import { getImage } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Media from '../../components/Media.astro';
+import MetaList from '../../components/MetaList.astro';
+import StatusTag from '../../components/StatusTag.astro';
+import type { Project, ProjectSection } from '../../data/types';
+import { site } from '../../data/site';
+import { ui } from '../../data/ui';
+import { getProjects, getUpdatesFor } from '../../lib/content';
+import { formatDate } from '../../lib/format';
+import { resolveImage } from '../../lib/media';
+
+export function getStaticPaths() {
+  return getProjects().map((project) => ({ params: { slug: project.slug }, props: { project } }));
+}
+
+interface Props {
+  project: Project;
+}
+const { project: p } = Astro.props;
+
+const all = getProjects();
+const i = all.findIndex((x) => x.slug === p.slug);
+const next = all.length > 1 ? all[(i + 1) % all.length] : undefined;
+
+const updates = getUpdatesFor(p.slug); // oldest → newest
+const total = updates.length;
+const pad = (n: number) => String(n).padStart(2, '0');
+
+// Progress sits after the first long-form section (usually "Concept").
+const sections: ProjectSection[] = p.sections ?? [];
+const [firstSection, ...restSections] = sections;
+
+const sources = [
+  ...updates.filter((u) => u.sourceUrl).map((u) => ({ url: u.sourceUrl!, date: u.date, title: u.title })),
+];
+
+// Social preview from the cover (1200×630)
+const coverImage = resolveImage(p.cover.image);
+const og = coverImage
+  ? await getImage({ src: coverImage, width: 1200, height: 630, fit: 'cover', format: 'jpg', quality: 82 })
+  : undefined;
+
+const hasBody =
+  sections.length > 0 ||
+  total > 0 ||
+  (p.gallery?.length ?? 0) > 0 ||
+  !!p.statusNote ||
+  sources.length > 0 ||
+  (p.links?.length ?? 0) > 0;
+
+const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd()}…` : p.summary;
+---
+
+<Base title={p.title} description={description} ogImage={og?.src} type="article">
+  <article class="project">
+    <header class="container p-head">
+      <nav class="crumbs mono" aria-label="Breadcrumb">
+        <a class="link link--quiet" href="/#work">
+          <span class="arrow arrow--w" aria-hidden="true">←</span>
+          {ui.project.allWork}
+        </a>
+      </nav>
+      <div class="p-head__grid">
+        <div class="p-head__title">
+          <h1>{p.title}</h1>
+          <div class="p-head__tags">
+            <StatusTag status={p.status} />
+            {p.workingTitle && <span class="tag mono">{ui.project.workingTitle}</span>}
+          </div>
+        </div>
+        <p class="p-head__summary">{p.summary}</p>
+      </div>
+    </header>
+
+    <div class="container p-cover">
+      <Media
+        item={p.cover}
+        mode="preview"
+        priority
+        vtName={`cover-${p.slug}`}
+        sizes="(min-width: 1440px) 1328px, 100vw"
+        aspectSmall="4 / 3"
+      />
+    </div>
+
+    <div class="container p-meta">
+      <MetaList project={p} columns />
+    </div>
+
+    {hasBody && (
+    <div class="container p-body">
+      {
+        firstSection && (
+          <section id={firstSection.id} class="p-section" aria-labelledby={`h-${firstSection.id}`}>
+            <h2 id={`h-${firstSection.id}`} class="p-section__head mono">
+              {firstSection.heading}
+            </h2>
+            <div class="p-section__content prose" data-reveal>
+              {firstSection.paragraphs?.map((t) => <p>{t}</p>)}
+              {firstSection.list &&
+                (firstSection.list.ordered ? (
+                  <ol>{firstSection.list.items.map((t) => <li>{t}</li>)}</ol>
+                ) : (
+                  <ul>{firstSection.list.items.map((t) => <li>{t}</li>)}</ul>
+                ))}
+              {firstSection.footnote && <p class="footnote">{firstSection.footnote}</p>}
+            </div>
+          </section>
+        )
+      }
+
+      {
+        total > 0 && (
+          <section id="progress" class="p-section p-section--wide" aria-labelledby="h-progress">
+            <h2 id="h-progress" class="p-section__head mono">
+              {ui.project.progress}
+              <span class="p-section__count">{ui.count.update(total)}</span>
+            </h2>
+            <div class="p-section__content">
+              <p class="progress__intro">{ui.project.progressIntro}</p>
+              <ol class="timeline" role="list">
+                {updates.map((u, n) => (
+                  <li id={u.id} class="tl">
+                    <div class="tl__meta mono">
+                      <span class="tl__index">
+                        {pad(n + 1)} / {pad(total)}
+                      </span>
+                      <time datetime={u.date}>{formatDate(u.date)}</time>
+                      {u.label && <span class="tl__label">{u.label}</span>}
+                    </div>
+                    {u.media && (
+                      <div class="tl__media" data-reveal>
+                        <Media item={u.media} mode="player" sizes="(min-width: 1440px) 1000px, (min-width: 1000px) 72vw, 100vw" />
+                      </div>
+                    )}
+                    <div class="tl__text" data-reveal>
+                      <h3 class="tl__title">{u.title}</h3>
+                      {u.body.map((t) => (
+                        <p>{t}</p>
+                      ))}
+                      <div class="tl__foot">
+                        {u.tools && u.tools.length > 0 && <p class="tl__tools mono">{u.tools.join(' · ')}</p>}
+                        {u.sourceUrl && (
+                          <a class="link link--quiet tl__source" href={u.sourceUrl} target="_blank" rel="noopener">
+                            {ui.journal.viewPost}
+                            <span class="arrow arrow--ne" aria-hidden="true">
+                              ↗
+                            </span>
+                            <span class="visually-hidden">on X (opens in a new tab)</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </section>
+        )
+      }
+
+      {
+        restSections.map((s) => (
+          <section id={s.id} class="p-section" aria-labelledby={`h-${s.id}`}>
+            <h2 id={`h-${s.id}`} class="p-section__head mono">
+              {s.heading}
+            </h2>
+            <div class="p-section__content prose" data-reveal>
+              {s.paragraphs?.map((t) => (
+                <p>{t}</p>
+              ))}
+              {s.list &&
+                (s.list.ordered ? (
+                  <ol>
+                    {s.list.items.map((t) => (
+                      <li>{t}</li>
+                    ))}
+                  </ol>
+                ) : (
+                  <ul>
+                    {s.list.items.map((t) => (
+                      <li>{t}</li>
+                    ))}
+                  </ul>
+                ))}
+              {s.footnote && <p class="footnote">{s.footnote}</p>}
+            </div>
+          </section>
+        ))
+      }
+
+      {
+        p.gallery && p.gallery.length > 0 && (
+          <section id="media" class="p-section p-section--wide" aria-labelledby="h-media">
+            <h2 id="h-media" class="p-section__head mono">
+              {ui.project.gallery}
+            </h2>
+            <div class="p-section__content gallery-grid">
+              {p.gallery.map((m) => (
+                <Media item={m} mode={m.video ? 'player' : 'still'} sizes="(min-width: 1000px) 36vw, 100vw">
+                  {m.caption && (
+                    <figcaption slot="caption" class="gallery-grid__caption">
+                      {m.caption}
+                    </figcaption>
+                  )}
+                </Media>
+              ))}
+            </div>
+          </section>
+        )
+      }
+
+      {
+        p.statusNote && (
+          <section id="status" class="p-section" aria-labelledby="h-status">
+            <h2 id="h-status" class="p-section__head mono">
+              {ui.project.status}
+            </h2>
+            <div class="p-section__content status-block" data-reveal>
+              <StatusTag status={p.status} />
+              <p>{p.statusNote}</p>
+            </div>
+          </section>
+        )
+      }
+
+      {
+        (sources.length > 0 || (p.links && p.links.length > 0)) && (
+          <section id="sources" class="p-section" aria-labelledby="h-sources">
+            <h2 id="h-sources" class="p-section__head mono">
+              {sources.length > 0 ? ui.project.sources : ui.project.links}
+            </h2>
+            <div class="p-section__content">
+              <ul class="sources" role="list">
+                {sources.map((s) => (
+                  <li>
+                    <a class="sources__item" href={s.url} target="_blank" rel="noopener">
+                      <time class="mono" datetime={s.date}>
+                        {formatDate(s.date)}
+                      </time>
+                      <span class="sources__title">{s.title}</span>
+                      <span class="sources__url mono">{s.url.replace(/^https?:\/\/(www\.)?/, '')}</span>
+                      <span class="arrow arrow--ne" aria-hidden="true">
+                        ↗
+                      </span>
+                    </a>
+                  </li>
+                ))}
+                {p.links?.map((l) => (
+                  <li>
+                    <a class="sources__item" href={l.url} target="_blank" rel="noopener">
+                      <span class="mono">Link</span>
+                      <span class="sources__title">{l.label}</span>
+                      <span class="sources__url mono">{l.url.replace(/^https?:\/\/(www\.)?/, '')}</span>
+                      <span class="arrow arrow--ne" aria-hidden="true">
+                        ↗
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        )
+      }
+    </div>
+    )}
+
+    <nav class="container p-nav" aria-label="Project navigation">
+      <a class="p-nav__link" href="/#work">
+        <span class="mono p-nav__label">
+          <span class="arrow arrow--w" aria-hidden="true">←</span>
+          {ui.project.allWork}
+        </span>
+        <span class="p-nav__title">{ui.sections.work}</span>
+      </a>
+      {
+        next ? (
+          <a class="p-nav__link p-nav__link--next" href={`/work/${next.slug}/`}>
+            <span class="mono p-nav__label">
+              {ui.project.next}
+              <span class="arrow arrow--e" aria-hidden="true">
+                →
+              </span>
+            </span>
+            <span class="p-nav__title">{next.title}</span>
+          </a>
+        ) : (
+          <a class="p-nav__link p-nav__link--next" href={site.xUrl} target="_blank" rel="noopener me">
+            <span class="mono p-nav__label">
+              {ui.hero.followX}
+              <span class="arrow arrow--ne" aria-hidden="true">
+                ↗
+              </span>
+            </span>
+            <span class="p-nav__title">{site.handle}</span>
+          </a>
+        )
+      }
+    </nav>
+  </article>
+</Base>
+
+<style>
+  /* ── Head ── */
+  .p-head {
+    padding-top: clamp(1.5rem, 0.8rem + 3vw, 3.5rem);
+  }
+  .crumbs {
+    margin-bottom: clamp(2rem, 1rem + 4vw, 4.5rem);
+  }
+  .crumbs .link {
+    min-height: 32px;
+  }
+  .p-head__grid {
+    display: grid;
+    gap: 1.75rem var(--gap);
+    align-items: end;
+  }
+  @media (min-width: 1000px) {
+    .p-head__grid {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+    .p-head__title {
+      grid-column: 1 / span 7;
+    }
+    .p-head__summary {
+      grid-column: 8 / -1;
+    }
+  }
+  h1 {
+    font-size: var(--text-display);
+    font-weight: 500;
+    letter-spacing: -0.045em;
+    line-height: 0.95;
+  }
+  .p-head__tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+    margin-top: 1.5rem;
+  }
+  .tag {
+    color: var(--ink-3);
+    padding: 0.2rem 0.55rem;
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+  }
+  .p-head__summary {
+    color: var(--ink-2);
+    font-size: var(--text-md);
+    line-height: 1.6;
+    max-width: 50ch;
+  }
+
+  .p-cover {
+    margin-top: clamp(2.5rem, 1.5rem + 3vw, 4rem);
+  }
+  .p-meta {
+    margin-top: 1.5rem;
+  }
+
+  /* ── Body sections: label left, content right ── */
+  .p-body {
+    margin-top: clamp(4rem, 2.5rem + 5vw, 8rem);
+    display: grid;
+    gap: clamp(4rem, 2.5rem + 4vw, 7rem);
+  }
+  .p-section {
+    display: grid;
+    gap: 1.25rem var(--gap);
+    scroll-margin-top: calc(var(--header-h) + 1rem);
+  }
+  @media (min-width: 1000px) {
+    .p-section {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+    .p-section__head {
+      grid-column: 1 / span 3;
+    }
+    .p-section__content {
+      grid-column: 4 / span 7;
+    }
+    .p-section--wide .p-section__content {
+      grid-column: 4 / -1;
+    }
+  }
+  .p-section__head {
+    font: inherit;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--ink);
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--line);
+    align-self: start;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .p-section__count {
+    color: var(--ink-3);
+  }
+  @media (min-width: 1000px) {
+    .p-section__head {
+      position: sticky;
+      top: calc(var(--header-h) + 1.5rem);
+    }
+  }
+
+  .prose {
+    font-size: var(--text-md);
+    line-height: 1.7;
+    color: var(--ink-2);
+  }
+  .prose > * + * {
+    margin-top: 1.1em;
+  }
+  .prose p:first-child {
+    color: var(--ink);
+    font-size: var(--text-xl);
+    line-height: 1.35;
+    letter-spacing: -0.015em;
+  }
+  .prose ol,
+  .prose ul {
+    list-style: none;
+    display: grid;
+    gap: 0;
+    border-top: 1px solid var(--line);
+  }
+  .prose li {
+    position: relative;
+    padding: 1rem 0 1rem 3rem;
+    border-bottom: 1px solid var(--line);
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+  .prose ol {
+    counter-reset: step;
+  }
+  .prose ol li {
+    counter-increment: step;
+  }
+  .prose ol li::before {
+    content: counter(step, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 1.15rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--ink-3);
+  }
+  .prose ul li::before {
+    content: '';
+    position: absolute;
+    left: 0.15rem;
+    top: 1.75rem;
+    width: 14px;
+    height: 1px;
+    background: var(--ink-3);
+  }
+  .footnote {
+    font-size: 0.875rem;
+    color: var(--ink-3);
+  }
+
+  /* ── Timeline ── */
+  .progress__intro {
+    color: var(--ink-3);
+    font-size: 0.9375rem;
+    margin-bottom: 2rem;
+  }
+  .timeline {
+    list-style: none;
+    display: grid;
+    gap: clamp(3.5rem, 2rem + 4vw, 6rem);
+  }
+  .tl {
+    display: grid;
+    gap: 1rem;
+    scroll-margin-top: calc(var(--header-h) + 1.5rem);
+  }
+  .tl__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 1.25rem;
+    color: var(--ink-3);
+  }
+  .tl__index {
+    color: var(--ink-3);
+  }
+  .tl__label {
+    color: var(--ink-2);
+  }
+  .tl__text {
+    color: var(--ink-2);
+    max-width: 62ch;
+    margin-top: 0.5rem;
+  }
+  .tl__text p + p {
+    margin-top: 0.7rem;
+  }
+  .tl__title {
+    font-size: var(--text-xl);
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 0.8rem;
+  }
+  .tl__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    margin-top: 1.25rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--line);
+  }
+  .tl__tools {
+    color: var(--ink-3);
+    text-transform: none;
+  }
+  .tl__source {
+    font-size: 0.875rem;
+    min-height: 32px;
+  }
+  .tl:target .tl__meta {
+    color: var(--ink);
+  }
+  .tl:target .tl__index {
+    color: var(--accent);
+  }
+
+  /* ── Gallery ── */
+  .gallery-grid {
+    display: grid;
+    gap: var(--gap);
+  }
+  @media (min-width: 700px) {
+    .gallery-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .gallery-grid__caption {
+    margin-top: 0.6rem;
+    font-size: 0.875rem;
+    color: var(--ink-3);
+  }
+
+  /* ── Status ── */
+  .status-block {
+    display: grid;
+    gap: 1rem;
+    justify-items: start;
+  }
+  .status-block p {
+    font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
+    line-height: 1.45;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    max-width: 46ch;
+  }
+
+  /* ── Sources ── */
+  .sources {
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+  .sources__item {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr) auto;
+    gap: 0.25rem 1rem;
+    align-items: baseline;
+    padding-block: 0.9rem;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-2);
+  }
+  .sources__item time {
+    color: var(--ink-3);
+  }
+  .sources__title {
+    transition: color var(--t-fast) var(--ease);
+  }
+  .sources__url {
+    grid-column: 2;
+    grid-row: 2;
+    color: var(--ink-3);
+    text-transform: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sources__item .arrow {
+    grid-column: 3;
+    grid-row: 1;
+    color: var(--ink-3);
+  }
+  .sources__item:hover .sources__title {
+    color: var(--ink);
+  }
+  @media (max-width: 520px) {
+    .sources__item {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+    .sources__item time {
+      grid-column: 1;
+    }
+    .sources__title {
+      grid-column: 1;
+    }
+    .sources__url {
+      grid-column: 1;
+      grid-row: auto;
+    }
+    .sources__item .arrow {
+      grid-column: 2;
+    }
+  }
+
+  /* ── Bottom nav ── */
+  .p-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gap);
+    margin-top: var(--section-space);
+  }
+  .p-nav__link {
+    display: grid;
+    gap: 0.6rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line-2);
+  }
+  .p-nav__link--next {
+    text-align: right;
+    justify-items: end;
+  }
+  .p-nav__label {
+    display: inline-flex;
+    gap: 0.5rem;
+    color: var(--ink-3);
+  }
+  .p-nav__title {
+    font-size: var(--text-xl);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    transition: color var(--t-fast) var(--ease);
+  }
+  .p-nav__link:hover .p-nav__label {
+    color: var(--ink);
+  }
+</style>

@@ -1,0 +1,350 @@
+---
+/**
+ * The home-page spread for the featured project:
+ * title + facts, then its progress as an editorial set of frames
+ * (newest largest) and a dated rail of every update.
+ */
+import Media from './Media.astro';
+import MetaList from './MetaList.astro';
+import StatusTag from './StatusTag.astro';
+import type { Project } from '../data/types';
+import { ui } from '../data/ui';
+import { getUpdatesFor } from '../lib/content';
+import { formatDateNumeric, formatDate } from '../lib/format';
+
+interface Props {
+  project: Project;
+}
+const { project: p } = Astro.props;
+const href = `/work/${p.slug}/`;
+
+const timeline = getUpdatesFor(p.slug); // oldest → newest
+const frames = [...timeline]
+  .reverse()
+  .filter((u) => u.media?.image)
+  .slice(0, 4);
+const spread = frames.length >= 3;
+---
+
+<article class="feature" aria-labelledby={`feature-${p.slug}`}>
+  <header class="feature__head">
+    <div class="feature__title-wrap" data-reveal>
+      <h3 id={`feature-${p.slug}`} class="feature__title">
+        <a href={href}>{p.title}</a>
+      </h3>
+      <div class="feature__tags">
+        <StatusTag status={p.status} />
+        {p.workingTitle && <span class="tag mono">{ui.project.workingTitle}</span>}
+      </div>
+    </div>
+    <div class="feature__info" data-reveal style="--reveal-delay:60ms">
+      <p class="feature__summary">{p.summary}</p>
+      <MetaList project={p} />
+      <a class="link feature__cta" href={href}>
+        {ui.project.view}
+        <span class="arrow arrow--e" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </header>
+
+  {
+    spread ? (
+      <div class:list={['gallery', `gallery--${frames.length}`]}>
+        {frames.map((u, i) => (
+          <a
+            class:list={['gallery__item', `gallery__item--${i + 1}`]}
+            href={`${href}#${u.id}`}
+            data-reveal
+            style={`--reveal-delay:${i * 50}ms`}
+          >
+            <Media
+              item={u.media!}
+              mode="still"
+              class={i === 0 ? 'media--fill' : undefined}
+              sizes={
+                i === 0
+                  ? '(min-width: 1440px) 880px, (min-width: 900px) 64vw, 100vw'
+                  : '(min-width: 1440px) 432px, (min-width: 900px) 32vw, 50vw'
+              }
+            >
+              <figcaption slot="caption" class="gallery__caption">
+                <time class="mono" datetime={u.date}>
+                  {formatDateNumeric(u.date)}
+                </time>
+                <span class="gallery__label">{u.label ?? u.title}</span>
+              </figcaption>
+            </Media>
+          </a>
+        ))}
+
+        {frames.length === 4 && (
+          <a class="gallery__more" href={href} data-reveal>
+            <span class="mono gallery__more-count">{ui.count.update(timeline.length)}</span>
+            <span class="gallery__more-cta">
+              {ui.project.view}
+              <span class="arrow arrow--e" aria-hidden="true">
+                →
+              </span>
+            </span>
+          </a>
+        )}
+
+        {timeline.length > 0 && (
+          <nav class="rail" aria-label={`${p.title} — ${ui.project.progress}`} data-reveal>
+            <p class="rail__head mono">
+              <span>{ui.project.progress}</span>
+              <span class="rail__count">{ui.count.update(timeline.length)}</span>
+            </p>
+            <ol class="rail__list" role="list">
+              {timeline.map((u) => (
+                <li>
+                  <a class="rail__item" href={`${href}#${u.id}`}>
+                    <time class="mono rail__date" datetime={u.date}>
+                      {formatDate(u.date)}
+                    </time>
+                    <span class="rail__title">{u.title}</span>
+                    <span class="arrow arrow--e rail__arrow" aria-hidden="true">
+                      →
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ol>
+            {p.statusNote && <p class="rail__note">{p.statusNote}</p>}
+          </nav>
+        )}
+      </div>
+    ) : (
+      <a class="gallery__single" href={href} data-reveal>
+        <Media item={p.cover} mode="still" sizes="(min-width: 1440px) 1328px, 100vw" />
+      </a>
+    )
+  }
+</article>
+
+<style>
+  /* ── Head ── */
+  .feature__head {
+    display: grid;
+    gap: 2rem var(--gap);
+    margin-bottom: clamp(2.5rem, 1.5rem + 3vw, 4rem);
+  }
+  @media (min-width: 900px) {
+    .feature__head {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+    .feature__title-wrap {
+      grid-column: 1 / span 6;
+    }
+    .feature__info {
+      grid-column: 8 / -1;
+    }
+  }
+  .feature__title {
+    font-size: var(--text-2xl);
+    font-weight: 500;
+    letter-spacing: -0.035em;
+    line-height: 1;
+  }
+  .feature__title a {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 2px;
+    background-position: 0 92%;
+    background-repeat: no-repeat;
+    transition: background-size var(--t-slow) var(--ease);
+  }
+  .feature__title a:hover {
+    background-size: 100% 2px;
+  }
+  .feature__tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+    margin-top: 1.25rem;
+  }
+  .tag {
+    color: var(--ink-3);
+    padding: 0.2rem 0.55rem;
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+  }
+  .feature__summary {
+    color: var(--ink-2);
+    font-size: var(--text-md);
+    line-height: 1.6;
+    margin-bottom: 1.75rem;
+    max-width: 52ch;
+  }
+  .feature__cta {
+    margin-top: 1.5rem;
+    font-size: 0.9375rem;
+  }
+
+  /* ── Gallery ── */
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem var(--gap);
+  }
+  .gallery__item {
+    display: block;
+    color: inherit;
+  }
+  .gallery__item--1 {
+    grid-column: 1 / -1;
+  }
+  .rail {
+    grid-column: 1 / -1;
+  }
+  /* 3 frames on small screens: the third spans full width */
+  .gallery--3 .gallery__item--3 {
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: 900px) {
+    .gallery {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      row-gap: clamp(2.5rem, 1.5rem + 2vw, 3.5rem);
+    }
+    .gallery__item--1 {
+      grid-column: 1 / span 8;
+      grid-row: 1 / span 2;
+      display: flex;
+    }
+    .gallery__item--2 {
+      grid-column: 9 / -1;
+      grid-row: 1;
+    }
+    .gallery__item--3 {
+      grid-column: 9 / -1 !important;
+      grid-row: 2;
+      align-self: end;
+    }
+    .gallery__item--4 {
+      grid-column: 1 / span 4;
+      grid-row: 3;
+    }
+    .rail {
+      grid-column: 6 / -1;
+      grid-row: 3;
+    }
+    .gallery--3 .rail {
+      grid-column: 1 / -1;
+    }
+    /* The big frame stretches to match the two stacked frames beside it */
+    .gallery__item--1 :global(.media--fill) {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .gallery__item--1 :global(.media--fill .media__frame) {
+      flex: 1;
+      aspect-ratio: auto;
+      min-height: 320px;
+    }
+  }
+
+  .gallery__caption {
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    margin-top: 0.8rem;
+    font-size: 0.875rem;
+  }
+  .gallery__caption time {
+    color: var(--ink-3);
+  }
+  .gallery__label {
+    color: var(--ink-2);
+    transition: color var(--t-fast) var(--ease);
+  }
+  .gallery__item:hover .gallery__label {
+    color: var(--ink);
+  }
+
+  .gallery__single {
+    display: block;
+  }
+
+  /* Fills the empty cell on small screens so the 2-up grid stays even */
+  .gallery__more {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-self: start;
+    aspect-ratio: 16 / 9;
+    padding: 0.85rem;
+    border-radius: var(--radius);
+    box-shadow: inset 0 0 0 1px var(--line-2);
+    color: var(--ink);
+    font-size: 0.875rem;
+    transition: background-color var(--t) var(--ease);
+  }
+  .gallery__more:hover {
+    background: var(--bg-raised);
+  }
+  .gallery__more-count {
+    color: var(--ink-3);
+  }
+  .gallery__more-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  @media (min-width: 900px) {
+    .gallery__more {
+      display: none;
+    }
+  }
+
+  /* ── Rail ── */
+  .rail__head {
+    display: flex;
+    justify-content: space-between;
+    color: var(--ink-3);
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .rail__list {
+    list-style: none;
+  }
+  .rail__item {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 1rem;
+    padding-block: 0.85rem;
+    border-bottom: 1px solid var(--line);
+    transition: color var(--t-fast) var(--ease);
+  }
+  .rail__date {
+    color: var(--ink-3);
+  }
+  .rail__title {
+    color: var(--ink-2);
+    transition: color var(--t-fast) var(--ease);
+  }
+  .rail__arrow {
+    color: var(--ink-3);
+  }
+  .rail__item:hover .rail__title,
+  .rail__item:focus-visible .rail__title {
+    color: var(--ink);
+  }
+  .rail__note {
+    margin-top: 1.25rem;
+    color: var(--ink-3);
+    font-size: 0.875rem;
+    max-width: 60ch;
+  }
+  @media (max-width: 480px) {
+    .rail__item {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.25rem 1rem;
+    }
+    .rail__date {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

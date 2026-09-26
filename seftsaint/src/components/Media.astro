@@ -1,0 +1,480 @@
+---
+/**
+ * Media frame — image, video, or a quiet placeholder.
+ *
+ * mode="still"    image only (use inside links / cards)
+ * mode="preview"  short muted loop; plays only while visible, on devices with a
+ *                 mouse and no reduced-motion preference. Elsewhere: poster + play button.
+ * mode="player"   poster + play button → loads the video on click, with controls.
+ *
+ * No file? The frame falls back to the poster, then to a placeholder that links
+ * to the original post. Nothing on the page breaks.
+ */
+import { Picture } from 'astro:assets';
+import type { MediaItem } from '../data/types';
+import { resolveMedia } from '../lib/media';
+import { ui } from '../data/ui';
+
+interface Props {
+  item: MediaItem;
+  mode?: 'still' | 'preview' | 'player';
+  /** `sizes` attribute — how wide the frame is at each breakpoint. */
+  sizes?: string;
+  /** Above-the-fold image: load eagerly with high priority. */
+  priority?: boolean;
+  /** CSS aspect ratio on small screens (< 700px). */
+  aspectSmall?: string;
+  /** Corner crop marks (hero only). */
+  marks?: boolean;
+  /** view-transition-name for page-to-page morphing. Must be unique per page. */
+  vtName?: string;
+  class?: string;
+}
+
+const {
+  item,
+  mode = 'still',
+  sizes = '(min-width: 1440px) 1328px, 100vw',
+  priority = false,
+  aspectSmall,
+  marks = false,
+  vtName,
+  class: className,
+} = Astro.props;
+
+const m = resolveMedia(item);
+const hasVideo = mode !== 'still' && !!m.video;
+const showWatch = mode !== 'still' && !m.video && !!item.sourceUrl;
+const aspect = item.aspect ?? '16 / 9';
+const style = [
+  `--aspect:${aspect}`,
+  `--aspect-sm:${aspectSmall ?? aspect}`,
+  item.focus ? `--focus:${item.focus}` : '',
+  vtName ? `view-transition-name:${vtName}` : '',
+]
+  .filter(Boolean)
+  .join(';');
+
+const dev = import.meta.env.DEV;
+const devNotes = [
+  item.interim ? 'interim frame' : '',
+  m.missingImage ? `missing ${m.missingImage}` : '',
+  m.missingVideo && mode !== 'still' ? `missing ${m.missingVideo}` : '',
+].filter(Boolean);
+---
+
+<figure
+  class:list={['media', `media--${mode}`, { 'media--placeholder': !m.image }, className]}
+  style={style}
+  data-media={hasVideo ? mode : undefined}
+  data-state="idle"
+>
+  <div class="media__frame">
+    {
+      m.image ? (
+        <Picture
+          src={m.image}
+          alt={item.alt}
+          formats={['avif', 'webp']}
+          widths={[480, 768, 1024, 1280].filter((w) => w <= (m.image?.width ?? 1280))}
+          sizes={sizes}
+          loading={priority ? 'eager' : 'lazy'}
+          decoding={priority ? 'sync' : 'async'}
+          fetchpriority={priority ? 'high' : 'auto'}
+          quality={priority ? 'high' : 'mid'}
+          class="media__img"
+          pictureAttributes={{ class: 'media__picture' }}
+        />
+      ) : (
+        <div class="media__placeholder" role="img" aria-label={item.alt}>
+          <span class="media__placeholder-label mono">{ui.media.pending}</span>
+        </div>
+      )
+    }
+
+    {
+      hasVideo && (
+        <video
+          class="media__video"
+          data-src={m.video}
+          muted
+          playsinline
+          preload="none"
+          disablepictureinpicture={mode === 'preview'}
+          loop={mode === 'preview'}
+          aria-hidden={mode === 'preview' ? 'true' : undefined}
+          aria-label={mode === 'player' ? item.alt : undefined}
+          tabindex={mode === 'preview' ? '-1' : undefined}
+        />
+      )
+    }
+
+    {
+      hasVideo && mode === 'preview' && (
+        <button
+          class="media__toggle"
+          type="button"
+          data-toggle
+          data-label-play={ui.media.playPreview}
+          data-label-pause={ui.media.pausePreview}
+          aria-label={ui.media.playPreview}
+        >
+          <svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M5 3.5v9l7.5-4.5z" fill="currentColor" />
+          </svg>
+          <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M4.5 3.5h2.5v9H4.5zM9 3.5h2.5v9H9z" fill="currentColor" />
+          </svg>
+        </button>
+      )
+    }
+
+    {
+      hasVideo && mode === 'player' && (
+        <button class="media__play" type="button" data-play aria-label={`${ui.media.playVideo}: ${item.alt}`}>
+          <span class="media__play-ring" aria-hidden="true">
+            <svg viewBox="0 0 16 16">
+              <path d="M5.5 3.5v9l7-4.5z" fill="currentColor" />
+            </svg>
+          </span>
+          <span class="media__play-label mono" aria-hidden="true">{ui.media.play}</span>
+        </button>
+      )
+    }
+
+    {
+      showWatch && (
+        <a class="media__watch mono" href={item.sourceUrl} target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M5.5 3.5v9l7-4.5z" fill="currentColor" />
+          </svg>
+          {ui.media.watchOnX}
+          <span class="arrow arrow--ne" aria-hidden="true">↗</span>
+          <span class="visually-hidden">: {item.caption ?? item.alt} (opens in a new tab)</span>
+        </a>
+      )
+    }
+
+    {
+      hasVideo && item.sourceUrl && (
+        <a class="media__fallback mono" href={item.sourceUrl} target="_blank" rel="noopener">
+          {ui.media.unavailable} — {ui.media.watchOnX} ↗
+        </a>
+      )
+    }
+
+    {
+      marks && (
+        <>
+          <span class="mark mark--tl" aria-hidden="true" />
+          <span class="mark mark--tr" aria-hidden="true" />
+          <span class="mark mark--bl" aria-hidden="true" />
+          <span class="mark mark--br" aria-hidden="true" />
+        </>
+      )
+    }
+
+    {
+      dev && devNotes.length > 0 && (
+        <span class="media__dev mono" title="Only visible in npm run dev">
+          {devNotes.join(' · ')}
+        </span>
+      )
+    }
+  </div>
+  <slot name="caption" />
+</figure>
+
+<style>
+  .media {
+    position: relative;
+    margin: 0;
+  }
+  .media__frame {
+    position: relative;
+    aspect-ratio: var(--aspect-sm, 16 / 9);
+    background: var(--frame);
+    overflow: clip;
+    border-radius: var(--radius);
+    isolation: isolate;
+  }
+  @media (min-width: 700px) {
+    .media__frame {
+      aspect-ratio: var(--aspect, 16 / 9);
+    }
+  }
+  /* Hairline inside the frame keeps dark images from dissolving into the page */
+  .media__frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px rgb(236 233 226 / 0.06);
+    pointer-events: none;
+  }
+
+  .media__picture,
+  .media__img,
+  .media__video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .media__img,
+  .media__video {
+    object-fit: cover;
+    object-position: var(--focus, center);
+  }
+  .media__img {
+    transition:
+      transform 700ms var(--ease),
+      opacity var(--t-slow) var(--ease);
+  }
+  :global(a:hover) .media__img,
+  :global(a:focus-visible) .media__img {
+    transform: scale(1.02);
+  }
+
+  .media__video {
+    z-index: 1;
+    opacity: 0;
+    transition: opacity var(--t-slow) var(--ease);
+    background: transparent;
+  }
+  .media[data-state='playing'] .media__video,
+  .media[data-state='paused'] .media__video {
+    opacity: 1;
+  }
+  .media:has(.mark) .media__watch,
+  .media:has(.mark) .media__toggle {
+    bottom: 24px;
+  }
+  .media:has(.mark) .media__watch {
+    left: 24px;
+  }
+  .media:has(.mark) .media__toggle {
+    right: 24px;
+  }
+
+  /* Placeholder: fine grid, quiet label */
+  .media__placeholder {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background-color: var(--frame);
+    background-image:
+      linear-gradient(rgb(236 233 226 / 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(236 233 226 / 0.035) 1px, transparent 1px);
+    background-size: 32px 32px;
+    background-position: center;
+  }
+  .media__placeholder-label {
+    color: var(--ink-3);
+    padding: 0.4rem 0.7rem;
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+    background: var(--bg);
+  }
+
+  /* Preview toggle (pause / play) */
+  .media__toggle {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 4;
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--ink);
+    background: rgb(13 14 15 / 0.55);
+    box-shadow: inset 0 0 0 1px rgb(236 233 226 / 0.18);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    transition:
+      background-color var(--t-fast) var(--ease),
+      opacity var(--t) var(--ease);
+  }
+  .media__toggle:hover {
+    background: rgb(13 14 15 / 0.8);
+  }
+  .media__toggle svg {
+    width: 14px;
+    height: 14px;
+  }
+  .media__toggle .icon-pause {
+    display: none;
+  }
+  .media[data-state='playing'] .media__toggle .icon-pause {
+    display: block;
+  }
+  .media[data-state='playing'] .media__toggle .icon-play {
+    display: none;
+  }
+  /* On pointer devices the toggle stays quiet until hover / focus */
+  @media (hover: hover) and (pointer: fine) {
+    .media[data-state='playing'] .media__toggle {
+      opacity: 0;
+    }
+    .media:hover .media__toggle,
+    .media__toggle:focus-visible {
+      opacity: 1 !important;
+    }
+  }
+  .media[data-state='loading'] .media__toggle {
+    opacity: 1;
+  }
+
+  /* Big play button (player mode) */
+  .media__play {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 0.75rem;
+    color: var(--ink);
+    background: linear-gradient(180deg, transparent 40%, rgb(0 0 0 / 0.28));
+    transition: opacity var(--t) var(--ease);
+  }
+  .media__play-ring {
+    width: 64px;
+    height: 64px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgb(13 14 15 / 0.5);
+    box-shadow: inset 0 0 0 1px rgb(236 233 226 / 0.3);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    transition:
+      transform var(--t) var(--ease),
+      background-color var(--t) var(--ease);
+  }
+  .media__play-ring svg {
+    width: 18px;
+    height: 18px;
+    margin-left: 2px;
+  }
+  .media__play:hover .media__play-ring {
+    transform: scale(1.06);
+    background: rgb(13 14 15 / 0.72);
+  }
+  .media__play-label {
+    color: var(--ink-2);
+  }
+  .media--player:not([data-state='idle']) .media__play {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* "Watch on X" pill when there is no local video */
+  .media__watch {
+    position: absolute;
+    left: 12px;
+    bottom: 12px;
+    z-index: 4;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 36px;
+    padding: 0 0.85rem 0 0.7rem;
+    border-radius: 999px;
+    color: var(--ink);
+    background: rgb(13 14 15 / 0.6);
+    box-shadow: inset 0 0 0 1px rgb(236 233 226 / 0.18);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    transition: background-color var(--t-fast) var(--ease);
+  }
+  .media__watch svg {
+    width: 11px;
+    height: 11px;
+  }
+  .media__watch:hover {
+    background: rgb(13 14 15 / 0.85);
+  }
+  .media--placeholder .media__watch {
+    left: 50%;
+    bottom: auto;
+    top: calc(50% + 1.75rem);
+    transform: translateX(-50%);
+  }
+
+  /* Error fallback — shown only if a video fails to load */
+  .media__fallback {
+    display: none;
+    position: absolute;
+    left: 12px;
+    bottom: 12px;
+    z-index: 4;
+    padding: 0.45rem 0.75rem;
+    border-radius: 999px;
+    background: rgb(13 14 15 / 0.75);
+    color: var(--ink-2);
+  }
+  .media[data-state='error'] .media__fallback {
+    display: inline-flex;
+  }
+  .media[data-state='error'] .media__toggle,
+  .media[data-state='error'] .media__play,
+  .media[data-state='error'] .media__video {
+    display: none;
+  }
+
+  /* Viewfinder crop marks */
+  .mark {
+    position: absolute;
+    z-index: 5;
+    width: 10px;
+    height: 10px;
+    border-color: rgb(236 233 226 / 0.55);
+    border-style: solid;
+    border-width: 0;
+    pointer-events: none;
+  }
+  .mark--tl {
+    top: 10px;
+    left: 10px;
+    border-top-width: 1px;
+    border-left-width: 1px;
+  }
+  .mark--tr {
+    top: 10px;
+    right: 10px;
+    border-top-width: 1px;
+    border-right-width: 1px;
+  }
+  .mark--bl {
+    bottom: 10px;
+    left: 10px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+  }
+  .mark--br {
+    bottom: 10px;
+    right: 10px;
+    border-bottom-width: 1px;
+    border-right-width: 1px;
+  }
+
+  .media__dev {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 6;
+    max-width: calc(100% - 16px);
+    padding: 0.25rem 0.5rem;
+    border-radius: 2px;
+    background: #3a2f12;
+    color: #f3d98b;
+    font-size: 10px;
+    text-transform: none;
+    pointer-events: none;
+  }
+</style>

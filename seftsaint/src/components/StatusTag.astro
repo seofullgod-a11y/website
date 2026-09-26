@@ -1,0 +1,52 @@
+---
+import type { Status } from '../data/types';
+import { ui } from '../data/ui';
+
+interface Props {
+  status: Status;
+  class?: string;
+}
+const { status, class: className } = Astro.props;
+---
+
+<span class:list={['status mono', `status--${status}`, className]}>
+  <span class="status__mark" aria-hidden="true"></span>
+  {ui.status[status]}
+</span>
+
+<style>
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55em;
+    color: var(--ink-2);
+    white-space: nowrap;
+  }
+  .status__mark {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex: none;
+  }
+  /* In progress — the only status that uses the accent */
+  .status--in-progress .status__mark {
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  /* Experiment — hollow ring */
+  .status--experiment .status__mark {
+    border: 1px solid var(--ink-2);
+  }
+  /* Paused — two short bars */
+  .status--paused .status__mark {
+    width: 7px;
+    border-radius: 0;
+    background:
+      linear-gradient(var(--ink-2), var(--ink-2)) left / 2px 100% no-repeat,
+      linear-gradient(var(--ink-2), var(--ink-2)) right / 2px 100% no-repeat;
+  }
+  /* Released — solid ivory */
+  .status--released .status__mark {
+    background: var(--ink);
+  }
+</style>

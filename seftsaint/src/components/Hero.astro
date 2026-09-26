@@ -1,0 +1,192 @@
+---
+import Media from './Media.astro';
+import StatusTag from './StatusTag.astro';
+import { site } from '../data/site';
+import { ui } from '../data/ui';
+import type { Project } from '../data/types';
+import { getUpdatesFor } from '../lib/content';
+import { formatDate } from '../lib/format';
+
+interface Props {
+  project?: Project;
+}
+const { project } = Astro.props;
+
+const updates = project ? getUpdatesFor(project.slug) : [];
+const lastDate = updates.at(-1)?.date ?? project?.period?.end ?? project?.period?.start;
+const [line1, line2] = site.hero.headline;
+---
+
+<section class="hero container" aria-labelledby="hero-title">
+  <div class="hero__grid">
+    <div class="hero__text">
+      <p class="hero__kicker mono">{site.hero.kicker}</p>
+      <h1 id="hero-title" class="hero__title">
+        <span class="hero__line">{line1}</span>
+        {line2 && <span class="hero__line serif-italic">{line2}</span>}
+      </h1>
+      <p class="hero__intro">{site.hero.intro}</p>
+      <div class="hero__actions">
+        <a class="btn" href="#work">
+          {ui.hero.viewWork}
+          <span class="arrow arrow--s" aria-hidden="true">↓</span>
+        </a>
+        <a class="link link--quiet hero__x" href={site.xUrl} target="_blank" rel="noopener me">
+          {ui.hero.followX}
+          <span class="arrow arrow--ne" aria-hidden="true">↗</span>
+          <span class="visually-hidden">(opens in a new tab)</span>
+        </a>
+      </div>
+    </div>
+
+    {
+      project && (
+        <div class="hero__media">
+          <Media
+            item={project.cover}
+            mode="preview"
+            priority
+            marks
+            vtName={`cover-${project.slug}`}
+            sizes="(min-width: 1440px) 776px, (min-width: 1024px) 56vw, 100vw"
+            aspectSmall="4 / 3"
+          />
+          <a class="hero__caption" href={`/work/${project.slug}/`}>
+            <span class="mono hero__caption-label">{ui.hero.latest}</span>
+            <span class="hero__caption-title">{project.title}</span>
+            <StatusTag status={project.status} class="hero__caption-status" />
+            {lastDate && (
+              <time class="mono hero__caption-date" datetime={lastDate}>
+                {formatDate(lastDate)}
+              </time>
+            )}
+            <span class="arrow arrow--e hero__caption-arrow" aria-hidden="true">
+              →
+            </span>
+          </a>
+        </div>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding-top: clamp(1.75rem, 0.8rem + 4vw, 4.5rem);
+  }
+  .hero__grid {
+    display: grid;
+    gap: clamp(2rem, 1rem + 3vw, 3rem);
+  }
+  @media (min-width: 1024px) {
+    .hero__grid {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--gap);
+      align-items: end;
+    }
+    .hero__text {
+      grid-column: 1 / span 5;
+      padding-bottom: 3.25rem; /* aligns the text baseline with the frame, above the caption */
+    }
+    .hero__media {
+      grid-column: 6 / -1;
+    }
+  }
+
+  .hero__kicker {
+    color: var(--ink-3);
+    margin-bottom: 1.5rem;
+  }
+  .hero__title {
+    font-size: clamp(3rem, 1.6rem + 5.4vw, 5.75rem);
+    font-weight: 500;
+    line-height: 0.94;
+    letter-spacing: -0.045em;
+  }
+  .hero__line {
+    display: block;
+  }
+  .hero__line.serif-italic {
+    font-size: 1.08em;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    margin-top: 0.02em;
+  }
+  .hero__intro {
+    margin-top: 1.5rem;
+    max-width: 38ch;
+    font-size: var(--text-md);
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.5rem;
+    margin-top: 2rem;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 44px;
+    padding: 0 1.15rem;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition:
+      background-color var(--t-fast) var(--ease),
+      transform var(--t-fast) var(--ease);
+  }
+  .btn:hover {
+    background: #fff;
+  }
+  .btn:active {
+    transform: translateY(1px);
+  }
+  .hero__x {
+    font-size: 0.875rem;
+    min-height: 44px;
+  }
+
+  /* Caption row under the frame */
+  .hero__caption {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem 1.25rem;
+    flex-wrap: wrap;
+    margin-top: 0.9rem;
+    padding-block: 0.35rem;
+    color: var(--ink);
+  }
+  .hero__caption-label {
+    color: var(--ink-3);
+  }
+  .hero__caption-title {
+    font-weight: 500;
+    font-size: 0.9375rem;
+  }
+  .hero__caption-date {
+    color: var(--ink-3);
+    margin-left: auto;
+  }
+  .hero__caption-arrow {
+    color: var(--ink-2);
+  }
+  .hero__caption:hover .hero__caption-title {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+  @media (max-width: 520px) {
+    .hero__caption-date {
+      margin-left: 0;
+    }
+    .hero__caption-arrow {
+      margin-left: auto;
+    }
+  }
+</style>

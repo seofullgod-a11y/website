@@ -1,0 +1,24 @@
+---
+interface Props {
+  index?: string;
+  title: string;
+  id?: string;
+  aside?: string;
+}
+const { index, title, id, aside } = Astro.props;
+---
+
+<div class="section-head mono">
+  {index && <span class="section-head__index" aria-hidden="true">{index}</span>}
+  <h2 class="section-head__title" id={id}>{title}</h2>
+  {aside && <span class="section-head__aside">{aside}</span>}
+  <slot />
+</div>
+
+<style>
+  h2 {
+    font: inherit;
+    letter-spacing: inherit;
+    line-height: inherit;
+  }
+</style>
