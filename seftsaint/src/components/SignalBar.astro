@@ -1,0 +1,128 @@
+---
+/**
+ * Signal — one quiet band of facts under the featured world:
+ * what it's built with · what happened · who it's open to.
+ * Content: src/data/site.ts → signal. Facts only — no logos, no borrowed endorsements.
+ */
+import { site } from '../data/site';
+import { partnerHref } from '../lib/partner';
+
+const s = site.signal;
+---
+
+<section class="signal" aria-label="At a glance">
+  <div class="signal__inner">
+    <div class="signal__built" data-reveal>
+      <p class="eyebrow">{s.label}</p>
+      <ul class="signal__tools" role="list">
+        {s.tools.map((t) => <li>{t}</li>)}
+      </ul>
+    </div>
+
+    <p class="signal__statement" data-reveal style="--reveal-delay:60ms">
+      <span>{s.statement[0]}</span>
+      {s.statement[1] && <em>{s.statement[1]}</em>}
+    </p>
+
+    {
+      site.partner.enabled && (
+        <a class="signal__open eyebrow" href={partnerHref} data-reveal style="--reveal-delay:120ms">
+          <span class="signal__open-rule" aria-hidden="true" />
+          <span class="signal__open-words">
+            {s.open.map((w) => (
+              <span>{w}</span>
+            ))}
+          </span>
+        </a>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .signal {
+    border-block: 1px solid var(--line);
+  }
+  .signal__inner {
+    max-width: var(--max);
+    margin-inline: auto;
+    padding: clamp(1.75rem, 1.2rem + 1.5vw, 2.5rem) var(--gutter);
+    display: grid;
+    gap: 2rem var(--gap);
+    align-items: center;
+  }
+  @media (min-width: 1024px) {
+    .signal__inner {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 4fr) minmax(0, 3fr);
+    }
+    .signal__statement {
+      padding-inline: 2rem;
+      border-inline: 1px solid var(--line);
+    }
+    .signal__open {
+      justify-self: end;
+    }
+  }
+
+  .signal__built {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 2.25rem;
+  }
+  .signal__tools {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 2rem;
+  }
+  .signal__tools li {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+
+  .signal__statement {
+    font-family: var(--font-display);
+    font-size: clamp(1.125rem, 1rem + 0.45vw, 1.375rem);
+    font-weight: 340;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+  }
+  .signal__statement span,
+  .signal__statement em {
+    display: block;
+  }
+  .signal__statement em {
+    color: var(--ink-2);
+    font-weight: 320;
+  }
+
+  .signal__open {
+    display: inline-flex;
+    align-items: center;
+    gap: 1.25rem;
+    color: var(--ink-2);
+    transition: color var(--t) var(--ease);
+  }
+  .signal__open:hover {
+    color: var(--ink);
+  }
+  .signal__open-rule {
+    width: 1.75rem;
+    height: 1px;
+    background: currentColor;
+    opacity: 0.6;
+    transition: width var(--t) var(--ease);
+  }
+  .signal__open:hover .signal__open-rule {
+    width: 2.5rem;
+  }
+  .signal__open-words {
+    display: grid;
+    line-height: 1.7;
+  }
+</style>

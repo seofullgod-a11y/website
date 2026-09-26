@@ -1,289 +1,147 @@
 ---
+/**
+ * The lab — who is behind this, in one statement, plus the toolkit.
+ * Content: src/data/site.ts → about (statement, lead, body, toolkit).
+ */
 import { site } from '../data/site';
-import { ui } from '../data/ui';
-import { getProjects, getUpdates } from '../lib/content';
-import { formatDate } from '../lib/format';
-import { partnerHref } from '../lib/partner';
+import Arrow from './Arrow.astro';
 
-// The story so far — straight from updates.ts (oldest first) and projects.ts.
-const story = [...getUpdates()].reverse();
-const projects = getProjects();
-const uniq = (xs: readonly string[]) => [...new Set(xs)];
-const tools = uniq(projects.flatMap((p) => p.tools ?? []));
-const ai = uniq(projects.flatMap((p) => p.ai ?? []));
+const a = site.about;
+const lastLine = a.statement.at(-1);
+const firstLines = a.statement.slice(0, -1);
 ---
 
-<div class="about">
-  <div class="about__text" data-reveal>
-    <p class="about__lead">{site.about.lead}</p>
-    {site.about.body.map((p) => <p class="about__body">{p}</p>)}
-  </div>
-  <div class="about__connect" data-reveal style="--reveal-delay:60ms">
-    <p class="mono about__label">{ui.sections.connect}</p>
-    <p class="about__connect-text">{site.connect.text}</p>
-    <a class="about__handle" href={site.xUrl} target="_blank" rel="noopener me">
-      <span>{site.handle}</span>
-      <span class="arrow arrow--ne" aria-hidden="true">↗</span>
-      <span class="visually-hidden">on X (opens in a new tab)</span>
-    </a>
-    {
-      site.email && (
-        <a class="about__email link link--quiet" href={`mailto:${site.email}`}>
-          {site.email}
+<section id="about" class="lab" aria-labelledby="lab-title">
+  <div class="lab__grid">
+    <div class="lab__main" data-reveal>
+      <p class="eyebrow">{a.kicker}</p>
+      <h2 id="lab-title" class="display lab__statement">
+        {firstLines.map((l) => <span>{l}</span>)}
+        {lastLine && <em>{lastLine}</em>}
+      </h2>
+      <div class="lab__copy">
+        <p class="lab__lead">{a.lead}</p>
+        {a.body.map((t) => <p class="lab__body">{t}</p>)}
+      </div>
+    </div>
+
+    <aside class="lab__side" data-reveal style="--reveal-delay:80ms">
+      <dl class="lab__kit">
+        {
+          a.toolkit.map((g) => (
+            <div class="lab__kit-row">
+              <dt class="eyebrow">{g.label}</dt>
+              <dd>{g.items.join(' · ')}</dd>
+            </div>
+          ))
+        }
+      </dl>
+      <div class="lab__connect">
+        <a class="lab__handle" href={site.xUrl} target="_blank" rel="noopener me">
+          {site.handle}
+          <Arrow dir="ne" />
+          <span class="visually-hidden">on X (opens in a new tab)</span>
         </a>
-      )
-    }
+        {site.email && <a class="lab__mail" href={`mailto:${site.email}`}>{site.email}</a>}
+      </div>
+    </aside>
   </div>
-
-  {
-    story.length > 0 && (
-      <div class="story" data-reveal>
-        <p class="mono about__label">{ui.about.soFar}</p>
-        <ol class="story__list" role="list">
-          {story.map((u, i) => (
-            <li class="story__item" style={`--i:${i}`}>
-              <time class="story__date mono" datetime={u.date}>
-                {formatDate(u.date)}
-              </time>
-              <a class="story__title" href={u.project ? `/work/${u.project}/#${u.id}` : (u.sourceUrl ?? '#')}>
-                {u.title}
-              </a>
-            </li>
-          ))}
-          {site.partner.enabled && (
-            <li class="story__item story__item--now" style={`--i:${story.length}`}>
-              <span class="story__date mono">{ui.about.now}</span>
-              <a class="story__title" href={partnerHref}>
-                {site.partner.heroLink}
-                <span class="arrow arrow--e" aria-hidden="true">
-                  →
-                </span>
-              </a>
-            </li>
-          )}
-        </ol>
-      </div>
-    )
-  }
-
-  {
-    (tools.length > 0 || ai.length > 0) && (
-      <div class="toolkit" data-reveal style="--reveal-delay:60ms">
-        <p class="mono about__label">{ui.about.toolkit}</p>
-        <dl class="toolkit__list">
-          {tools.length > 0 && (
-            <div class="toolkit__row">
-              <dt class="mono">{ui.about.tools}</dt>
-              <dd>{tools.join(' · ')}</dd>
-            </div>
-          )}
-          {ai.length > 0 && (
-            <div class="toolkit__row">
-              <dt class="mono">{ui.about.ai}</dt>
-              <dd>{ai.join(' · ')}</dd>
-            </div>
-          )}
-        </dl>
-      </div>
-    )
-  }
-</div>
+</section>
 
 <style>
-  .about {
+  .lab {
+    max-width: var(--max);
+    margin-inline: auto;
+    padding: clamp(5rem, 3rem + 6vw, 9rem) var(--gutter) 0;
+  }
+  .lab__grid {
     display: grid;
     gap: 3rem var(--gap);
+    padding-top: clamp(2.5rem, 2rem + 2vw, 4rem);
+    border-top: 1px solid var(--line);
   }
-  @media (min-width: 1000px) {
-    .about {
+  @media (min-width: 1024px) {
+    .lab__grid {
       grid-template-columns: repeat(12, minmax(0, 1fr));
       align-items: end;
     }
-    .about__text {
-      grid-column: 1 / span 7;
+    .lab__main {
+      grid-column: 1 / span 8;
     }
-    .about__connect {
+    .lab__side {
       grid-column: 9 / -1;
     }
-    .story {
-      grid-column: 1 / span 7;
-    }
-    .toolkit {
-      grid-column: 9 / -1;
-      align-self: start;
-    }
+  }
+  .lab__statement {
+    margin-top: 1.5rem;
+    font-size: clamp(2.5rem, 1.4rem + 3.8vw, 5.25rem);
+    line-height: 0.98;
+  }
+  .lab__statement span,
+  .lab__statement em {
+    display: block;
+  }
+  .lab__statement em {
+    color: var(--ink-2);
+  }
+  .lab__copy {
+    margin-top: clamp(1.75rem, 1.2rem + 1.5vw, 2.5rem);
+    max-width: 50ch;
+  }
+  .lab__lead {
+    font-size: 1.0625rem;
+    line-height: 1.6;
+  }
+  .lab__body {
+    margin-top: 0.9rem;
+    color: var(--ink-2);
   }
 
-  /* So far — a short timeline that draws itself in */
-  .story {
-    padding-top: 1rem;
+  .lab__kit {
     border-top: 1px solid var(--line);
   }
-  .story__list {
-    position: relative;
-    list-style: none;
-    margin-top: 1.25rem;
-    padding-left: 1.25rem;
-  }
-  .story__list::before {
-    content: '';
-    position: absolute;
-    left: 2px;
-    top: 0.55rem;
-    bottom: 0.55rem;
-    width: 1px;
-    background: linear-gradient(var(--line-2), var(--accent));
-    transform-origin: 50% 0;
-    transition: transform 900ms var(--ease) 120ms;
-  }
-  :global(.js) .story:not(:global(.is-in)) .story__list::before {
-    transform: scaleY(0);
-  }
-  .story__item {
-    position: relative;
+  .lab__kit-row {
     display: grid;
-    grid-template-columns: 7.5rem minmax(0, 1fr);
-    gap: 0.25rem 1rem;
-    align-items: baseline;
-    padding-block: 0.45rem;
-    transition:
-      opacity 500ms var(--ease) calc(200ms + var(--i) * 90ms),
-      transform 500ms var(--ease) calc(200ms + var(--i) * 90ms);
-  }
-  :global(.js) .story:not(:global(.is-in)) .story__item {
-    opacity: 0;
-    transform: translateX(-8px);
-  }
-  .story__item::before {
-    content: '';
-    position: absolute;
-    left: calc(-1.25rem);
-    top: 50%;
-    width: 5px;
-    height: 5px;
-    margin-top: -2.5px;
-    border-radius: 50%;
-    background: var(--bg);
-    box-shadow: inset 0 0 0 1px var(--ink-3);
-  }
-  .story__item--now::before {
-    background: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-dim);
-  }
-  .story__date {
-    color: var(--ink-3);
-  }
-  .story__title {
-    font-size: 1rem;
-    color: var(--ink);
-    transition: color var(--t-fast) var(--ease);
-  }
-  .story__title:hover {
-    color: var(--accent);
-  }
-  .story__item--now .story__title {
-    color: var(--accent);
-  }
-  .story__title .arrow {
-    margin-left: 0.35em;
-  }
-  @media (max-width: 480px) {
-    .story__item {
-      grid-template-columns: 1fr;
-      gap: 0.1rem;
-    }
-    .story__item::before {
-      top: 0.9rem;
-    }
-  }
-
-  /* Toolkit */
-  .toolkit {
-    padding-top: 1rem;
-    border-top: 1px solid var(--line);
-  }
-  .toolkit__list {
-    margin-top: 1.25rem;
-    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
     gap: 1rem;
+    align-items: baseline;
+    padding-block: 0.95rem;
+    border-bottom: 1px solid var(--line);
   }
-  .toolkit__row {
-    display: grid;
-    gap: 0.3rem;
-  }
-  .toolkit__row dt {
-    color: var(--ink-3);
-  }
-  .toolkit__row dd {
+  .lab__kit-row dd {
     margin: 0;
     font-size: 0.9375rem;
-    line-height: 1.6;
-    color: var(--ink);
+    line-height: 1.55;
   }
-
-  @media (prefers-reduced-motion: reduce) {
-    .story__list::before,
-    .story__item {
-      transition: none;
-    }
+  .lab__connect {
+    display: grid;
+    justify-items: start;
+    gap: 0.4rem;
+    margin-top: 2rem;
   }
-  .about__lead {
-    font-size: clamp(1.5rem, 1rem + 1.9vw, 2.5rem);
-    line-height: 1.2;
-    letter-spacing: -0.025em;
-    font-weight: 400;
-    max-width: 24ch;
-    text-wrap: balance;
+  .lab__handle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 1.4rem + 1vw, 2.25rem);
+    font-weight: 340;
+    letter-spacing: -0.02em;
   }
-  .about__body {
-    margin-top: 1.25rem;
-    color: var(--ink-2);
-    font-size: var(--text-md);
-    max-width: 54ch;
-  }
-  .about__body + .about__body {
-    margin-top: 0.75rem;
-  }
-
-  .about__connect {
-    padding-top: 1rem;
-    border-top: 1px solid var(--line);
-  }
-  .about__label {
+  .lab__handle :global(.arrow-icon) {
+    width: 16px;
+    height: 16px;
     color: var(--ink-3);
   }
-  .about__connect-text {
-    margin-top: 0.75rem;
-    color: var(--ink-2);
-    font-size: 0.9375rem;
-  }
-  .about__handle {
+  .lab__mail {
+    min-height: 32px;
     display: inline-flex;
-    align-items: baseline;
-    gap: 0.5rem;
-    margin-top: 1rem;
-    font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem);
-    font-weight: 500;
-    letter-spacing: -0.025em;
-    background-image: linear-gradient(currentColor, currentColor);
-    background-size: 100% 1px;
-    background-position: 0 100%;
-    background-repeat: no-repeat;
-    padding-bottom: 0.15rem;
-    transition: background-size var(--t-slow) var(--ease);
-  }
-  .about__handle:hover {
-    background-size: 0% 1px;
-    background-position: 100% 100%;
-  }
-  .about__email {
-    display: flex;
-    width: fit-content;
-    margin-top: 1rem;
-    font-size: 0.9375rem;
-  }
-  .about__handle .arrow {
-    font-size: 0.7em;
+    align-items: center;
     color: var(--ink-2);
+    font-size: 0.9375rem;
+    transition: color var(--t-fast) var(--ease);
+  }
+  .lab__mail:hover {
+    color: var(--ink);
   }
 </style>

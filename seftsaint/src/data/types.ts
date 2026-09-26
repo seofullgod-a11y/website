@@ -41,6 +41,11 @@ export interface MediaItem {
   aspect?: string;
   /** CSS object-position for cropping, e.g. '40% 50%'. Default 'center'. */
   focus?: string;
+  /**
+   * Optional wide (≈2.4:1) still without game HUD, for the cinematic strip on the home page,
+   * e.g. 'forest-concept/latest-wide.jpg' (inside src/assets/media/). Falls back to `image`.
+   */
+  wide?: string;
 }
 
 export interface ProjectSection {
@@ -64,6 +69,10 @@ export interface Project {
   workingTitle?: boolean;
   /** One or two sentences. Shown on the home page and at the top of the project page. */
   summary: string;
+  /** One sharp line for the home page (featured world). Falls back to `summary`. */
+  oneLiner?: string;
+  /** A few words next to the status on the home page, e.g. 'The hardware hit its limit'. */
+  statusShort?: string;
   /** e.g. ['Game prototype', '3D'] — free text, add anything (film, tool, visual study…). */
   types: string[];
   status: Status;
@@ -94,6 +103,8 @@ export interface Update {
   date: string;
   title: string;
   body: string[];
+  /** One short line for the lab notes on the home page. Falls back to the first sentence of `body`. */
+  excerpt?: string;
   /** slug of the related project (optional). */
   project?: string;
   /** Short label used in the project's progress strip, e.g. 'Godot'. */

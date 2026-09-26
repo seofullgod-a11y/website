@@ -36,8 +36,6 @@ interface Props {
   vtName?: string;
   /** Subtle cursor parallax (if enabled in src/data/effects.ts). */
   parallax?: boolean;
-  /** First-visit intro (hero only): renders the line of light the frame opens from. */
-  intro?: boolean;
   /** Title + meta line for the video player, e.g. "Last update" / "25 Sep 2026 · Unreal". */
   title?: string;
   meta?: string;
@@ -55,7 +53,6 @@ const {
   parallax = false,
   title,
   meta,
-  intro = false,
   class: className,
 } = Astro.props;
 
@@ -224,8 +221,6 @@ const devNotes = [
         </a>
       )
     }
-
-    {intro && <span class="media__scan" aria-hidden="true" />}
 
     {
       marks && (
@@ -509,12 +504,12 @@ const devNotes = [
     height: 14px;
   }
   .media__end-btn--accent {
-    background: var(--accent);
+    background: var(--ink);
     color: var(--bg);
     box-shadow: none;
   }
   .media__end-btn--accent:hover {
-    background: #d6e8c4;
+    background: #fff;
   }
   @media (max-width: 560px) {
     .media__end {

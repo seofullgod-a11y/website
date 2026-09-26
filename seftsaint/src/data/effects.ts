@@ -10,9 +10,9 @@
  */
 export const effects = {
   /**
-   * First visit to the home page: the hero frame opens from a line of light, the headline
-   * rises in, then the facts count up. Plays once per visit, never blocks the page,
-   * skipped for reduced motion and when arriving on a #link.
+   * First visit to the home page: the footage fades up out of the dark and settles, the
+   * headline rises in line by line, a horizon line draws across. Plays once per visit,
+   * never blocks the page, skipped for reduced motion and when arriving on a #link.
    */
   intro: true,
   /** Featured project: move across the big frame to scrub through its stages (Godot → … → latest). */
@@ -24,9 +24,9 @@ export const effects = {
   /** Hero and cover frames: the image shifts slightly with the cursor, like looking through a window. */
   parallax: true,
   /** A very soft light follows the cursor over the dark background. */
-  lensLight: true,
+  lensLight: false,
   /** Small mono labels briefly "decode" when you hover them. */
-  decode: true,
+  decode: false,
   /** Thin reading-progress line under the header. */
   scrollProgress: true,
   /** The dot in the wordmark breathes slowly — a quiet "in progress" signal. */

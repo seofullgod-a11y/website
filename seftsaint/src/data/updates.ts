@@ -53,9 +53,11 @@ export const updates: Update[] = [
       'My 16GB MacBook is starting to struggle with Unreal, so this is my last post on this project. I’m thinking about going back to Godot and making a different game instead.',
       'Before this I used ready-made assets from Meshy. Fast, but lifeless — so I started reworking the characters and other parts of the scene in Blender, with Opus 5.5 building characters and assets.',
     ],
+    excerpt: 'Unreal outgrew the 16GB MacBook. Characters reworked in Blender with Opus 5.5 — then set aside.',
     tools: ['Unreal Engine', 'Blender', 'GPT-6 Astra', 'Opus 5.5'],
     media: {
       image: 'forest-concept/2026-09-25-last-update.jpg',
+      wide: 'forest-concept/2026-09-25-last-update-wide.jpg',
       preview: 'forest-concept/2026-09-25-last-update-preview.mp4',
       video: 'forest-concept/2026-09-25-last-update.mp4',
       alt: 'A hooded character with a backpack on a sunlit forest trail, a small glowing bird beside them.',
@@ -73,6 +75,7 @@ export const updates: Update[] = [
       'Tried GPT-6 Luna today. It does a pretty good job taking over the 3D work from Astra, and it doesn’t eat nearly as many tokens.',
       'To be clear, Luna didn’t build the whole thing — Astra built it first, then Luna worked on top of it. I’ve been switching back and forth between the two.',
     ],
+    excerpt: 'GPT-6 Luna took over the 3D work on top of Astra’s build — at far fewer tokens.',
     tools: ['GPT-6 Luna', 'GPT-6 Astra'],
     media: {
       image: 'forest-concept/2026-09-23-luna.jpg',
@@ -92,6 +95,7 @@ export const updates: Update[] = [
       'Got a new MacBook, so I tried switching from Godot to Unreal. I moved the concept I’d already made in Godot over, then changed the trees and lighting.',
       'Moving everything over used a lot of tokens. Next time I’m going all in on animation.',
     ],
+    excerpt: 'New MacBook, new engine. The Godot concept moved to Unreal, with new trees and light.',
     tools: ['Unreal Engine', 'Blender', 'GPT-6 Astra'],
     media: {
       image: 'forest-concept/2026-09-20-unreal.jpg',
@@ -110,6 +114,7 @@ export const updates: Update[] = [
     body: [
       'Godot + Blender, built with GPT-6 Astra. I hit the limit twice, but overall it turned out beautifully.',
     ],
+    excerpt: 'Godot and Blender, built with GPT-6 Astra. Hit the limit twice — it still turned out beautifully.',
     tools: ['Godot', 'Blender', 'GPT-6 Astra'],
     media: {
       image: 'forest-concept/2026-09-14-godot.jpg',

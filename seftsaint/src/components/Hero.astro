@@ -1,320 +1,495 @@
 ---
-import Media from './Media.astro';
-import StatusTag from './StatusTag.astro';
+/**
+ * Hero — full-bleed, in-engine footage with the statement over it.
+ * Copy + media: src/data/site.ts → hero. The "Watch" button plays the latest build.
+ */
+import { getImage } from 'astro:assets';
 import { site } from '../data/site';
 import { ui } from '../data/ui';
 import type { Project } from '../data/types';
 import { getUpdatesFor } from '../lib/content';
+import { resolveImage, resolveVideo } from '../lib/media';
 import { formatDate } from '../lib/format';
-import { effects } from '../data/effects';
+import Arrow from './Arrow.astro';
 
 interface Props {
   project?: Project;
 }
 const { project } = Astro.props;
+const h = site.hero;
+const [line1, line2] = h.headline;
 
-const updates = project ? getUpdatesFor(project.slug) : [];
-const latest = updates.at(-1);
-const lastDate = latest?.date ?? project?.period?.end ?? project?.period?.start;
-const [line1, line2] = site.hero.headline;
-const facts = site.hero.facts ?? [];
+// Poster: wide for screens, portrait for phones (art direction)
+const wide = resolveImage(h.media.image);
+const tall = resolveImage(h.media.imageTall);
+const set = async (img: typeof wide, widths: number[], format: 'avif' | 'webp') =>
+  img ? (await getImage({ src: img, widths: widths.filter((w) => w <= img.width), format, quality: 70 })).srcSet.attribute : '';
+const wideW = [960, 1280, 1600, 1920, 2240];
+const tallW = [480, 720, 920];
+const poster = wide ? await getImage({ src: wide, width: 1600, format: 'jpg', quality: 76 }) : undefined;
+const sources = {
+  tallAvif: await set(tall, tallW, 'avif'),
+  tallWebp: await set(tall, tallW, 'webp'),
+  wideAvif: await set(wide, wideW, 'avif'),
+  wideWebp: await set(wide, wideW, 'webp'),
+};
+const loop = resolveVideo(h.media.loop);
+const loopTall = resolveVideo(h.media.loopTall);
+
+// "Watch the latest build" — the newest update of the featured project
+const latest = project ? getUpdatesFor(project.slug).at(-1) : undefined;
+const latestVideo = resolveVideo(latest?.media?.video);
+const latestImg = resolveImage(latest?.media?.image);
+const latestPoster = latestVideo && latestImg ? (await getImage({ src: latestImg, width: 1280, format: 'webp', quality: 80 })).src : '';
+const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
 ---
 
-<section class="hero container" aria-labelledby="hero-title">
-  <div class="hero__grid">
-    <div class="hero__text">
-      <p class="hero__kicker mono" data-decode-area data-intro="up" style="--d:120ms">
-        <span data-decode>{site.hero.kicker}</span>
-      </p>
-      <h1 id="hero-title" class="hero__title">
-        <span class="hero__line" data-intro="rise" style="--d:220ms"><span class="hero__line-in">{line1}</span></span>
-        {
-          line2 && (
-            <span class="hero__line serif-italic" data-intro="rise" style="--d:340ms">
-              <span class="hero__line-in">{line2}</span>
-            </span>
-          )
-        }
-      </h1>
-      <p class="hero__intro" data-intro="up" style="--d:620ms">{site.hero.intro}</p>
-      <div class="hero__actions" data-intro="up" style="--d:720ms">
-        <a class="btn" href="#work">
-          {ui.hero.viewWork}
-          <span class="arrow arrow--s" aria-hidden="true">↓</span>
-        </a>
-        <a class="link link--quiet hero__x" href={site.xUrl} target="_blank" rel="noopener me">
-          {ui.hero.followX}
-          <span class="arrow arrow--ne" aria-hidden="true">↗</span>
-          <span class="visually-hidden">(opens in a new tab)</span>
-        </a>
-      </div>
+<section
+  class="hero"
+  aria-labelledby="hero-title"
+  data-loop={loop ? 'view' : undefined}
+  data-loop-state={loop ? 'idle' : undefined}
+>
+  <div class="hero__stage" data-intro="stage" style={h.media.focus ? `--focus:${h.media.focus}` : undefined}>
+    <div class="hero__parallax" data-hero-parallax>
       {
-        site.partner.enabled && (
-          <a class="hero__partner" href="#partner" data-intro="up" style="--d:820ms">
-            <span class="hero__partner-dot" aria-hidden="true" />
-            {site.partner.heroLink}
-            <span class="arrow arrow--e" aria-hidden="true">
-              →
-            </span>
-          </a>
+        wide && poster && (
+          <picture class="hero__poster">
+            {sources.tallAvif && <source media="(max-width: 760px)" type="image/avif" srcset={sources.tallAvif} sizes="100vw" />}
+            {sources.tallWebp && <source media="(max-width: 760px)" type="image/webp" srcset={sources.tallWebp} sizes="100vw" />}
+            <source type="image/avif" srcset={sources.wideAvif} sizes="100vw" />
+            <source type="image/webp" srcset={sources.wideWebp} sizes="100vw" />
+            <img
+              src={poster.src}
+              alt={h.media.alt}
+              width={wide.width}
+              height={wide.height}
+              fetchpriority="high"
+              decoding="async"
+            />
+          </picture>
+        )
+      }
+      {
+        loop && (
+          <video
+            class="hero__video media__loop"
+            data-src={loop}
+            data-src-sm={loopTall}
+            muted
+            loop
+            playsinline
+            preload="none"
+            disablepictureinpicture
+            aria-hidden="true"
+            tabindex="-1"
+          />
         )
       }
     </div>
-
-    {
-      project && (
-        <div class="hero__media" data-intro="frame">
-          <Media
-            intro={effects.intro}
-            item={project.cover}
-            mode="preview"
-            priority
-            marks
-            vtName={`cover-${project.slug}`}
-            sizes="(min-width: 1440px) 776px, (min-width: 1024px) 56vw, 100vw"
-            aspectSmall="4 / 3"
-            parallax
-            title={latest?.title ?? project.title}
-            meta={latest ? `${formatDate(latest.date)} · ${latest.label ?? latest.title}` : undefined}
-          />
-          <a class="hero__caption" href={`/work/${project.slug}/`} data-decode-area data-intro="up" style="--d:1250ms">
-            <span class="mono hero__caption-label" data-decode>{ui.hero.latest}</span>
-            <span class="hero__caption-title">{project.title}</span>
-            <StatusTag status={project.status} class="hero__caption-status" />
-            {lastDate && (
-              <time class="mono hero__caption-date" datetime={lastDate}>
-                {formatDate(lastDate)}
-              </time>
-            )}
-            <span class="arrow arrow--e hero__caption-arrow" aria-hidden="true">
-              →
-            </span>
-          </a>
-        </div>
-      )
-    }
+    <div class="hero__shade" aria-hidden="true"></div>
   </div>
 
+  <div class="hero__content">
+    <p class="eyebrow eyebrow--rule hero__kicker" data-intro="up" style="--d:200ms">{h.kicker}</p>
+    <h1 id="hero-title" class="display hero__title">
+      <span class="hero__line" data-intro="rise" style="--d:300ms"><span>{line1}</span></span>
+      {
+        line2 && (
+          <span class="hero__line hero__line--2" data-intro="rise" style="--d:440ms">
+            <span>
+              <em>{line2}</em>
+            </span>
+          </span>
+        )
+      }
+    </h1>
+    <p class="hero__intro" data-intro="up" style="--d:800ms">{h.intro}</p>
+    <div class="hero__actions" data-intro="up" style="--d:950ms">
+      <a class="link-line" href="#work">
+        {h.ctaWork}
+        <Arrow dir="s" />
+      </a>
+      {
+        latestVideo ? (
+          <button
+            type="button"
+            class="link-line hero__watch"
+            data-play-src={latestVideo}
+            data-play-poster={latestPoster}
+            data-play-title={latest?.title}
+            data-play-meta={latest ? `${formatDate(latest.date)} · ${latest.label ?? latest.title}` : undefined}
+            data-play-post={latestPost || undefined}
+            aria-haspopup="dialog"
+          >
+            <span class="hero__watch-icon" aria-hidden="true">
+              <svg viewBox="0 0 16 16">
+                <path d="M5.5 3.5v9l7-4.5z" fill="currentColor" />
+              </svg>
+            </span>
+            {h.ctaWatch}
+          </button>
+        ) : (
+          latestPost && (
+            <a class="link-line" href={latestPost} target="_blank" rel="noopener">
+              {h.ctaWatch}
+              <Arrow dir="ne" />
+              <span class="visually-hidden">on X (opens in a new tab)</span>
+            </a>
+          )
+        )
+      }
+    </div>
+  </div>
+
+  <p class="hero__caption eyebrow" data-intro="up" style="--d:1500ms">
+    <span>{h.caption[0]}</span>
+    <span>{h.caption[1]}</span>
+  </p>
+
+  <ul class="hero__words eyebrow" role="list" data-intro="up" style="--d:1650ms" aria-hidden="true">
+    {h.words.map((w) => <li>{w}</li>)}
+  </ul>
+
+  <p class="hero__scroll eyebrow" data-intro="up" style="--d:1750ms" aria-hidden="true">
+    <span class="hero__scroll-line"></span>
+    {ui.hero.scroll}
+  </p>
+
   {
-    facts.length > 0 && (
-      <dl class="hero__facts" data-intro="facts" style="--d:1350ms">
-        {facts.map((f, i) => (
-          <div class="hero__fact" data-intro="up" style={`--d:${1450 + i * 90}ms`}>
-            <dt class="hero__fact-label">{f.label}</dt>
-            <dd class="hero__fact-value">
-              <span aria-hidden="true" data-count={f.value} data-count-delay={1450 + i * 90}>
-                {f.value}
-              </span>
-              <span class="visually-hidden">{f.value}</span>
-            </dd>
-          </div>
-        ))}
-      </dl>
+    loop && (
+      <button
+        class="hero__toggle"
+        type="button"
+        data-toggle
+        data-label-play={ui.hero.playFootage}
+        data-label-pause={ui.hero.pauseFootage}
+        aria-label={ui.hero.playFootage}
+      >
+        <svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M5 3.5v9l7.5-4.5z" fill="currentColor" />
+        </svg>
+        <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M5 3.5h2v9H5zM9 3.5h2v9H9z" fill="currentColor" />
+        </svg>
+      </button>
     )
   }
+
+  <span class="hero__horizon" data-intro="line" style="--d:700ms" aria-hidden="true"></span>
 </section>
 
 <style>
   .hero {
-    padding-top: clamp(1.75rem, 0.8rem + 4vw, 4.5rem);
+    position: relative;
+    isolation: isolate;
+    /* Fills the screen; on very tall screens it stops near the footage's own shape (≈1.95:1) */
+    min-height: max(620px, min(100svh, 62vw));
+    margin-top: calc(-1 * var(--header-h));
+    display: flex;
+    align-items: center;
+    overflow: clip;
   }
-  .hero__grid {
-    display: grid;
-    gap: clamp(2rem, 1rem + 3vw, 3rem);
+
+  /* ── Footage ── */
+  .hero__stage {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+  }
+  .hero__parallax {
+    position: absolute;
+    inset: -4% 0;
+    will-change: transform;
+  }
+  .hero__poster,
+  .hero__poster img,
+  .hero__video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .hero__poster img,
+  .hero__video {
+    object-fit: cover;
+    object-position: var(--focus, 50% 50%);
+    filter: brightness(1.12) saturate(1.04);
+  }
+  .hero__video {
+    opacity: 0;
+    transition: opacity 1200ms var(--ease);
+  }
+  .hero[data-loop-state='playing'] .hero__video,
+  .hero[data-loop-state='paused'] .hero__video {
+    opacity: 1;
+  }
+  /* Keep the statement readable and the edges quiet */
+  .hero__shade {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgb(11 12 12 / 0.65) 0%, rgb(11 12 12 / 0) 20%),
+      linear-gradient(0deg, var(--bg) 0%, rgb(11 12 12 / 0.4) 12%, rgb(11 12 12 / 0) 34%);
   }
   @media (min-width: 1024px) {
-    .hero__grid {
-      grid-template-columns: repeat(12, minmax(0, 1fr));
-      column-gap: var(--gap);
-      align-items: end;
+    /* The left stays dark for the words; the world opens up to the right */
+    .hero__shade {
+      background:
+        linear-gradient(90deg, rgb(11 12 12 / 0.94) 0%, rgb(11 12 12 / 0.78) 24%, rgb(11 12 12 / 0.22) 50%, rgb(11 12 12 / 0) 68%),
+        linear-gradient(180deg, rgb(11 12 12 / 0.65) 0%, rgb(11 12 12 / 0) 20%),
+        linear-gradient(0deg, var(--bg) 0%, rgb(11 12 12 / 0.4) 12%, rgb(11 12 12 / 0) 34%);
     }
-    .hero__text {
-      grid-column: 1 / span 5;
-      padding-bottom: 3.25rem; /* aligns the text baseline with the frame, above the caption */
-    }
-    .hero__media {
-      grid-column: 6 / -1;
+  }
+  @media (max-width: 1023px) {
+    .hero__shade {
+      background:
+        linear-gradient(180deg, rgb(11 12 12 / 0.7) 0%, rgb(11 12 12 / 0) 22%),
+        linear-gradient(0deg, var(--bg) 4%, rgb(11 12 12 / 0.86) 36%, rgb(11 12 12 / 0.35) 56%, rgb(11 12 12 / 0) 72%);
     }
   }
 
+  /* ── Words ── */
+  .hero__content {
+    width: 100%;
+    max-width: var(--max);
+    margin-inline: auto;
+    padding: calc(var(--header-h) + 2.5rem) var(--gutter) 5.5rem;
+  }
+  @media (max-width: 1023px) {
+    .hero {
+      align-items: flex-end;
+      min-height: max(560px, 100svh);
+    }
+    .hero__content {
+      padding-bottom: 6.5rem;
+    }
+  }
   .hero__kicker {
-    color: var(--ink-3);
-    margin-bottom: 1.5rem;
+    margin-bottom: clamp(1.25rem, 0.8rem + 1.5vw, 2rem);
+    color: var(--ink-2);
+    text-shadow: 0 1px 12px rgb(0 0 0 / 0.55);
   }
   .hero__title {
-    font-size: clamp(3rem, 1.6rem + 5.4vw, 5.75rem);
-    font-weight: 500;
-    line-height: 0.94;
-    letter-spacing: -0.045em;
+    font-size: clamp(3.5rem, 1.2rem + 7.6vw, 9.5rem);
+    line-height: 0.9;
+    letter-spacing: -0.035em;
   }
-  .hero__line,
-  .hero__line-in {
+  .hero__line {
     display: block;
   }
-  .hero__line.serif-italic {
-    font-size: 1.08em;
-    letter-spacing: -0.025em;
-    color: var(--ink);
-    margin-top: 0.02em;
+  .hero__line > span {
+    display: block;
+  }
+  .hero__line--2 {
+    padding-left: 0.38em;
+  }
+  .hero__line--2 em {
+    font-weight: 300;
+    letter-spacing: -0.03em;
   }
   .hero__intro {
-    margin-top: 1.5rem;
-    max-width: 38ch;
-    font-size: var(--text-md);
-    line-height: 1.55;
-    color: var(--ink-2);
+    margin-top: clamp(1.5rem, 1rem + 1.5vw, 2.25rem);
+    margin-left: clamp(0rem, -1rem + 3.5vw, 3.6rem);
+    max-width: 34ch;
+    font-size: clamp(1.0625rem, 0.95rem + 0.4vw, 1.3125rem);
+    line-height: 1.5;
+    color: var(--ink);
+    opacity: 0.86;
   }
   .hero__actions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.75rem 1.5rem;
-    margin-top: 2rem;
+    gap: 0.75rem 2.5rem;
+    margin-top: clamp(2rem, 1.4rem + 1.5vw, 3rem);
+    margin-left: clamp(0rem, -1rem + 3.5vw, 3.6rem);
   }
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    min-height: 44px;
-    padding: 0 1.15rem;
-    border-radius: 999px;
+  .hero__watch {
+    gap: 0.9rem;
+    justify-content: flex-start;
+  }
+  .hero__watch-icon {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px var(--line-2);
+    transition: background-color var(--t) var(--ease);
+  }
+  .hero__watch:hover .hero__watch-icon {
     background: var(--ink);
     color: var(--bg);
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition:
-      background-color var(--t-fast) var(--ease),
-      transform var(--t-fast) var(--ease);
   }
-  .btn:hover {
-    background: #fff;
-  }
-  .btn:active {
-    transform: translateY(1px);
-  }
-  .hero__x {
-    font-size: 0.875rem;
-    min-height: 44px;
+  .hero__watch-icon svg {
+    width: 9px;
+    height: 9px;
+    transform: translateX(1px);
   }
 
-  /* Facts row — real numbers, one line of context each */
-  .hero__facts {
-    position: relative;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1.5rem var(--gap);
-    margin-top: clamp(2.5rem, 1.5rem + 3vw, 4.5rem);
-    padding-top: 1.5rem;
+  /* ── Edges: caption, words, scroll ── */
+  .hero__caption,
+  .hero__words,
+  .hero__scroll {
+    text-shadow: 0 1px 12px rgb(0 0 0 / 0.55);
   }
-  .hero__facts::before {
+  .hero__caption {
+    position: absolute;
+    top: calc(var(--header-h) + 2rem);
+    right: var(--gutter);
+    display: grid;
+    justify-items: end;
+    text-align: right;
+    color: var(--ink-2);
+  }
+  .hero__caption::after {
+    content: '';
+    position: absolute;
+    right: calc(-1 * var(--gutter) + 0.75rem);
+    top: 0.8em;
+    width: calc(var(--gutter) - 1.5rem);
+    height: 1px;
+    background: var(--line-2);
+  }
+  .hero__words {
+    position: absolute;
+    right: var(--gutter);
+    bottom: 5.25rem;
+    list-style: none;
+    display: grid;
+    gap: 0.1rem;
+    padding-top: 1rem;
+    color: var(--ink-3);
+  }
+  .hero__words::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
+    width: 1.5rem;
+    height: 1px;
+    background: var(--line-2);
+  }
+  .hero__scroll {
+    position: absolute;
+    left: var(--gutter);
+    bottom: 2.25rem;
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    color: var(--ink-3);
+    line-height: 1;
+  }
+  .hero__scroll-line {
+    position: relative;
+    width: 1px;
+    height: 3rem;
+    background: var(--line-2);
+    overflow: hidden;
+  }
+  .hero__scroll-line::after {
+    content: '';
+    position: absolute;
+    left: 0;
     right: 0;
+    top: -40%;
+    height: 40%;
+    background: var(--ink);
+    animation: hero-scroll 2.4s var(--ease-in-out) infinite;
+  }
+  @keyframes hero-scroll {
+    0% {
+      transform: translateY(0);
+    }
+    70%,
+    100% {
+      transform: translateY(350%);
+    }
+  }
+  .hero__horizon {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
     height: 1px;
     background: var(--line-2);
     transform-origin: 0 50%;
   }
-  @media (min-width: 800px) {
-    .hero__facts {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-  }
-  .hero__fact {
-    display: flex;
-    flex-direction: column-reverse;
-    justify-content: flex-end;
-    gap: 0.45rem;
-  }
-  .hero__fact-value {
-    margin: 0;
-    font-size: clamp(1.75rem, 1.2rem + 2vw, 2.75rem);
-    font-weight: 500;
-    letter-spacing: -0.04em;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-  }
-  .hero__fact-label {
-    color: var(--ink-3);
-    font-size: 0.8125rem;
-    line-height: 1.4;
-    max-width: 22ch;
-  }
 
-  /* "Open to partners & investors" — a chip, so it reads as a status, not a footnote */
-  .hero__partner {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    min-height: 40px;
-    margin-top: 1.5rem;
-    padding: 0 1rem 0 0.85rem;
-    border-radius: 999px;
-    font-size: 0.875rem;
+  /* Pause / play the footage (it moves on its own for more than 5 s) */
+  .hero__toggle {
+    position: absolute;
+    right: var(--gutter);
+    bottom: 1.75rem;
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
     color: var(--ink);
-    background: rgb(198 220 178 / 0.06);
-    box-shadow: inset 0 0 0 1px rgb(198 220 178 / 0.3);
+    box-shadow: inset 0 0 0 1px var(--line-2);
     transition:
       background-color var(--t-fast) var(--ease),
       box-shadow var(--t-fast) var(--ease);
   }
-  .hero__partner:hover {
-    background: rgb(198 220 178 / 0.12);
-    box-shadow: inset 0 0 0 1px rgb(198 220 178 / 0.55);
+  .hero__toggle:hover {
+    background: rgb(235 230 220 / 0.08);
+    box-shadow: inset 0 0 0 1px rgb(235 230 220 / 0.4);
   }
-  .hero__partner .arrow--e {
-    transition: transform var(--t-fast) var(--ease);
+  .hero__toggle svg {
+    width: 12px;
+    height: 12px;
   }
-  .hero__partner:hover .arrow--e {
-    transform: translateX(3px);
+  .hero__toggle .icon-pause {
+    display: none;
   }
-  :global([data-fx~='pulse']) .hero__partner-dot {
-    animation: fx-breathe 3.6s ease-in-out infinite;
+  .hero[data-loop-state='playing'] .hero__toggle .icon-pause {
+    display: block;
   }
-  .hero__partner-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-dim);
+  .hero[data-loop-state='playing'] .hero__toggle .icon-play {
+    display: none;
+  }
+  .hero[data-loop-state='error'] .hero__toggle {
+    display: none;
   }
 
-  /* Caption row under the frame */
-  .hero__caption {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem 1.25rem;
-    flex-wrap: wrap;
-    margin-top: 0.9rem;
-    padding-block: 0.35rem;
-    color: var(--ink);
-  }
-  .hero__caption-label {
-    color: var(--ink-3);
-  }
-  .hero__caption-title {
-    font-weight: 500;
-    font-size: 0.9375rem;
-  }
-  .hero__caption-date {
-    color: var(--ink-3);
-    margin-left: auto;
-  }
-  .hero__caption-arrow {
-    color: var(--ink-2);
-  }
-  .hero__caption:hover .hero__caption-title {
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 4px;
-  }
-  @media (max-width: 520px) {
-    .hero__caption-date {
+  @media (max-width: 760px) {
+    .hero__caption {
+      top: calc(var(--header-h) + 1rem);
+    }
+    .hero__caption::after {
+      display: none;
+    }
+    .hero__words {
+      display: none;
+    }
+    .hero__scroll {
+      display: none;
+    }
+    .hero__line--2 {
+      padding-left: 0.2em;
+    }
+    .hero__intro,
+    .hero__actions {
       margin-left: 0;
     }
-    .hero__caption-arrow {
-      margin-left: auto;
+    .hero__actions {
+      gap: 0.25rem 2rem;
+    }
+  }
+
+  @media (max-width: 760px) and (max-height: 720px) {
+    .hero__caption {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero__scroll-line::after {
+      animation: none;
+      display: none;
     }
   }
 </style>

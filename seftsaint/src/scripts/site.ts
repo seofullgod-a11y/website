@@ -114,8 +114,12 @@ class Clip {
     }
   }
   load() {
-    if (this.video.getAttribute('src') || !this.video.dataset.src) return;
-    this.video.src = this.video.dataset.src;
+    if (this.video.getAttribute('src')) return;
+    // Phones get the portrait cut when there is one (data-src-sm).
+    const small = this.video.dataset.srcSm && window.matchMedia('(max-width: 760px)').matches;
+    const src = small ? this.video.dataset.srcSm : this.video.dataset.src;
+    if (!src) return;
+    this.video.src = src;
     this.video.load();
   }
   play() {
@@ -313,3 +317,74 @@ if (dialog && lightboxVideo) {
     resumeViewLoops();
   });
 }
+
+/* ── 5. Menu (small screens) ───────────────────────────────── */
+const menuBtn = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+const menu = document.querySelector<HTMLElement>('[data-menu]');
+if (menuBtn && menu) {
+  const label = menuBtn.querySelector<HTMLElement>('[data-menu-label]');
+  const setOpen = (open: boolean, { focus = true } = {}) => {
+    menu.hidden = !open;
+    menuBtn.setAttribute('aria-expanded', String(open));
+    if (label) label.textContent = (open ? menuBtn.dataset.labelClose : menuBtn.dataset.labelOpen) ?? '';
+    document.documentElement.classList.toggle('menu-open', open);
+    if (open && focus) menu.querySelector<HTMLElement>('a')?.focus();
+    if (!open && focus) menuBtn.focus();
+  };
+  menuBtn.addEventListener('click', () => setOpen(Boolean(menu.hidden)));
+  menu.addEventListener('click', (e) => {
+    if ((e.target as Element).closest('[data-menu-link]')) setOpen(false, { focus: false });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !menu.hidden) setOpen(false);
+  });
+  window.matchMedia('(min-width: 861px)').addEventListener?.('change', (m) => {
+    if (m.matches && !menu.hidden) setOpen(false, { focus: false });
+  });
+}
+
+/* ── 6. Featured world: step through the builds ────────────── */
+document.querySelectorAll<HTMLElement>('[data-builds]').forEach((root) => {
+  const pics = [...root.querySelectorAll<HTMLElement>('[data-build]')];
+  if (pics.length < 2) return;
+  const link = root.querySelector<HTMLAnchorElement>('[data-build-link]');
+  const date = root.querySelector<HTMLElement>('[data-build-date]');
+  const title = root.querySelector<HTMLElement>('[data-build-title]');
+  const count = root.querySelector<HTMLElement>('[data-build-count]');
+  const base = link?.getAttribute('href')?.split('#')[0] ?? '';
+  let current = Number(root.dataset.default ?? pics.length - 1);
+
+  const show = (i: number) => {
+    current = (i + pics.length) % pics.length;
+    const d = pics[current].dataset;
+    pics.forEach((p, k) => p.classList.toggle('is-active', k === current));
+    if (link && d.id) {
+      link.href = `${base}#${d.id}`;
+      link.setAttribute('aria-label', `${link.getAttribute('aria-label')?.split(' — ')[0]} — ${d.title ?? ''}`);
+    }
+    if (date) {
+      date.textContent = d.date ?? '';
+      if (d.iso) date.setAttribute('datetime', d.iso);
+    }
+    if (title) title.textContent = d.title ?? '';
+    if (count) count.textContent = String(current + 1).padStart(2, '0');
+  };
+  root.querySelector('[data-build-prev]')?.addEventListener('click', () => show(current - 1));
+  root.querySelector('[data-build-next]')?.addEventListener('click', () => show(current + 1));
+  root.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') show(current - 1);
+    if (e.key === 'ArrowRight') show(current + 1);
+  });
+  // Load every frame once the strip is near, so stepping is instant.
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (list) => {
+        if (!list.some((x) => x.isIntersecting)) return;
+        root.querySelectorAll<HTMLImageElement>('img[loading="lazy"]').forEach((img) => (img.loading = 'eager'));
+        io.disconnect();
+      },
+      { rootMargin: '400px 0px' },
+    );
+    io.observe(root);
+  }
+});

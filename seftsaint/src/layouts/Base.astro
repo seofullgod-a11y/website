@@ -45,7 +45,7 @@ const handle = site.handle.startsWith('@') ? site.handle : `@${site.handle}`;
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     {canonical && <link rel="canonical" href={canonical} />}
-    <meta name="theme-color" content="#0d0e0f" />
+    <meta name="theme-color" content="#0b0c0c" />
     <meta name="color-scheme" content="dark" />
     <meta name="author" content={site.name} />
 
@@ -54,6 +54,8 @@ const handle = site.handle.startsWith('@') ? site.handle : `@${site.handle}`;
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <link rel="preload" href="/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/newsreader-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/newsreader-italic-latin.woff2" as="font" type="font/woff2" crossorigin />
 
     <!-- Social preview -->
     <meta property="og:type" content={type} />
@@ -96,14 +98,14 @@ const handle = site.handle.startsWith('@') ? site.handle : `@${site.handle}`;
                   d.classList.add('intro-go');
                 });
               });
-              // Open the frame once the poster is there (at most 700 ms of waiting).
-              var img = document.querySelector('[data-intro="frame"] .media__img');
+              // Bring the footage up once the poster is there (at most 700 ms of waiting).
+              var img = document.querySelector('[data-intro="stage"] img');
               var opened = false;
               var open = function () {
                 if (opened) return;
                 opened = true;
                 d.classList.add('intro-open');
-                setTimeout(done, 2400);
+                setTimeout(done, 3200);
               };
               if (img && !img.complete) {
                 img.addEventListener('load', open, { once: true });
@@ -161,5 +163,7 @@ const handle = site.handle.startsWith('@') ? site.handle : `@${site.handle}`;
   main {
     display: block;
     outline: none;
+    /* The header is fixed; the home hero slides back up under it. */
+    padding-top: var(--header-h);
   }
 </style>

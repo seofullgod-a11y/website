@@ -1,116 +1,158 @@
 ---
+/**
+ * Closing — the last thing on every page: the journey continues, and how to reach me.
+ * Content: src/data/site.ts → closing.
+ */
 import { site } from '../data/site';
 import { ui } from '../data/ui';
-import { promote, partnerHref, partnerMailto } from '../lib/partner';
+import { promote, partnerMailto } from '../lib/partner';
+import Arrow from './Arrow.astro';
 
-const partner = promote('footer');
-const mailto = partnerMailto();
-
+const c = site.closing;
+const [line1, line2] = c.line;
+const mailto = promote('footer') ? partnerMailto() : site.email ? `mailto:${site.email}` : '';
 const year = new Date().getFullYear();
 ---
 
 <footer class="footer">
-  {
-    partner && (
-      <div class="container footer__partner">
-        <a class="footer__partner-link" href={partnerHref}>
-          <span class="footer__dot" aria-hidden="true" />
-          {site.partner.footerLine}
-          <span class="arrow arrow--e" aria-hidden="true">
-            →
-          </span>
-        </a>
-        {mailto && site.email && (
-          <a class="link link--quiet footer__mail mono" href={mailto}>
-            {site.email}
+  <div class="footer__inner">
+    <div class="closing" data-reveal>
+      <p class="eyebrow eyebrow--rule">{c.kicker}</p>
+      <p class="display closing__line">
+        <span>{line1}</span>
+        {line2 && <em>{line2}</em>}
+      </p>
+      <div class="closing__side">
+        <p class="closing__text">{c.text}</p>
+        <div class="closing__cta">
+          {
+            mailto && (
+              <a class="btn-line" href={mailto}>
+                {c.ctaWrite}
+                <Arrow dir="ne" />
+              </a>
+            )
+          }
+          <a class="link-line" href={site.xUrl} target="_blank" rel="noopener me">
+            {c.ctaFollow}
+            <Arrow dir="ne" />
+            <span class="visually-hidden">(opens in a new tab)</span>
           </a>
-        )}
+        </div>
       </div>
-    )
-  }
-  <div class="container footer__inner">
-    <p class="footer__brand">
-      <span class="footer__name">{site.name}</span>
-      <span class="footer__note">{ui.footer.note}</span>
-    </p>
-    <ul class="footer__links mono" role="list">
-      <li>
-        <a class="link link--quiet" href={site.xUrl} target="_blank" rel="noopener me">
-          {site.handle} <span class="arrow arrow--ne" aria-hidden="true">↗</span>
-          <span class="visually-hidden">(opens in a new tab)</span>
-        </a>
-      </li>
-      <li>
-        <a class="link link--quiet" href="#top">
-          {ui.footer.top} <span class="arrow" aria-hidden="true">↑</span>
-        </a>
-      </li>
-      <li class="footer__year">© {year}</li>
-    </ul>
+    </div>
+
+    <div class="footer__bar">
+      <p class="footer__brand">
+        <span class="footer__name">{site.name}</span>
+        <span class="footer__note">{ui.footer.note}</span>
+      </p>
+      <ul class="footer__links" role="list">
+        {
+          site.email && (
+            <li>
+              <a href={`mailto:${site.email}`}>{site.email}</a>
+            </li>
+          )
+        }
+        <li>
+          <a href={site.xUrl} target="_blank" rel="noopener me">
+            {site.handle}
+            <span class="visually-hidden">on X (opens in a new tab)</span>
+          </a>
+        </li>
+        <li>
+          <a href="#top">
+            {ui.footer.top} <Arrow dir="n" />
+          </a>
+        </li>
+        <li class="footer__year">© {year}</li>
+      </ul>
+    </div>
   </div>
 </footer>
 
 <style>
   .footer {
-    margin-top: var(--section-space);
+    margin-top: clamp(3rem, 2rem + 4vw, 6rem);
     border-top: 1px solid var(--line);
-    padding-block: 2rem 2.5rem;
-    padding-bottom: max(2.5rem, env(safe-area-inset-bottom));
   }
-  .footer__partner {
+  /* Right after the partner band: no second line, no extra gap */
+  :global(main:has(> .partner:last-child)) + .footer {
+    margin-top: 0;
+    border-top: 0;
+  }
+  .footer__inner {
+    max-width: var(--max);
+    margin-inline: auto;
+    padding: clamp(4rem, 3rem + 4vw, 7rem) var(--gutter) max(2rem, env(safe-area-inset-bottom));
+  }
+
+  .closing {
+    display: grid;
+    gap: 1.75rem var(--gap);
+  }
+  @media (min-width: 1024px) {
+    .closing {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      align-items: end;
+    }
+    .closing .eyebrow {
+      grid-column: 1 / -1;
+    }
+    .closing__line {
+      grid-column: 1 / span 8;
+    }
+    .closing__side {
+      grid-column: 9 / -1;
+    }
+  }
+  .closing__line {
+    font-size: clamp(2.75rem, 1.4rem + 5vw, 6.5rem);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+  }
+  .closing__line span,
+  .closing__line em {
+    display: block;
+  }
+  .closing__line em {
+    color: var(--ink-2);
+    padding-left: 0.3em;
+  }
+  .closing__text {
+    color: var(--ink-2);
+    max-width: 30ch;
+  }
+  .closing__cta {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem 2rem;
-    padding-bottom: 1.5rem;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px solid var(--line);
+    gap: 1rem 2rem;
+    margin-top: 1.5rem;
   }
-  .footer__partner-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.7rem;
-    min-height: 44px;
-    font-size: var(--text-lg);
-    font-weight: 500;
-    letter-spacing: -0.015em;
-    color: var(--ink);
-  }
-  .footer__partner-link .arrow--e {
-    color: var(--accent);
-    transition: transform var(--t-fast) var(--ease);
-  }
-  .footer__partner-link:hover .arrow--e {
-    transform: translateX(4px);
-  }
-  .footer__dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-dim);
-  }
-  .footer__mail {
-    text-transform: none;
-    color: var(--ink-3);
-    min-height: 32px;
-  }
-  .footer__inner {
+
+  .footer__bar {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
     gap: 1rem 2rem;
+    margin-top: clamp(4rem, 3rem + 3vw, 6rem);
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
   }
   .footer__brand {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 0.25rem 1rem;
+    gap: 0.25rem 1.25rem;
   }
   .footer__name {
-    font-weight: 500;
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    font-weight: 360;
+    letter-spacing: -0.02em;
   }
   .footer__note {
     color: var(--ink-3);
@@ -120,14 +162,27 @@ const year = new Date().getFullYear();
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.5rem 1.5rem;
+    gap: 0.25rem 1.75rem;
     list-style: none;
+    font-size: 0.6875rem;
+    font-weight: 450;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
     color: var(--ink-3);
   }
   .footer__links a {
-    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 36px;
+    transition: color var(--t-fast) var(--ease);
+  }
+  .footer__links a:hover {
+    color: var(--ink);
   }
   .footer__links li:first-child {
     text-transform: none;
+    letter-spacing: 0.02em;
+    font-size: 0.8125rem;
   }
 </style>

@@ -43,8 +43,10 @@ export const projects: Project[] = [
     workingTitle: true,
     summary:
       'A third-person walk through a forest. It started in Godot, moved to Unreal, and went through several passes on the trees, lighting and characters — built with AI models connected to my tools.',
+    oneLiner: 'A third-person forest world. First pass in Godot, rebuilt in Unreal — four public builds in twelve days.',
     types: ['Game prototype', '3D', 'AI workflow'],
     status: 'paused',
+    statusShort: 'The hardware hit its limit',
     statusNote:
       'This was my last update on this one. My 16GB MacBook started to struggle with Unreal, so I’m thinking about going back to Godot and making a different game instead.',
     featured: true,

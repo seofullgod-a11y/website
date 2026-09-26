@@ -3,5 +3,7 @@ Fonts in this folder are licensed under the SIL Open Font License 1.1 (https://o
 - Geist, Geist Mono — Copyright 2024 The Geist Project Authors (https://github.com/vercel/geist-font)
 - Instrument Serif — Copyright 2022 The Instrument Serif Project Authors (https://github.com/Instrument/instrument-serif)
 - IBM Plex Sans Thai — Copyright 2019 IBM Corp. (https://github.com/IBM/plex)
+- Newsreader — Copyright 2020 The Newsreader Project Authors (https://github.com/productiontype/Newsreader)
 
 Files were taken from the Fontsource packages (latin / thai subsets).
+Newsreader was subset to Latin and limited to weights 280–480, optical sizes 24–72.

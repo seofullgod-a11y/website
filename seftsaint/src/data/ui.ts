@@ -12,16 +12,36 @@ export const ui = {
   nav: {
     work: 'Work',
     journal: 'Journal',
+    notes: 'Notes',
     about: 'About',
-    partner: 'Partner',
+    partner: 'Partners',
     x: 'X',
     home: 'Home',
+    talk: 'Let’s talk',
+    menu: 'Menu',
+    closeMenu: 'Close',
   },
 
   hero: {
     viewWork: 'View work',
     followX: 'Follow on X',
     latest: 'Latest',
+    scroll: 'Scroll',
+    pauseFootage: 'Pause footage',
+    playFootage: 'Play footage',
+  },
+
+  featured: {
+    previous: 'Previous build',
+    next: 'Next build',
+    builds: 'Builds',
+    showBuild: 'Show build',
+  },
+
+  notes: {
+    watch: 'Watch',
+    onX: 'On X',
+    now: 'Now',
   },
 
   sections: {

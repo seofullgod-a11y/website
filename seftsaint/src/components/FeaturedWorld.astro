@@ -1,0 +1,298 @@
+---
+/**
+ * Featured world — the gateway into one project.
+ * Left: name, one line, status, the way in. Right: a cinemascope strip that steps
+ * through every public build (oldest → newest; opens on the newest).
+ * Content: projects.ts (title, oneLiner, status) + updates.ts (builds) + site.ts → featured.
+ */
+import { Picture } from 'astro:assets';
+import type { Project } from '../data/types';
+import { site } from '../data/site';
+import { ui } from '../data/ui';
+import { getUpdatesFor } from '../lib/content';
+import { resolveImage } from '../lib/media';
+import { formatDateNumeric } from '../lib/format';
+import Arrow from './Arrow.astro';
+
+interface Props {
+  project: Project;
+}
+const { project: p } = Astro.props;
+const f = site.featured;
+const href = `/work/${p.slug}/`;
+
+const builds = getUpdatesFor(p.slug)
+  .map((u) => ({ u, img: resolveImage(u.media?.wide ?? u.media?.image) }))
+  .filter((b): b is { u: typeof b.u; img: NonNullable<typeof b.img> } => !!b.img);
+const last = builds.length - 1;
+const pad = (n: number) => String(n).padStart(2, '0');
+const statusLabel = ui.status[p.status];
+const shortNote = p.statusShort ?? '';
+---
+
+<section id="work" class="world" aria-labelledby="world-title">
+  <div class="world__grid">
+    <div class="world__text" data-reveal>
+      <p class="eyebrow">{f.kicker}</p>
+      <h2 id="world-title" class="display world__title">{p.title}</h2>
+      {p.workingTitle && <p class="world__wt eyebrow">{ui.project.workingTitle}</p>}
+      <p class="world__line">{p.oneLiner ?? p.summary}</p>
+      <p class="world__status">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span class="eyebrow world__status-label">{statusLabel}</span>
+        {shortNote && <span class="world__status-note">— {shortNote}</span>}
+      </p>
+      <a class="link-line world__cta" href={href}>
+        {f.cta}
+        <Arrow dir="e" />
+      </a>
+    </div>
+
+    {
+      builds.length > 0 && (
+        <div class="world__stage" data-reveal style="--reveal-delay:80ms" data-builds data-default={last}>
+          <a class="world__frame" href={`${href}#${builds[last].u.id}`} data-build-link aria-label={`${p.title} — ${builds[last].u.title}`}>
+            {builds.map((b, i) => (
+              <Picture
+                src={b.img}
+                alt={b.u.media?.alt ?? ''}
+                formats={['avif', 'webp']}
+                widths={[640, 960, 1280, 1600, 2240].filter((w) => w <= b.img.width)}
+                sizes="(min-width: 1520px) 1000px, (min-width: 1024px) 66vw, 100vw"
+                loading="lazy"
+                class="world__img"
+                pictureAttributes={{
+                  class: `world__pic${i === last ? ' is-active' : ''}`,
+                  'data-build': String(i),
+                  'data-id': b.u.id,
+                  'data-title': b.u.title,
+                  'data-label': b.u.label ?? b.u.title,
+                  'data-date': formatDateNumeric(b.u.date),
+                  'data-iso': b.u.date,
+                }}
+              />
+            ))}
+            <ul class="world__words eyebrow" role="list" aria-hidden="true">
+              {f.words.map((w) => (
+                <li>{w}</li>
+              ))}
+            </ul>
+          </a>
+
+          <div class="world__bar">
+            <p class="world__caption" aria-live="polite">
+              <time class="mono" data-build-date datetime={builds[last].u.date}>
+                {formatDateNumeric(builds[last].u.date)}
+              </time>
+              <span class="world__caption-title" data-build-title>
+                {builds[last].u.title}
+              </span>
+            </p>
+            <p class="world__count mono" aria-hidden="true">
+              <span data-build-count>{pad(last + 1)}</span> / {pad(builds.length)}
+            </p>
+            {builds.length > 1 && (
+              <div class="world__nav" role="group" aria-label={ui.featured.builds}>
+                <button type="button" class="round-btn" data-build-prev aria-label={ui.featured.previous}>
+                  <Arrow dir="w" />
+                </button>
+                <button type="button" class="round-btn" data-build-next aria-label={ui.featured.next}>
+                  <Arrow dir="e" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .world {
+    max-width: var(--max);
+    margin-inline: auto;
+    padding: clamp(4.5rem, 3rem + 5vw, 8rem) var(--gutter) clamp(4rem, 3rem + 4vw, 7rem);
+  }
+  .world__grid {
+    display: grid;
+    gap: 2.5rem var(--gap);
+  }
+  @media (min-width: 1024px) {
+    .world__grid {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      align-items: center;
+    }
+    .world__text {
+      grid-column: 1 / span 4;
+      padding-right: 1rem;
+    }
+    .world__stage {
+      grid-column: 5 / -1;
+    }
+  }
+
+  .world__title {
+    margin-top: 1.25rem;
+    font-size: clamp(2.75rem, 1.6rem + 3.2vw, 4.75rem);
+    line-height: 0.95;
+  }
+  .world__wt {
+    margin-top: 0.75rem;
+    color: var(--ink-faint);
+  }
+  .world__line {
+    margin-top: 1.25rem;
+    max-width: 34ch;
+    color: var(--ink-2);
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+  .world__status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.75rem;
+    margin-top: 1.5rem;
+    font-size: 0.875rem;
+    color: var(--ink-2);
+  }
+  .world__status-label {
+    color: var(--ink);
+  }
+  .world__cta {
+    margin-top: 2rem;
+    min-width: 14rem;
+  }
+
+  /* The strip */
+  .world__frame {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 10;
+    background: var(--frame);
+    border-radius: 2px;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  @media (min-width: 700px) {
+    .world__frame {
+      aspect-ratio: 2.39 / 1;
+    }
+  }
+  .world__frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: linear-gradient(90deg, rgb(11 12 12 / 0.55) 0%, rgb(11 12 12 / 0) 38%);
+    box-shadow: inset 0 0 0 1px rgb(235 230 220 / 0.06);
+    pointer-events: none;
+  }
+  .world__pic {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 700ms var(--ease);
+  }
+  .world__pic.is-active {
+    opacity: 1;
+  }
+  .world__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.04);
+    transition: transform 1600ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .world__pic.is-active .world__img {
+    transform: none;
+  }
+  .world__frame:hover .world__pic.is-active .world__img {
+    transform: scale(1.015);
+  }
+  .world__words {
+    position: absolute;
+    left: clamp(1rem, 0.5rem + 2vw, 2.25rem);
+    top: 50%;
+    z-index: 3;
+    transform: translateY(-50%);
+    list-style: none;
+    display: grid;
+    gap: 0.15rem;
+    padding-top: 1rem;
+    color: var(--ink);
+    text-shadow: 0 1px 12px rgb(0 0 0 / 0.5);
+  }
+  .world__words::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1.5rem;
+    height: 1px;
+    background: var(--ink);
+    opacity: 0.6;
+  }
+  @media (max-width: 520px) {
+    .world__words {
+      display: none;
+    }
+  }
+
+  .world__bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 1rem 1.5rem;
+    padding-top: 1rem;
+  }
+  .world__caption {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    min-width: 0;
+    font-size: 0.9375rem;
+  }
+  .world__caption time {
+    color: var(--ink-3);
+    flex: none;
+  }
+  .world__caption-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .world__count {
+    color: var(--ink-2);
+    letter-spacing: 0.18em;
+  }
+  .world__nav {
+    display: flex;
+    gap: 0.5rem;
+  }
+  @media (max-width: 520px) {
+    .world__bar {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+    .world__caption {
+      grid-column: 1 / -1;
+    }
+  }
+  .round-btn {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--line-2);
+    transition:
+      background-color var(--t) var(--ease),
+      color var(--t) var(--ease);
+  }
+  .round-btn:hover {
+    background: var(--ink);
+    color: var(--bg);
+  }
+</style>

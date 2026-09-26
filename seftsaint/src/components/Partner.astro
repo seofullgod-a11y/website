@@ -1,402 +1,289 @@
 ---
-/** Partner / investors — content lives in src/data/site.ts → partner */
+/**
+ * Partners & investors — confident, calm, specific.
+ * Content: src/data/site.ts → partner. Numbers must be real (see proofNote).
+ */
 import { site } from '../data/site';
 import { ui } from '../data/ui';
-import Media from './Media.astro';
 import { partnerMailto, promote } from '../lib/partner';
+import Arrow from './Arrow.astro';
 
 const p = site.partner;
 const [line1, line2] = p.headline;
 const mailto = partnerMailto();
 const countUp = promote('countUp');
+const pad = (n: number) => String(n).padStart(2, '0');
 ---
 
-<div class="partner">
-  <span class="partner__rule" aria-hidden="true" data-reveal></span>
+<section id="partner" class="partner" aria-labelledby="partner-title">
+  <div class="partner__inner">
+    <p class="eyebrow eyebrow--rule" data-reveal>{p.kicker}</p>
 
-  <div class="partner__intro" data-reveal>
-    <p class="partner__kicker mono">
-      <span class="partner__dot" aria-hidden="true"></span>
-      {p.heroLink}
-    </p>
-    <h3 class="partner__title">
-      <span>{line1}</span>
-      {line2 && <span class="serif-italic">{line2}</span>}
-    </h3>
-    <p class="partner__lead">{p.lead}</p>
-    {p.body.map((t) => <p class="partner__body">{t}</p>)}
+    <div class="partner__top">
+      <h2 id="partner-title" class="display partner__title" data-reveal>
+        <span>{line1}</span>
+        {line2 && <em>{line2}</em>}
+      </h2>
 
-    <div class="partner__cta">
-      {
-        mailto && (
-          <a class="btn-accent" href={mailto}>
-            {p.ctaEmail}
-            <span class="arrow arrow--e" aria-hidden="true">→</span>
+      <div class="partner__pitch" data-reveal style="--reveal-delay:80ms">
+        <p class="partner__lead">{p.lead}</p>
+        {p.body.map((t) => <p class="partner__body">{t}</p>)}
+
+        <div class="partner__cta">
+          {
+            mailto && (
+              <a class="btn-solid" href={mailto}>
+                {p.ctaTalk}
+                <Arrow dir="ne" />
+              </a>
+            )
+          }
+          <a class="link-line" href={site.xUrl} target="_blank" rel="noopener me">
+            {p.ctaX}
+            <Arrow dir="ne" />
+            <span class="visually-hidden">(opens in a new tab)</span>
           </a>
-        )
-      }
-      <a class="link link--quiet partner__x" href={site.xUrl} target="_blank" rel="noopener me">
-        {p.ctaX} <span class="arrow arrow--ne" aria-hidden="true">↗</span>
-        <span class="visually-hidden">(opens in a new tab)</span>
-      </a>
+        </div>
+        {
+          site.email && (
+            <p class="partner__email">
+              <span class="partner__address">{site.email}</span>
+              <button
+                type="button"
+                class="copy"
+                data-copy={site.email}
+                data-copied-label={p.ctaCopied}
+                data-announce={ui.partner.copiedAnnounce}
+                hidden
+              >
+                <span data-copy-label>{p.ctaCopy}</span>
+              </button>
+              <span class="visually-hidden" role="status" data-copy-status />
+            </p>
+          )
+        }
+      </div>
     </div>
-    {
-      site.email && (
-        <p class="partner__email">
-          <span class="mono partner__address">{site.email}</span>
-          <button
-            type="button"
-            class="copy"
-            data-copy={site.email}
-            data-copied-label={p.ctaCopied}
-            data-announce={ui.partner.copiedAnnounce}
-            hidden
-          >
-            <svg class="copy__icon" viewBox="0 0 16 16" aria-hidden="true">
-              <rect x="5.5" y="5.5" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.3" fill="none" />
-              <path d="M3.5 10.5v-7h7" stroke="currentColor" stroke-width="1.3" fill="none" />
-            </svg>
-            <svg class="copy__done" viewBox="0 0 16 16" aria-hidden="true">
-              <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="1.5" fill="none" />
-            </svg>
-            <span data-copy-label>{p.ctaCopy}</span>
-          </button>
-          <span class="visually-hidden" role="status" data-copy-status></span>
-        </p>
-      )
-    }
-  </div>
 
-  <div class="partner__side" data-reveal style="--reveal-delay:60ms">
-    {
-      p.media && (
-        <figure class="partner__figure">
-          <Media
-            item={p.media}
-            mode="preview"
-            title={p.mediaTitle}
-            meta={p.mediaMeta}
-            sizes="(min-width: 1440px) 620px, (min-width: 1000px) 44vw, 100vw"
-          />
-          <figcaption class="partner__made">
-            <span class="partner__made-dot" aria-hidden="true" />
-            <span class="partner__made-text">
-              {p.madeOn}
-              {p.madeOnNote && <span class="partner__made-note"> — {p.madeOnNote}</span>}
-            </span>
-          </figcaption>
-        </figure>
-      )
-    }
+    <div class="partner__bottom">
+      <div class="partner__proof" data-reveal>
+        <dl class="proof">
+          {
+            p.proof.map((x) => (
+              <div class="proof__item">
+                <dt class="proof__label">{x.label}</dt>
+                <dd class="proof__value display">
+                  <span aria-hidden="true" data-count={countUp ? x.value : undefined}>
+                    {x.value}
+                  </span>
+                  <span class="visually-hidden">{x.value}</span>
+                </dd>
+              </div>
+            ))
+          }
+        </dl>
+        {p.proofNote && <p class="proof__note">{p.proofNote}</p>}
+      </div>
 
-    <dl class="needs">
-      {
-        p.needs.map((n) => (
-          <div class="needs__row">
-            <dt class="mono">{n.label}</dt>
-            <dd>{n.text}</dd>
-          </div>
-        ))
-      }
-    </dl>
+      <div class="partner__unlocks" data-reveal style="--reveal-delay:80ms">
+        <p class="eyebrow">{p.unlocksTitle}</p>
+        <ol class="unlocks" role="list">
+          {
+            p.unlocks.map((u, i) => (
+              <li class="unlock">
+                <span class="unlock__no mono">{pad(i + 1)}</span>
+                <span class="unlock__title">{u.title}</span>
+                <span class="unlock__text">{u.text}</span>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </div>
   </div>
-
-  <div class="proof" data-reveal style="--reveal-delay:100ms">
-    <ul class="proof__list" role="list">
-      {
-        p.proof.map((x) => (
-          <li class="proof__item">
-            <span class="proof__value">
-              <span aria-hidden="true" data-count={countUp ? x.value : undefined}>{x.value}</span>
-              <span class="visually-hidden">{x.value}</span>
-            </span>
-            <span class="proof__label">{x.label}</span>
-          </li>
-        ))
-      }
-    </ul>
-    {p.proofNote && <p class="proof__note">{p.proofNote}</p>}
-  </div>
-</div>
+</section>
 
 <style>
-  /* A raised panel — the one section on the page that asks for something */
   .partner {
-    position: relative;
+    margin-top: clamp(5rem, 3rem + 6vw, 9rem);
+    background: var(--bg-raised);
+    border-block: 1px solid var(--line);
+  }
+  .partner__inner {
+    max-width: var(--max);
+    margin-inline: auto;
+    padding: clamp(4rem, 3rem + 4vw, 7rem) var(--gutter);
+  }
+
+  .partner__top {
     display: grid;
     gap: 2.5rem var(--gap);
-    padding: clamp(1.5rem, 1rem + 2.5vw, 3.5rem);
-    background: var(--bg-raised);
-    border-radius: 6px;
-    box-shadow: inset 0 0 0 1px var(--line);
-    overflow: hidden;
+    margin-top: clamp(1.75rem, 1.2rem + 1.5vw, 2.5rem);
   }
-  @media (min-width: 1000px) {
-    .partner {
+  @media (min-width: 1024px) {
+    .partner__top {
       grid-template-columns: repeat(12, minmax(0, 1fr));
-      align-items: start;
-      row-gap: 3.5rem;
+      align-items: end;
     }
-    .partner__intro {
-      grid-column: 1 / span 5;
+    .partner__title {
+      grid-column: 1 / span 7;
     }
-    .partner__side {
-      grid-column: 7 / -1;
-    }
-    .proof {
-      grid-column: 1 / -1;
+    .partner__pitch {
+      grid-column: 8 / -1;
+      padding-left: clamp(1.5rem, 0.5rem + 2vw, 3rem);
+      border-left: 1px solid var(--line-2);
     }
   }
-
-  /* Accent line that draws across the top edge when the panel scrolls in */
-  .partner__rule {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, var(--accent), rgb(198 220 178 / 0.25) 55%, transparent);
-    transform-origin: 0 50%;
-  }
-  :global(.js) .partner__rule[data-reveal] {
-    opacity: 1;
-    transform: scaleX(0);
-    transition: transform 500ms var(--ease);
-  }
-  :global(.js) .partner__rule[data-reveal]:global(.is-in) {
-    transform: scaleX(1);
-  }
-
-  .partner__kicker {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    color: var(--accent);
-    margin-bottom: 1.5rem;
-  }
-  .partner__dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-dim);
-  }
-  :global([data-fx~='pulse']) .partner__dot {
-    animation: fx-breathe 3.6s ease-in-out infinite;
-  }
-
   .partner__title {
-    font-size: var(--text-2xl);
-    font-weight: 500;
-    letter-spacing: -0.04em;
-    line-height: 0.98;
+    font-size: clamp(3.25rem, 1.4rem + 6.2vw, 8rem);
+    line-height: 0.92;
+    letter-spacing: -0.035em;
   }
-  .partner__title span {
+  .partner__title span,
+  .partner__title em {
     display: block;
   }
-  .partner__title .serif-italic {
-    font-size: 1.08em;
-    letter-spacing: -0.02em;
+  .partner__title em {
+    padding-left: 0.3em;
   }
   .partner__lead {
-    margin-top: 1.75rem;
-    font-size: var(--text-xl);
-    line-height: 1.35;
+    font-family: var(--font-display);
+    font-size: clamp(1.375rem, 1.1rem + 0.8vw, 1.75rem);
+    font-weight: 340;
     letter-spacing: -0.015em;
-    max-width: 30ch;
+    line-height: 1.25;
   }
   .partner__body {
     margin-top: 1rem;
     color: var(--ink-2);
-    font-size: var(--text-md);
-    max-width: 52ch;
+    max-width: 46ch;
   }
-
   .partner__cta {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.75rem 1.5rem;
+    gap: 1rem 2rem;
     margin-top: 2rem;
   }
-  .btn-accent {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    min-height: 48px;
-    padding: 0 1.35rem;
-    border-radius: 999px;
-    background: var(--accent);
-    color: var(--bg);
-    font-size: 0.9375rem;
-    font-weight: 500;
-    transition:
-      background-color var(--t-fast) var(--ease),
-      transform var(--t-fast) var(--ease);
-  }
-  .btn-accent:hover {
-    background: #d6e8c4;
-  }
-  .btn-accent:hover .arrow--e {
-    transform: translateX(3px);
-  }
-  .btn-accent .arrow--e {
-    transition: transform var(--t-fast) var(--ease);
-  }
-  .partner__x {
-    font-size: 0.875rem;
-    min-height: 44px;
-  }
-
   .partner__email {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.25rem 0.75rem;
-    margin-top: 0.9rem;
+    gap: 0.25rem 1rem;
+    margin-top: 1.25rem;
+    font-size: 0.875rem;
   }
   .partner__address {
-    color: var(--ink-3);
-    text-transform: none;
+    color: var(--ink-2);
     user-select: all;
   }
   .copy {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
     min-height: 32px;
-    padding: 0 0.7rem;
-    border-radius: 999px;
-    font-size: 0.8125rem;
-    color: var(--ink-2);
-    box-shadow: inset 0 0 0 1px var(--line-2);
-    transition:
-      color var(--t-fast) var(--ease),
-      box-shadow var(--t-fast) var(--ease);
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    transition: color var(--t-fast) var(--ease);
   }
   .copy[hidden] {
     display: none;
   }
   .copy:hover {
     color: var(--ink);
-    box-shadow: inset 0 0 0 1px rgb(236 233 226 / 0.35);
-  }
-  .copy svg {
-    width: 13px;
-    height: 13px;
-  }
-  .copy__done {
-    display: none;
   }
   .copy[data-state='copied'] {
     color: var(--accent);
-    box-shadow: inset 0 0 0 1px rgb(198 220 178 / 0.45);
-  }
-  .copy[data-state='copied'] .copy__icon {
-    display: none;
-  }
-  .copy[data-state='copied'] .copy__done {
-    display: block;
   }
 
-  /* The work, next to the ask */
-  .partner__figure {
-    margin: 0;
-  }
-  .partner__made {
-    display: flex;
-    align-items: center;
-    gap: 0.7rem;
-    margin-top: 0.75rem;
-    font-size: 0.875rem;
-  }
-  .partner__made-dot {
-    flex: none;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-    transform: translateY(-1px);
-  }
-  .partner__made-text {
-    color: var(--ink);
-  }
-  .partner__made-note {
-    color: var(--ink-2);
-  }
-
-  .needs {
-    margin-top: 1.75rem;
+  .partner__bottom {
+    display: grid;
+    gap: 3rem var(--gap);
+    margin-top: clamp(3.5rem, 2.5rem + 3vw, 5.5rem);
+    padding-top: clamp(2rem, 1.5rem + 1.5vw, 3rem);
     border-top: 1px solid var(--line);
   }
-  .needs__row {
-    display: grid;
-    grid-template-columns: 7.5rem minmax(0, 1fr);
-    gap: 1rem;
-    padding-block: 1rem;
-    border-bottom: 1px solid var(--line);
-  }
-  .needs dt {
-    color: var(--ink-3);
-    padding-top: 0.2em;
-  }
-  .needs dd {
-    margin: 0;
-    font-size: 0.9375rem;
-    line-height: 1.55;
-  }
-  @media (max-width: 480px) {
-    .needs__row {
-      grid-template-columns: 1fr;
-      gap: 0.35rem;
+  @media (min-width: 1024px) {
+    .partner__bottom {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+    .partner__proof {
+      grid-column: 1 / span 7;
+    }
+    .partner__unlocks {
+      grid-column: 8 / -1;
+      padding-left: clamp(1.5rem, 0.5rem + 2vw, 3rem);
     }
   }
 
-  /* Proof — real numbers only */
-  .proof__list {
-    list-style: none;
+  .proof {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--gap);
   }
   .proof__item {
-    display: grid;
-    gap: 0.5rem;
-    padding-top: 1.1rem;
-    border-top: 1px solid var(--line-2);
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+    gap: 0.6rem;
   }
   .proof__value {
-    font-size: clamp(2rem, 1.2rem + 3vw, 4rem);
-    font-weight: 500;
-    letter-spacing: -0.04em;
+    margin: 0;
+    font-size: clamp(2.25rem, 1.3rem + 3vw, 4.25rem);
     line-height: 1;
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: lining-nums tabular-nums;
   }
   .proof__label {
     color: var(--ink-2);
-    font-size: 0.875rem;
-    line-height: 1.4;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    max-width: 18ch;
   }
   .proof__note {
-    margin-top: 1rem;
+    margin-top: 1.5rem;
     color: var(--ink-3);
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
   }
-  @media (max-width: 420px) {
-    .proof__list {
-      gap: 0.75rem;
+
+  .unlocks {
+    list-style: none;
+    margin-top: 1rem;
+    border-top: 1px solid var(--line);
+  }
+  .unlock {
+    display: grid;
+    grid-template-columns: 2.5rem 6.5rem minmax(0, 1fr);
+    gap: 0.25rem 1rem;
+    align-items: baseline;
+    padding-block: 1rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .unlock__no {
+    color: var(--ink-3);
+  }
+  .unlock__title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 360;
+    letter-spacing: -0.01em;
+  }
+  .unlock__text {
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+  }
+  @media (max-width: 560px) {
+    .unlock {
+      grid-template-columns: 2.25rem minmax(0, 1fr);
     }
-    .proof__value {
-      font-size: 1.625rem;
+    .unlock__text {
+      grid-column: 2;
+    }
+    .proof {
+      gap: 0.75rem;
     }
     .proof__label {
       font-size: 0.75rem;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    :global(.js) .partner__rule[data-reveal] {
-      transform: none;
     }
   }
 </style>

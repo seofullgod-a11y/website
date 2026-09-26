@@ -91,6 +91,28 @@ if (fx.has('parallax') && fine.matches && motionOK()) {
   });
 }
 
+/* ── Hero: footage drifts slower than the page (scroll parallax) ── */
+if (fx.has('parallax') && motionOK()) {
+  const layer = document.querySelector<HTMLElement>('[data-hero-parallax]');
+  const hero = layer?.closest<HTMLElement>('.hero');
+  if (layer && hero) {
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const y = Math.min(window.scrollY, hero.offsetHeight);
+      layer.style.transform = `translate3d(0, ${(y * 0.22).toFixed(1)}px, 0)`;
+    };
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!raf && window.scrollY < hero.offsetHeight * 1.2) raf = requestAnimationFrame(update);
+      },
+      { passive: true },
+    );
+    update();
+  }
+}
+
 /* ── Evolution viewer ──────────────────────────────────────── */
 if (fx.has('evolution')) {
   document.querySelectorAll<HTMLElement>('[data-evo]').forEach((evo) => {
