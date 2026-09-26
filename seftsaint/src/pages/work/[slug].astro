@@ -13,6 +13,7 @@ import { getProjects, getUpdatesFor } from '../../lib/content';
 import { formatDate } from '../../lib/format';
 import { resolveImage } from '../../lib/media';
 import { promote, partnerHref, partnerMailto } from '../../lib/partner';
+import '../../styles/devlog.css';
 
 export function getStaticPaths() {
   return getProjects().map((project) => ({ params: { slug: project.slug }, props: { project } }));
@@ -205,6 +206,9 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
           </section>
         )
       }
+
+      {/* Devlog: this project's latest days — put in by the server (server/devlog.mjs); nothing shows until there is an entry */}
+      <Fragment set:html={`<!--devlog:project:${p.slug}--><!--/devlog-->`} />
 
       {
         restSections.map((s) => (

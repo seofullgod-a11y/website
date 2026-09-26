@@ -1,0 +1,91 @@
+---
+/**
+ * Devlog on the home page — the latest day of updates (up to three), and a way to the rest.
+ * The entries are put in by the server (server/devlog.mjs) where the marker is;
+ * words: src/data/devlog.ts. You post updates from /studio.
+ */
+import { devlog } from '../data/devlog';
+import Arrow from './Arrow.astro';
+import '../styles/devlog.css';
+
+interface Props {
+  no?: string;
+}
+const { no } = Astro.props;
+const [h1, h2] = devlog.headline;
+const slot = `<!--devlog:latest--><p class="dl-empty">${devlog.offline}</p><!--/devlog-->`;
+---
+
+<section id="devlog" class="dls" aria-labelledby="dls-title" data-hud={devlog.kicker} data-hud-no={no}>
+  <div class="dls__inner">
+    <header class="dls__head">
+      <div data-reveal>
+        <p class="eyebrow" data-decode-area data-decode-reveal>
+          {no && <span class="eyebrow__no" aria-hidden="true">{no}</span>}
+          <span data-decode>{devlog.kicker}</span>
+        </p>
+        <h2 id="dls-title" class="display dls__title">
+          <span>{h1}</span>
+          {h2 && <em>{h2}</em>}
+        </h2>
+      </div>
+      <div class="dls__side" data-reveal style="--reveal-delay:80ms">
+        <p class="dls__intro">{devlog.intro}</p>
+        <a class="btn-line" href="/devlog/" data-decode-area>
+          <span data-decode>{devlog.cta}</span>
+          <Arrow dir="e" />
+        </a>
+      </div>
+    </header>
+    <Fragment set:html={slot} />
+  </div>
+</section>
+
+<style>
+  .dls__inner {
+    max-width: var(--max);
+    margin-inline: auto;
+    padding: clamp(3.5rem, 2rem + 4vw, 6.5rem) var(--gutter) 0;
+  }
+  .dls__head {
+    display: grid;
+    gap: 1.75rem var(--gap);
+    margin-bottom: clamp(2rem, 1.5rem + 1.5vw, 3rem);
+  }
+  @media (min-width: 1024px) {
+    .dls__head {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      align-items: end;
+    }
+    .dls__head > :first-child {
+      grid-column: 1 / span 6;
+    }
+    .dls__side {
+      grid-column: 8 / -1;
+    }
+  }
+  .dls__title {
+    margin-top: 1.25rem;
+    font-size: clamp(2.25rem, 1.3rem + 2.6vw, 4rem);
+    line-height: 0.95;
+  }
+  .dls__title span,
+  .dls__title em {
+    display: block;
+  }
+  .dls__title em {
+    color: var(--ink-2);
+    padding-left: 0.3em;
+  }
+  .dls__side {
+    display: grid;
+    justify-items: start;
+    gap: 1.5rem;
+  }
+  .dls__intro {
+    max-width: 44ch;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+</style>

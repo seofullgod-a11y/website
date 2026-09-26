@@ -416,3 +416,25 @@ document.querySelectorAll<HTMLElement>('[data-builds]').forEach((root) => {
     io.observe(root);
   }
 });
+
+/* ── 7. Devlog: category filter without a page load ─────────── */
+const dlFilters = document.querySelector<HTMLElement>('[data-devlog-filters]');
+const dlList = document.querySelector<HTMLElement>('[data-devlog-list]');
+if (dlFilters && dlList) {
+  dlFilters.addEventListener('click', (e) => {
+    const chip = (e.target as Element | null)?.closest<HTMLAnchorElement>('a.dl-chip');
+    if (!chip || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    e.preventDefault();
+    const cat = chip.dataset.cat ?? '';
+    dlFilters.querySelectorAll<HTMLAnchorElement>('a.dl-chip').forEach((a) => {
+      if (a === chip) a.setAttribute('aria-current', 'true');
+      else a.removeAttribute('aria-current');
+    });
+    dlList.querySelectorAll<HTMLElement>('.dl-card').forEach((c) => (c.hidden = !!cat && c.dataset.cat !== cat));
+    dlList.querySelectorAll<HTMLElement>('.dl-day').forEach((d) => {
+      d.hidden = !d.querySelector('.dl-card:not([hidden])');
+      d.classList.add('is-in'); // never leave a day waiting for its fade-in
+    });
+    history.replaceState(null, '', cat ? `?c=${encodeURIComponent(cat)}` : location.pathname);
+  });
+}

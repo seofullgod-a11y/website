@@ -29,6 +29,7 @@ Deploy: ดูหัวข้อ **"ขึ้น GitHub + Railway"** ด้า�
 | ต้องการแก้ | ไฟล์ |
 |---|---|
 | ข้อความหน้าแรกทุกส่วน (เรียงตามหน้าเว็บ) | `src/data/site.ts` → `hero`, `proof`, `featured`, `about`, `story`, `partner`, `closing` |
+| **โพสต์อัปเดตรายวันพร้อมคลิป (Devlog)** | เปิด `/studio` บนเว็บ (ดูหัวข้อ Devlog ด้านล่าง) — ชื่อหมวดและข้อความของ Devlog อยู่ใน `src/data/devlog.ts` |
 | **ขนาดและความหนาของตัวอักษร** | `src/styles/global.css` → `:root`: `--w-display` (หัวข้อใหญ่), `--w-display-em` (บรรทัดตัวเอียง), `--w-serif` (หัวข้อเล็ก), `--fs-label` / `--w-label` (ตัวพิมพ์ใหญ่เล็ก ๆ, ปุ่ม, เมนู), `--text-base` (ตัวอักษรเนื้อหา) — ขนาดหัวข้อใหญ่ของแต่ละส่วนอยู่ในไฟล์ของส่วนนั้น เช่น `.hero__title` ใน `src/components/Hero.astro` |
 | ยอดวิว/ไลก์ของแต่ละ build | `src/data/updates.ts` → `stats` (+ วันที่ใน `site.ts` → `story.statsAsOf`) |
 | ชื่อ, ลิงก์ X, อีเมล, meta/SEO | `src/data/site.ts` |
@@ -124,6 +125,50 @@ Newsreader ไม่มีตัวอักษรไทย ถ้าเปล�
 
 ตอนรัน `npm run dev` หรือ `npm run build` terminal จะแสดงรายชื่อไฟล์ที่ยังขาด
 และในโหมด dev จะมีป้ายสีเหลืองบนภาพที่ยังเป็นภาพชั่วคราวหรือยังไม่มีวิดีโอ ป้ายนี้ไม่แสดงบนเว็บจริง
+
+---
+
+## Devlog — อัปเดตรายวันพร้อมคลิป
+
+โพสต์ได้จากมือถือหรือคอมที่ **`/studio`** (เช่น `https://seftsaint.up.railway.app/studio`) ไม่ต้องผ่าน GitHub:
+เลือกหมวด พิมพ์หัวข้อ (และรายละเอียดถ้ามี) แนบคลิปหรือรูป แล้วกด **โพสต์อัปเดต**
+ระบบจะย่อคลิปให้เอง แล้วอัปเดตขึ้นเว็บภายในราว 1 นาที
+
+อัปเดตจะไปขึ้น 3 ที่:
+- **`/devlog`**: ทุกอัปเดต จัดกลุ่มตามวัน (Day 13, Today …) พร้อมตัวกรองตามหมวด
+- **หน้าแรก** ส่วน **03 Devlog**: วันล่าสุด แสดงได้สูงสุด 3 รายการ
+- **หน้าโปรเจกต์**: ส่วน Devlog ของโปรเจกต์นั้น ขึ้นเฉพาะเมื่อมีอัปเดตแล้ว
+
+build ทั้ง 4 ที่โพสต์บน X ไปแล้วจะขึ้นเป็นรายการแรก ๆ ของ Devlog ในหมวด **Build** ด้วย (ปิดได้ที่ `devlog.includeBuilds`)
+
+### ตั้งค่าใน Railway (ทำครั้งเดียว)
+1. **ที่เก็บคลิป (Volume):** ในโปรเจกต์ Railway กด `⌘K` (หรือคลิกขวาที่ว่างบนหน้าโปรเจกต์) → เลือก **Volume** → เลือก service ของเว็บ → Mount path ใส่ `/data`
+2. **รหัสผ่าน:** service ของเว็บ → **Variables** → **New Variable** → ชื่อ `STUDIO_PASSWORD` → ค่าเป็นรหัสผ่านที่ต้องการ (ยาว ๆ และเดายาก)
+3. รอ deploy ใหม่ให้เสร็จ แล้วเปิด `/studio`
+
+ถ้ายังไม่ได้ตั้งรหัสผ่าน หน้า studio จะปิดอยู่ ส่วนเว็บยังทำงานได้ตามปกติ
+ถ้ายังไม่ได้ต่อ Volume หน้า studio จะเตือนและยังไม่รับโพสต์ เพราะถ้าไม่มี Volume ไฟล์จะหายทุกครั้งที่ deploy
+
+### รายละเอียด
+- **ไฟล์ที่รับ:** คลิปจากมือถือ/จอคอม (MP4, MOV รวมถึง HEVC และ HDR จาก iPhone) และรูป ขนาดสูงสุด 1.5 GB ต่อไฟล์ คลิปยาวสุด 5 นาที (ส่วนที่เกินจะถูกตัดออก)
+  - ระบบแปลงเป็น MP4 (H.264) ความยาวด้านยาวสุด 1920px ที่เล่นได้ทุกเครื่อง
+  - ทำคลิปพรีวิวสั้น 8 วินาทีแบบไม่มีเสียงไว้เล่นวนบนหน้าเว็บ
+  - ทำภาพปก
+  - คลิปแนวตั้งจะแสดงเต็มคลิปในกรอบ ไม่ถูกครอป
+  - ไม่เก็บไฟล์ต้นฉบับ
+- **อัปโหลดทีละ 8 MB:** ถ้าเน็ตหลุดระหว่างทาง ระบบจะลองต่อจากจุดเดิมเอง
+- **แก้ไข / ซ่อน / ลบ:** ทำได้จากรายการใต้ฟอร์มในหน้า studio เช่น แก้วันที่ หมวด หัวข้อ รายละเอียด ลิงก์ X หรือซ่อนไว้ก่อนได้
+- **หมวด:** World, Characters, Lighting, Gameplay, UI, AI workflow, Tech, Audio, Build — เปลี่ยนชื่อที่แสดงหรือเพิ่มหมวดได้ใน `src/data/devlog.ts` (อย่าเปลี่ยน `key` ของหมวดที่ใช้ไปแล้ว)
+- **ค่าใช้จ่าย:** Volume คิดตามพื้นที่ที่ใช้ ($0.15/GB/เดือน ตามหน้า Railway ณ ก.ย. 2026) คลิป 30 วินาทีใช้ราว 10–30 MB ส่วนการดูคลิปนับเป็น egress ของ Railway เหมือนวิดีโออื่นบนเว็บ
+- **ความปลอดภัย:**
+  - ต้องใส่รหัสผ่านถึงจะเข้า studio ได้ และเข้าได้ครั้งละ 30 วัน
+  - เปลี่ยน `STUDIO_PASSWORD` เมื่อไหร่ ทุกเครื่องจะออกจากระบบทันที
+  - ถ้าใส่รหัสผิดเกิน 10 ครั้ง ระบบจะล็อกไว้ 15 นาที
+  - หน้า studio ไม่ถูก index โดย Google
+- **ถ้าหน้า studio บอกว่าไม่พบ ffmpeg:**
+  1. ลองกด Redeploy ก่อน
+  2. ถ้ายังไม่หาย ให้เพิ่ม Variable `RAILPACK_DEPLOY_APT_PACKAGES` = `ffmpeg`
+- **ลองบนเครื่องตัวเอง:** `npm run build` แล้ว `STUDIO_PASSWORD=test npm start` → เปิด `http://localhost:4321/studio` (ไฟล์จะเก็บในโฟลเดอร์ `data/` ซึ่งไม่ขึ้น GitHub) ส่วน `npm run dev` จะไม่มีข้อมูล Devlog
 
 ---
 
@@ -260,10 +305,10 @@ preview ควรอยู่ราว 2–5MB ส่วนเดโมเต็
 src/
   data/        ← เนื้อหาทั้งหมด (แก้ตรงนี้เป็นหลัก)
   assets/media ← ภาพผลงาน (ระบบปรับขนาดให้)
-  components/  ← หน้าแรก: Hero → ProofBand (So far) → FeaturedWorld → About (The lab) → Story (บท 01–05) → Partner → Footer (ปิดท้าย)
+  components/  ← หน้าแรก: Hero → ProofBand (So far) → FeaturedWorld → DevlogLatest (Devlog) → About (The lab) → Story (บท 01–05) → Partner → Footer (ปิดท้าย)
                  (SignalBar กับ LabNotes เหลือไว้เป็นไฟล์ที่ชี้ไปยังของใหม่ เพื่อให้ build ผ่านแม้ไฟล์เก่ายังค้างใน GitHub)
                  อื่น ๆ: Header (+ เมนูมือถือ), Media (ภาพ/วิดีโอ), Lightbox, PartnerNudge (การ์ดมุมจอ), Arrow, ...
-  pages/       ← index, work/[slug], 404
+  pages/       ← index, work/[slug], devlog (+ config.json), studio (หน้าโพสต์อัปเดต), 404
   scripts/     ← site.ts (header, fade-in, วิดีโอ, หน้าต่างเล่นวิดีโอ) + fx.ts (เอฟเฟกต์)
                  + partner.ts (การ์ดมุมจอ, Copy email) + intro.ts (ตัวเลขนับขึ้น, Loading world)
                  + scramble.ts (ตัวอักษรถอดรหัส ใช้ร่วมกันหลายที่)
@@ -272,6 +317,7 @@ src/
 scripts/media.mjs ← npm run media (เตรียมวิดีโอ/poster จากไฟล์ต้นฉบับ)
 media-src/     ← วิดีโอต้นฉบับ (ไม่ขึ้น GitHub)
 server.mjs     ← server สำหรับ production (npm start)
+server/        ← devlog.mjs (studio API, เก็บไฟล์, ย่อคลิปด้วย ffmpeg) + render.mjs (HTML ของ Devlog)
 railway.json   ← ค่าตั้ง Railway
 public/
   media/       ← วิดีโอ

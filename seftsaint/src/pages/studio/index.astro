@@ -1,0 +1,635 @@
+---
+/**
+ * /studio — your private page for posting devlog updates (Thai UI, phone-first).
+ * Password: STUDIO_PASSWORD in Railway → Variables. Files go to the Railway volume.
+ * Logic: src/scripts/studio.ts · server: server/devlog.mjs
+ */
+import '../../styles/global.css';
+import { site } from '../../data/site';
+---
+
+<!doctype html>
+<html lang="th" class="js">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#0b0c0c" />
+    <meta name="color-scheme" content="dark" />
+    <title>Studio — {site.name}</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin />
+  </head>
+  <body class="st">
+    <header class="st-top">
+      <a class="st-brand" href="/">{site.name} <span>studio</span></a>
+      <nav class="st-top__nav">
+        <a href="/devlog/" target="_blank" rel="noopener">หน้า Devlog ↗</a>
+        <button type="button" class="st-link" data-logout hidden>ออกจากระบบ</button>
+      </nav>
+    </header>
+
+    <main class="st-main">
+      <p class="st-loading" data-view="loading">กำลังโหลด…</p>
+
+      <section class="st-card" data-view="disabled" hidden>
+        <h1 class="st-h1">Studio ยังปิดอยู่</h1>
+        <p>
+          ไปที่ Railway → service ของเว็บ → <b>Variables</b> → เพิ่ม <code>STUDIO_PASSWORD</code> เป็นรหัสผ่านที่ต้องการ
+          แล้วรอให้ deploy ใหม่เสร็จ จากนั้นเปิดหน้านี้อีกครั้ง
+        </p>
+      </section>
+
+      <section class="st-card st-login" data-view="login" hidden>
+        <h1 class="st-h1">เข้าสู่ Studio</h1>
+        <form data-login>
+          <label class="st-field">
+            <span>รหัสผ่าน</span>
+            <input type="password" name="password" autocomplete="current-password" required />
+          </label>
+          <button class="btn-solid st-submit" type="submit">เข้าสู่ระบบ</button>
+          <p class="st-msg" data-login-msg role="alert"></p>
+        </form>
+      </section>
+
+      <div data-view="app" hidden>
+        <div class="st-warn" data-warn hidden></div>
+
+        <form class="st-card st-form" data-new novalidate>
+          <h1 class="st-h1">อัปเดตใหม่</h1>
+
+          <div class="st-row">
+            <label class="st-field">
+              <span>วันที่</span>
+              <input type="date" name="date" required />
+            </label>
+            <label class="st-field">
+              <span>โปรเจกต์</span>
+              <select name="project" data-projects></select>
+            </label>
+          </div>
+
+          <fieldset class="st-field st-cats">
+            <legend>หมวด</legend>
+            <div class="st-chips" data-cats></div>
+          </fieldset>
+
+          <label class="st-field">
+            <span>หัวข้อ</span>
+            <input name="title" maxlength="120" required placeholder="เช่น Volumetric fog pass" autocomplete="off" />
+          </label>
+
+          <label class="st-field">
+            <span>รายละเอียด <small>(ไม่ใส่ก็ได้)</small></span>
+            <textarea name="text" maxlength="1200" rows="3" placeholder="วันนี้ทำอะไร เจออะไร ใช้อะไร"></textarea>
+          </label>
+
+          <div class="st-field">
+            <span>คลิปหรือรูป <small>(ไม่ใส่ก็ได้)</small></span>
+            <label class="st-drop" data-drop>
+              <input type="file" name="file" accept="video/*,image/*" data-file />
+              <span class="st-drop__main">เลือกคลิปหรือรูป</span>
+              <span class="st-drop__sub">MP4 · MOV · รูป — สูงสุด 1.5 GB · คลิปยาวสุด 5 นาที</span>
+            </label>
+            <div class="st-preview" data-preview hidden>
+              <div class="st-preview__media" data-preview-media></div>
+              <div class="st-preview__info">
+                <p data-file-info></p>
+                <button type="button" class="st-link" data-clear-file>เอาออก</button>
+              </div>
+            </div>
+          </div>
+
+          <label class="st-field">
+            <span>ลิงก์โพสต์บน X <small>(ไม่ใส่ก็ได้)</small></span>
+            <input type="url" name="link" placeholder="https://x.com/seftsaint/status/…" inputmode="url" />
+          </label>
+
+          <label class="st-check">
+            <input type="checkbox" name="hidden" />
+            <span>ซ่อนไว้ก่อน (ยังไม่ขึ้นเว็บ)</span>
+          </label>
+
+          <button class="btn-solid st-submit" type="submit" data-submit>โพสต์อัปเดต</button>
+
+          <div class="st-progress" data-progress hidden>
+            <div class="st-bar"><span data-bar></span></div>
+            <p data-progress-text></p>
+          </div>
+          <p class="st-msg" data-form-msg role="status"></p>
+        </form>
+
+        <section class="st-list" aria-labelledby="st-list-title">
+          <div class="st-list__head">
+            <h2 id="st-list-title" class="st-h2">อัปเดตทั้งหมด</h2>
+            <p class="st-meta" data-storage></p>
+          </div>
+          <div data-entries></div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      import '../../scripts/studio.ts';
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  .st [hidden] {
+    display: none !important;
+  }
+  /* Thai reads badly with wide letter-spacing and forced capitals */
+  .st .btn-solid,
+  .st .btn-line {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    text-transform: none;
+  }
+  .st {
+    min-height: 100dvh;
+    background: var(--bg);
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  .st code {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    padding: 0.05rem 0.35rem;
+    border-radius: 3px;
+    background: rgb(235 230 220 / 0.08);
+  }
+  .st-top {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem max(1rem, env(safe-area-inset-left));
+    border-bottom: 1px solid var(--line);
+    background: rgb(11 12 12 / 0.9);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+  .st-brand {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+  }
+  .st-brand span {
+    margin-left: 0.35rem;
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .st-top__nav {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    font-size: 0.875rem;
+    color: var(--ink-2);
+  }
+  .st-link {
+    font-size: 0.875rem;
+    color: var(--ink-2);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--line-2);
+  }
+  .st-link:hover {
+    color: var(--ink);
+  }
+  .st-main {
+    width: min(100% - 2rem, 44rem);
+    margin: 1.5rem auto 5rem;
+    display: grid;
+    gap: 1.5rem;
+  }
+  .st-loading {
+    color: var(--ink-3);
+  }
+  .st-card {
+    display: grid;
+    gap: 1.1rem;
+    padding: clamp(1.1rem, 0.8rem + 1.5vw, 1.75rem);
+    border-radius: 6px;
+    background: var(--bg-raised);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .st-card form {
+    display: grid;
+    gap: 1rem;
+  }
+  .st-h1 {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: var(--w-serif);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .st-h2 {
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    font-weight: var(--w-serif);
+    letter-spacing: -0.02em;
+  }
+  .st-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  @media (max-width: 420px) {
+    .st-row {
+      grid-template-columns: 1fr;
+    }
+  }
+  .st-field {
+    display: grid;
+    gap: 0.4rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .st-field > span,
+  .st-field > legend {
+    font-size: 0.8125rem;
+    color: var(--ink-2);
+    padding: 0;
+  }
+  .st-field small {
+    color: var(--ink-3);
+    font-size: 0.75rem;
+  }
+  .st input:not([type='checkbox']):not([type='radio']):not([type='file']),
+  .st select,
+  .st textarea {
+    width: 100%;
+    min-height: 46px;
+    padding: 0.6rem 0.8rem;
+    border-radius: 4px;
+    border: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: inherit;
+    font-size: 1rem; /* 16px: no zoom on iPhone */
+    box-shadow: inset 0 0 0 1px var(--line-2);
+    color-scheme: dark;
+  }
+  .st textarea {
+    resize: vertical;
+    line-height: 1.5;
+  }
+  .st input:focus-visible,
+  .st select:focus-visible,
+  .st textarea:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 1px var(--ink);
+  }
+  .st-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+  .st-chip {
+    position: relative;
+  }
+  .st-chip input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .st-chip span {
+    display: grid;
+    gap: 0.05rem;
+    min-height: 44px;
+    align-content: center;
+    padding: 0.4rem 0.85rem;
+    border-radius: 8px;
+    box-shadow: inset 0 0 0 1px var(--line-2);
+    cursor: pointer;
+    transition:
+      background-color 160ms var(--ease),
+      color 160ms var(--ease);
+  }
+  .st-chip b {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .st-chip i {
+    font-style: normal;
+    font-size: 0.6875rem;
+    color: var(--ink-3);
+  }
+  .st-chip input:checked + span {
+    background: var(--ink);
+    color: var(--bg);
+  }
+  .st-chip input:checked + span i {
+    color: rgb(11 12 12 / 0.6);
+  }
+  .st-chip input:focus-visible + span {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+  .st-drop {
+    position: relative;
+    display: grid;
+    place-items: center;
+    gap: 0.25rem;
+    min-height: 7.5rem;
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px dashed var(--line-2);
+    text-align: center;
+    cursor: pointer;
+    transition:
+      border-color 160ms var(--ease),
+      background-color 160ms var(--ease);
+  }
+  .st-drop:hover,
+  .st-drop.is-over {
+    border-color: var(--ink-2);
+    background: rgb(235 230 220 / 0.03);
+  }
+  .st-drop input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .st-drop__main {
+    font-weight: 500;
+  }
+  .st-drop__sub {
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+  .st-preview {
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    gap: 0.9rem;
+    align-items: center;
+  }
+  .st-preview[hidden] {
+    display: none;
+  }
+  .st-preview__media {
+    aspect-ratio: 16 / 9;
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--frame);
+  }
+  .st-preview__media video,
+  .st-preview__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .st-preview__info {
+    display: grid;
+    gap: 0.35rem;
+    justify-items: start;
+    font-size: 0.875rem;
+    color: var(--ink-2);
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .st-check {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.9375rem;
+    color: var(--ink-2);
+  }
+  .st-check input {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--ink);
+  }
+  .st-submit {
+    justify-content: center;
+    width: 100%;
+    min-height: 52px;
+  }
+  .st-submit:disabled {
+    opacity: 0.5;
+    cursor: progress;
+  }
+  .st-progress {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .st-progress[hidden] {
+    display: none;
+  }
+  .st-bar {
+    height: 4px;
+    border-radius: 4px;
+    background: rgb(235 230 220 / 0.1);
+    overflow: hidden;
+  }
+  .st-bar span {
+    display: block;
+    height: 100%;
+    width: 100%;
+    background: var(--ink);
+    transform: scaleX(var(--p, 0));
+    transform-origin: 0 50%;
+    transition: transform 200ms linear;
+  }
+  .st-progress.is-busy .st-bar span {
+    animation: st-busy 1.2s ease-in-out infinite;
+    transform-origin: 0 50%;
+  }
+  @keyframes st-busy {
+    0% {
+      transform: translateX(-100%) scaleX(0.4);
+    }
+    100% {
+      transform: translateX(250%) scaleX(0.4);
+    }
+  }
+  .st-progress p,
+  .st-msg {
+    font-size: 0.875rem;
+    color: var(--ink-2);
+  }
+  .st-msg:empty {
+    display: none;
+  }
+  .st-msg.is-error {
+    color: #f0b4a8;
+  }
+  .st-msg.is-ok {
+    color: var(--accent);
+  }
+  .st-msg a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .st-warn {
+    padding: 1rem 1.1rem;
+    border-radius: 6px;
+    background: rgb(240 180 168 / 0.08);
+    box-shadow: inset 0 0 0 1px rgb(240 180 168 / 0.35);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+  }
+  .st-warn[hidden] {
+    display: none;
+  }
+  .st-warn b {
+    color: #f0b4a8;
+  }
+  .st-list {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  .st-list__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+  }
+  .st-meta {
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+  .st-day {
+    margin-top: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .st-entry {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    gap: 0.9rem;
+    padding: 0.85rem;
+    border-radius: 6px;
+    background: var(--bg-raised);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  @media (max-width: 420px) {
+    .st-entry {
+      grid-template-columns: 5.5rem minmax(0, 1fr);
+    }
+  }
+  .st-entry.is-hidden {
+    opacity: 0.6;
+  }
+  .st-entry__thumb {
+    aspect-ratio: 16 / 9;
+    border-radius: 3px;
+    overflow: hidden;
+    background: var(--frame);
+    display: grid;
+    place-items: center;
+    font-size: 0.6875rem;
+    color: var(--ink-3);
+  }
+  .st-entry__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .st-entry__body {
+    display: grid;
+    gap: 0.3rem;
+    min-width: 0;
+  }
+  .st-entry__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+    color: var(--ink-3);
+  }
+  .st-entry__title {
+    font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+  .st-entry__text {
+    font-size: 0.875rem;
+    color: var(--ink-2);
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+  .st-entry__err {
+    font-size: 0.8125rem;
+    color: #f0b4a8;
+  }
+  .st-entry__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    margin-top: 0.2rem;
+  }
+  .st-entry__actions button,
+  .st-entry__actions a {
+    min-height: 36px;
+    font-size: 0.8125rem;
+    color: var(--ink-2);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--line-2);
+  }
+  .st-entry__actions button:hover,
+  .st-entry__actions a:hover {
+    color: var(--ink);
+  }
+  .st-entry__actions .is-danger {
+    color: #f0b4a8;
+  }
+  .st-badge {
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    box-shadow: inset 0 0 0 1px var(--line-2);
+    color: var(--ink-2);
+  }
+  .st-badge--live {
+    color: var(--bg);
+    background: var(--accent);
+    box-shadow: none;
+  }
+  .st-badge--failed {
+    color: #f0b4a8;
+    box-shadow: inset 0 0 0 1px rgb(240 180 168 / 0.5);
+  }
+  .st-edit {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--line);
+  }
+  .st-edit__actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+  .st-edit__actions .btn-solid,
+  .st-edit__actions .btn-line {
+    min-height: 42px;
+  }
+  .st-empty {
+    padding: 1.25rem;
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 1px var(--line);
+    color: var(--ink-3);
+    font-size: 0.9375rem;
+  }
+</style>

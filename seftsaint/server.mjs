@@ -1,6 +1,6 @@
 /**
- * Production static server for the built site (dist/).
- * Zero dependencies — Node built-ins only. Used by `npm start` (Railway, Render, any VPS).
+ * Production server for the built site (dist/). Used by `npm start` (Railway, Render, any VPS).
+ * Node built-ins only; the devlog (server/devlog.mjs) also uses ffmpeg.
  *
  *  - listens on $PORT (Railway sets it automatically)
  *  - clean URLs: /work/forest-concept → dist/work/forest-concept/index.html
@@ -8,6 +8,7 @@
  *  - gzip / brotli for text files
  *  - byte-range requests (needed for <video> on Safari / iOS)
  *  - real 404 page, /health for health checks
+ *  - devlog: /studio/api/* (upload page), /devlog-media/*, entries put into the pages
  */
 import http from 'node:http';
 import fs from 'node:fs';
@@ -15,8 +16,10 @@ import fsp from 'node:fs/promises';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
+import { createDevlog } from './server/devlog.mjs';
 
-const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), 'dist');
+const APP = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.join(APP, 'dist');
 const PORT = Number(process.env.PORT) || 4321;
 
 if (!fs.existsSync(path.join(ROOT, 'index.html'))) {
@@ -107,14 +110,61 @@ function pickEncoding(req, ext) {
   return null;
 }
 
-async function send(req, res, found, status, urlPath) {
+// Pages that carry devlog markers get the entries put in at request time.
+const pageText = new Map();
+async function readPage(file, stat) {
+  const key = `${file}:${stat.mtimeMs}`;
+  if (!pageText.has(key)) pageText.set(key, await fsp.readFile(file, 'utf8'));
+  return pageText.get(key);
+}
+const dynamicCompressed = new Map();
+function sendHtml(req, res, html, etag, status, extra = {}) {
+  const headers = {
+    ...SECURITY_HEADERS,
+    'Content-Type': 'text/html; charset=utf-8',
+    'Cache-Control': 'public, max-age=0, must-revalidate',
+    ETag: etag,
+    Vary: 'Accept-Encoding',
+    ...extra,
+  };
+  if (status === 200 && req.headers['if-none-match'] === etag) {
+    res.writeHead(304, headers);
+    return res.end();
+  }
+  const encoding = pickEncoding(req, '.html');
+  let body = Buffer.from(html);
+  if (encoding) {
+    const key = `${etag}:${encoding}`;
+    if (!dynamicCompressed.has(key)) {
+      if (dynamicCompressed.size > 300) dynamicCompressed.clear();
+      dynamicCompressed.set(
+        key,
+        encoding === 'br'
+          ? zlib.brotliCompressSync(body, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 6 } })
+          : zlib.gzipSync(body, { level: 7 }),
+      );
+    }
+    body = dynamicCompressed.get(key);
+    headers['Content-Encoding'] = encoding;
+  }
+  res.writeHead(status, { ...headers, 'Content-Length': body.length });
+  res.end(req.method === 'HEAD' ? undefined : body);
+}
+
+async function send(req, res, found, status, urlPath, opts = {}) {
   const { file, stat } = found;
   const ext = path.extname(file).toLowerCase();
+  if (ext === '.html' && status === 200 && devlog) {
+    const raw = await readPage(file, stat);
+    const out = devlog.inject(raw, opts.query ?? new URLSearchParams());
+    if (out) return sendHtml(req, res, out.html, out.etag, status);
+  }
   const etag = `W/"${stat.size.toString(16)}-${Math.floor(stat.mtimeMs).toString(16)}"`;
   const headers = {
     ...SECURITY_HEADERS,
     'Content-Type': TYPES[ext] || 'application/octet-stream',
-    'Cache-Control': status === 404 ? 'no-cache' : cacheControl(urlPath, ext),
+    'Cache-Control': status === 404 ? 'no-cache' : opts.cache || cacheControl(urlPath, ext),
+    ...(urlPath.startsWith('/studio') ? { 'X-Robots-Tag': 'noindex' } : {}),
     'Last-Modified': stat.mtime.toUTCString(),
     ETag: etag,
     'Accept-Ranges': 'bytes',
@@ -161,19 +211,27 @@ async function send(req, res, found, status, urlPath) {
   fs.createReadStream(file).pipe(res);
 }
 
+const devlog = createDevlog({ appRoot: APP, distRoot: ROOT, sendFile: send });
+
 const server = http.createServer(async (req, res) => {
   try {
-    if (req.method !== 'GET' && req.method !== 'HEAD') {
-      res.writeHead(405, { Allow: 'GET, HEAD' });
-      return res.end();
-    }
-
     let urlPath;
+    let query;
     try {
-      urlPath = decodeURIComponent(new URL(req.url || '/', 'http://localhost').pathname);
+      const url = new URL(req.url || '/', 'http://localhost');
+      urlPath = decodeURIComponent(url.pathname);
+      query = url.searchParams;
     } catch {
       res.writeHead(400);
       return res.end('Bad request');
+    }
+
+    // The studio's private API (uploads, edits) — the only place that accepts more than GET.
+    if (urlPath.startsWith('/studio/api/')) return await devlog.api(req, res, urlPath, query);
+
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      res.writeHead(405, { Allow: 'GET, HEAD' });
+      return res.end();
     }
 
     if (urlPath === '/health') {
@@ -181,8 +239,10 @@ const server = http.createServer(async (req, res) => {
       return res.end('ok');
     }
 
+    if (urlPath.startsWith('/devlog-media/') && (await devlog.serveMedia(req, res, urlPath))) return;
+
     const found = await resolveFile(urlPath);
-    if (found) return await send(req, res, found, 200, urlPath);
+    if (found) return await send(req, res, found, 200, urlPath, { query });
 
     const notFound = await resolveFile('/404.html');
     if (notFound) return await send(req, res, notFound, 404, urlPath);

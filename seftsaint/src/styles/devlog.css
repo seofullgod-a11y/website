@@ -1,0 +1,390 @@
+/* ─────────────────────────────────────────────────────────────
+ * Devlog — days and cards. The HTML is rendered by server/render.mjs
+ * (so these are plain global classes, prefixed dl-).
+ * ───────────────────────────────────────────────────────────── */
+
+/* A day: date on the left (sticky on wide screens), the updates on the right */
+.dl-list {
+  display: grid;
+}
+.dl-day {
+  display: grid;
+  gap: 1.25rem var(--gap);
+  padding-block: clamp(1.75rem, 1.2rem + 1.5vw, 2.75rem);
+  border-top: 1px solid var(--line-2);
+}
+.dl-day[hidden] {
+  display: none;
+}
+@media (min-width: 1000px) {
+  .dl-day {
+    grid-template-columns: 12rem minmax(0, 1fr);
+    column-gap: clamp(1.5rem, 0.5rem + 2vw, 3rem);
+  }
+  .dl-day__head {
+    position: sticky;
+    top: calc(var(--header-h) + 1.5rem);
+    align-self: start;
+  }
+}
+.dl-day__head {
+  display: grid;
+  gap: 0.35rem;
+  align-content: start;
+}
+.dl-day__no {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.7rem;
+  font-size: var(--fs-label);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.dl-day__date {
+  font-family: var(--font-display);
+  font-size: 1.4375rem;
+  font-weight: var(--w-serif);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.dl-day__rel {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: var(--font-sans);
+  font-size: 0.625rem;
+  font-weight: var(--w-label);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+.dl-day__sum {
+  font-size: 0.875rem;
+  color: var(--ink-2);
+}
+.dl-day__cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.7rem;
+  margin-top: 0.3rem;
+  list-style: none;
+  font-size: 0.625rem;
+  font-weight: var(--w-label);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.dl-day__more {
+  margin-top: 1.5rem;
+  min-width: 14rem;
+}
+
+/* Cards */
+.dl-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  gap: 2rem var(--gap);
+  list-style: none;
+}
+.dl-card {
+  display: grid;
+  gap: 0.95rem;
+  align-content: start;
+  min-width: 0;
+}
+.dl-card[hidden] {
+  display: none;
+}
+.dl-card__media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--frame);
+  box-shadow: inset 0 0 0 1px var(--line);
+  isolation: isolate;
+}
+.dl-card__poster,
+.dl-card__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 900ms var(--ease);
+}
+.dl-card__video {
+  opacity: 0;
+  transition:
+    opacity 600ms var(--ease),
+    transform 900ms var(--ease);
+}
+.dl-card__media[data-loop-state='playing'] .dl-card__video,
+.dl-card__media[data-loop-state='paused'] .dl-card__video {
+  opacity: 1;
+}
+.dl-card:hover .dl-card__poster,
+.dl-card:hover .dl-card__video {
+  transform: scale(1.03);
+}
+.dl-card__media--tall {
+  background: #050505;
+}
+.dl-card__media--tall .dl-card__poster,
+.dl-card__media--tall .dl-card__video {
+  object-fit: contain;
+}
+.dl-card__media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(0deg, rgb(11 12 12 / 0.5) 0%, rgb(11 12 12 / 0) 38%);
+  pointer-events: none;
+}
+.dl-card__media .render {
+  z-index: 2;
+}
+/* The whole frame plays the clip; the pill is the visible label */
+.dl-card__play {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  padding: 0.75rem;
+  cursor: pointer;
+}
+.dl-card__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.85rem 0.45rem 0.65rem;
+  border-radius: 999px;
+  background: rgb(11 12 12 / 0.58);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 0 0 1px rgb(235 230 220 / 0.2);
+  font-size: var(--fs-label);
+  font-weight: var(--w-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--ink);
+  transition:
+    background-color var(--t) var(--ease),
+    color var(--t) var(--ease);
+}
+.dl-card__pill svg {
+  width: 9px;
+  height: 9px;
+}
+.dl-card__play:hover .dl-card__pill,
+.dl-card__play:focus-visible .dl-card__pill {
+  background: var(--ink);
+  color: var(--bg);
+}
+.dl-card__dur {
+  position: absolute;
+  right: 0.8rem;
+  bottom: 0.95rem;
+  z-index: 3;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.6);
+  pointer-events: none;
+}
+
+.dl-card__body {
+  display: grid;
+  gap: 0.4rem;
+  align-content: start;
+  min-width: 0;
+}
+.dl-card__cat {
+  font-size: var(--fs-label);
+  font-weight: var(--w-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.dl-card__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.1875rem, 1.1rem + 0.3vw, 1.375rem);
+  font-weight: var(--w-serif);
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.dl-card__text {
+  max-width: 52ch;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.dl-card__links {
+  margin-top: 0.2rem;
+}
+.dl-card__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 36px;
+  font-size: var(--fs-label);
+  font-weight: var(--w-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--ink-2);
+  transition: color var(--t-fast) var(--ease);
+}
+.dl-card__link:hover {
+  color: var(--ink);
+}
+/* A note without a clip */
+.dl-card--text .dl-card__body {
+  padding: 1.1rem 1.2rem 1.2rem;
+  border-radius: 3px;
+  background: var(--bg-raised);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* Filter + stats (devlog page) */
+.dl-filters {
+  /* positioned, so the screen-reader copies inside the chips scroll with the row instead of widening the page */
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+@media (max-width: 760px) {
+  /* one swipeable row on phones */
+  .dl-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-inline: calc(-1 * var(--gutter));
+    padding-inline: var(--gutter);
+    scrollbar-width: none;
+  }
+  .dl-filters::-webkit-scrollbar {
+    display: none;
+  }
+}
+.dl-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 38px;
+  padding: 0 0.95rem;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  font-size: var(--fs-label);
+  font-weight: var(--w-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--ink-2);
+  transition:
+    background-color var(--t) var(--ease),
+    color var(--t) var(--ease),
+    box-shadow var(--t) var(--ease);
+}
+.dl-chip:hover {
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px rgb(235 230 220 / 0.4);
+}
+.dl-chip[aria-current='true'] {
+  background: var(--ink);
+  color: var(--bg);
+  box-shadow: none;
+}
+.dl-chip__n {
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  opacity: 0.65;
+}
+.dl-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.7rem;
+  font-size: 0.875rem;
+  color: var(--ink-2);
+}
+.dl-stats .status-dot {
+  margin-right: 0.2rem;
+}
+.dl-empty {
+  padding-block: 2rem;
+  color: var(--ink-3);
+  font-size: 0.9375rem;
+}
+
+/* Project page section (same grid as the other sections there) */
+.dl-psection {
+  display: grid;
+  gap: 1.25rem var(--gap);
+  scroll-margin-top: calc(var(--header-h) + 1rem);
+}
+.dl-psection__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-self: start;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line);
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink);
+}
+.dl-psection__count {
+  color: var(--ink-3);
+}
+@media (min-width: 1000px) {
+  .dl-psection {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+  .dl-psection__head {
+    grid-column: 1 / span 3;
+    position: sticky;
+    top: calc(var(--header-h) + 1.5rem);
+  }
+  .dl-psection__content {
+    grid-column: 4 / -1;
+  }
+}
+.dl-psection .dl-day {
+  grid-template-columns: minmax(0, 1fr);
+  padding-top: 1rem;
+}
+.dl-psection .dl-day:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.dl-psection .dl-day__head {
+  position: static;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+}
+.dl-psection__all {
+  margin-top: 1.5rem;
+  min-width: 14rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-card__poster,
+  .dl-card__video {
+    transition: none;
+  }
+  .dl-card:hover .dl-card__poster,
+  .dl-card:hover .dl-card__video {
+    transform: none;
+  }
+}

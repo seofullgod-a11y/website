@@ -11,6 +11,7 @@ export const ui = {
 
   nav: {
     work: 'Work',
+    devlog: 'Devlog',
     journal: 'Journal',
     notes: 'Story',
     about: 'About',

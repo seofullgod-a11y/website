@@ -1,0 +1,90 @@
+---
+/**
+ * /devlog — every update, grouped by day, newest first, with a category filter.
+ * The entries, filter and counts are put in by the server (server/devlog.mjs);
+ * words: src/data/devlog.ts. You post from /studio.
+ */
+import Base from '../../layouts/Base.astro';
+import { devlog } from '../../data/devlog';
+import { site } from '../../data/site';
+import '../../styles/devlog.css';
+
+const [h1, h2] = devlog.headline;
+const mark = (name: string, fallback = '') => `<!--devlog:${name}-->${fallback}<!--/devlog-->`;
+---
+
+<Base title={devlog.kicker} description={`${devlog.intro} Games and 3D worlds by ${site.name}.`}>
+  <section class="dlp" aria-labelledby="dlp-title">
+    <header class="dlp__head">
+      <div class="dlp__main">
+        <p class="eyebrow eyebrow--rule" data-decode-area data-decode-reveal>
+          <span data-decode>{devlog.kicker}</span>
+        </p>
+        <h1 id="dlp-title" class="display dlp__title">
+          <span>{h1}</span>
+          {h2 && <em>{h2}</em>}
+        </h1>
+      </div>
+      <div class="dlp__side">
+        <p class="dlp__intro">{devlog.intro}</p>
+        <Fragment set:html={mark('stats')} />
+      </div>
+    </header>
+
+    <div class="dlp__filters">
+      <Fragment set:html={mark('filters')} />
+    </div>
+
+    <Fragment set:html={mark('list', `<p class="dl-empty">${devlog.offline}</p>`)} />
+  </section>
+</Base>
+
+<style>
+  .dlp {
+    max-width: var(--max);
+    margin-inline: auto;
+    padding: clamp(3rem, 2rem + 4vw, 6rem) var(--gutter) clamp(3rem, 2rem + 3vw, 5rem);
+  }
+  .dlp__head {
+    display: grid;
+    gap: 1.75rem var(--gap);
+  }
+  @media (min-width: 1024px) {
+    .dlp__head {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      align-items: end;
+    }
+    .dlp__main {
+      grid-column: 1 / span 7;
+    }
+    .dlp__side {
+      grid-column: 8 / -1;
+    }
+  }
+  .dlp__title {
+    margin-top: 1.25rem;
+    font-size: clamp(2.5rem, 1.3rem + 3.8vw, 5.25rem);
+    line-height: 0.95;
+  }
+  .dlp__title span,
+  .dlp__title em {
+    display: block;
+  }
+  .dlp__title em {
+    color: var(--ink-2);
+    padding-left: 0.3em;
+  }
+  .dlp__side {
+    display: grid;
+    gap: 1rem;
+  }
+  .dlp__intro {
+    max-width: 44ch;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  .dlp__filters {
+    margin: clamp(2rem, 1.5rem + 2vw, 3.5rem) 0 1.5rem;
+  }
+</style>
