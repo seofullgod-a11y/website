@@ -11,6 +11,10 @@ import type { NowItem, Update } from './types';
  *               matter — sorting uses `date`.
  *
  *  Link an entry to a project with `project: '<slug>'`.
+ *
+ *  Media: `image` is the still. Add `preview` + `video` only for clips
+ *  that exist in public/media/ (see README). Entries without a video
+ *  show "Watch on X" instead of a play button.
  * ─────────────────────────────────────────────────────────────
  */
 
@@ -56,7 +60,6 @@ export const updates: Update[] = [
       video: 'forest-concept/2026-09-25-last-update.mp4',
       alt: 'A hooded character with a backpack on a sunlit forest trail, a small glowing bird beside them.',
       sourceUrl: 'https://x.com/seftsaint/status/2103491735855022174',
-      interim: true,
     },
     sourceUrl: 'https://x.com/seftsaint/status/2103491735855022174',
   },
@@ -73,8 +76,6 @@ export const updates: Update[] = [
     tools: ['GPT-6 Luna', 'GPT-6 Astra'],
     media: {
       image: 'forest-concept/2026-09-23-luna.jpg',
-      preview: 'forest-concept/2026-09-23-luna-preview.mp4',
-      video: 'forest-concept/2026-09-23-luna.mp4',
       alt: 'A character with a large backpack on a forest path, with a health bar, minimap and item bar on screen.',
       sourceUrl: 'https://x.com/seftsaint/status/2102771402210476533',
       interim: true,
@@ -94,8 +95,6 @@ export const updates: Update[] = [
     tools: ['Unreal Engine', 'Blender', 'GPT-6 Astra'],
     media: {
       image: 'forest-concept/2026-09-20-unreal.jpg',
-      preview: 'forest-concept/2026-09-20-unreal-preview.mp4',
-      video: 'forest-concept/2026-09-20-unreal.mp4',
       alt: 'A small character in a green cap walking along a dirt path through tall grass, with a minimap in the corner.',
       sourceUrl: 'https://x.com/seftsaint/status/2101395711015497764',
       interim: true,
@@ -114,8 +113,6 @@ export const updates: Update[] = [
     tools: ['Godot', 'Blender', 'GPT-6 Astra'],
     media: {
       image: 'forest-concept/2026-09-14-godot.jpg',
-      preview: 'forest-concept/2026-09-14-godot-preview.mp4',
-      video: 'forest-concept/2026-09-14-godot.mp4',
       alt: 'A small character with a shield stands in a forest clearing next to a wooden archway and a cooking pot.',
       sourceUrl: 'https://x.com/seftsaint/status/2099524314546700370',
       interim: true,

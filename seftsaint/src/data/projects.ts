@@ -53,13 +53,12 @@ export const projects: Project[] = [
     ai: ['GPT-6 Astra', 'GPT-6 Luna', 'Opus 5.5'],
     cover: {
       image: 'forest-concept/2026-09-25-last-update.jpg',
-      // Short muted loop (plays in the hero) + the full demo (plays on click).
-      // Not added yet — put the original recording in media-src/ and run `npm run media` (see README).
+      // Short muted loop (plays when visible) + the full demo (plays on click).
+      // Made from the original recording with `npm run media` (see README).
       preview: 'forest-concept/2026-09-25-last-update-preview.mp4',
       video: 'forest-concept/2026-09-25-last-update.mp4',
       alt: 'A hooded character with a backpack walks a forest trail at dawn while a small glowing bird hovers beside them.',
       sourceUrl: 'https://x.com/seftsaint/status/2103491735855022174',
-      interim: true,
       focus: '46% 50%',
     },
     sections: [
