@@ -21,11 +21,12 @@ const show = promote('nudge');
 const img = show ? resolveImage(p.media?.image) : undefined;
 const thumb = img ? await getImage({ src: img, width: 720, height: 315, fit: 'cover', format: 'webp', quality: 72 }) : undefined;
 const mailto = partnerMailto();
+const objectives: readonly string[] = p.nudge.objectives ?? [];
 ---
 
 {
   show && (
-    <aside class="nudge" data-nudge data-snooze={p.nudge.snoozeDays} aria-label={ui.partner.nudgeLabel} hidden>
+    <aside class="nudge" data-nudge data-snooze={p.nudge.snoozeDays} aria-label={ui.partner.nudgeLabel} hidden data-decode-area>
       {thumb && (
         <a class="nudge__media" href={partnerHref} tabindex="-1" aria-hidden="true" data-nudge-cta>
           <img src={thumb.src} width={360} height={158} alt="" loading="lazy" decoding="async" />
@@ -35,10 +36,20 @@ const mailto = partnerMailto();
       <div class="nudge__body">
         <p class="nudge__kicker mono">
           <span class="nudge__dot" aria-hidden="true" />
-          {p.nudge.kicker}
+          <span data-decode>{p.nudge.kicker}</span>
         </p>
         <p class="nudge__title">{p.nudge.title}</p>
         <p class="nudge__text">{p.nudge.text}</p>
+        {objectives.length > 0 && (
+          <ul class="nudge__quest" role="list" aria-label={ui.partner.objectives}>
+            {objectives.map((o) => (
+              <li>
+                <span class="nudge__box" aria-hidden="true" />
+                {o}
+              </li>
+            ))}
+          </ul>
+        )}
         <div class="nudge__actions">
           <a class="nudge__cta" href={partnerHref} data-nudge-cta>
             {p.nudge.cta}
@@ -151,7 +162,7 @@ const mailto = partnerMailto();
   }
   .nudge__title {
     font-family: var(--font-display);
-    font-size: 1.5rem;
+    font-size: 1.3125rem;
     font-weight: var(--w-serif);
     letter-spacing: -0.02em;
     line-height: 1.1;
@@ -161,6 +172,31 @@ const mailto = partnerMailto();
     color: var(--ink-2);
     font-size: 0.875rem;
     line-height: 1.5;
+  }
+  /* Quest objectives — open boxes, nothing ticked that isn't done */
+  .nudge__quest {
+    display: grid;
+    gap: 0.4rem;
+    margin-top: 0.8rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--line);
+    list-style: none;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+  .nudge__quest li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+  .nudge__box {
+    flex: none;
+    width: 9px;
+    height: 9px;
+    border: 1px solid var(--ink-3);
+    border-radius: 1px;
+    transform: translateY(1px);
   }
   .nudge__actions {
     display: flex;
@@ -233,7 +269,8 @@ const mailto = partnerMailto();
       width: auto;
     }
     .nudge__media,
-    .nudge__text {
+    .nudge__text,
+    .nudge__quest {
       display: none;
     }
     .nudge__body {

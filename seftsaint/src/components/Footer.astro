@@ -17,7 +17,9 @@ const year = new Date().getFullYear();
 <footer class="footer">
   <div class="footer__inner">
     <div class="closing" data-reveal>
-      <p class="eyebrow eyebrow--rule">{c.kicker}</p>
+      <p class="eyebrow eyebrow--rule" data-decode-area data-decode-reveal>
+        <span data-decode>{c.kicker}</span>
+      </p>
       <p class="display closing__line">
         <span>{line1}</span>
         {line2 && <em>{line2}</em>}
@@ -27,14 +29,14 @@ const year = new Date().getFullYear();
         <div class="closing__cta">
           {
             mailto && (
-              <a class="btn-line" href={mailto}>
-                {c.ctaWrite}
+              <a class="btn-line" href={mailto} data-decode-area>
+                <span data-decode>{c.ctaWrite}</span>
                 <Arrow dir="ne" />
               </a>
             )
           }
-          <a class="link-line" href={site.xUrl} target="_blank" rel="noopener me">
-            {c.ctaFollow}
+          <a class="link-line" href={site.xUrl} target="_blank" rel="noopener me" data-decode-area>
+            <span data-decode>{c.ctaFollow}</span>
             <Arrow dir="ne" />
             <span class="visually-hidden">(opens in a new tab)</span>
           </a>
@@ -56,14 +58,14 @@ const year = new Date().getFullYear();
           )
         }
         <li>
-          <a href={site.xUrl} target="_blank" rel="noopener me">
-            {site.handle}
+          <a href={site.xUrl} target="_blank" rel="noopener me" data-decode-area>
+            <span data-decode>{site.handle}</span>
             <span class="visually-hidden">on X (opens in a new tab)</span>
           </a>
         </li>
         <li>
-          <a href="#top">
-            {ui.footer.top} <Arrow dir="n" />
+          <a href="#top" data-decode-area>
+            <span data-decode>{ui.footer.top}</span> <Arrow dir="n" />
           </a>
         </li>
         <li class="footer__year">© {year}</li>
@@ -108,7 +110,7 @@ const year = new Date().getFullYear();
     }
   }
   .closing__line {
-    font-size: clamp(2.75rem, 1.4rem + 5vw, 6.5rem);
+    font-size: clamp(2.25rem, 1.3rem + 3vw, 4.5rem);
     line-height: 0.95;
     letter-spacing: -0.03em;
   }
@@ -150,7 +152,7 @@ const year = new Date().getFullYear();
   }
   .footer__name {
     font-family: var(--font-display);
-    font-size: 1.375rem;
+    font-size: 1.125rem;
     font-weight: 440;
     letter-spacing: -0.02em;
   }

@@ -107,20 +107,20 @@
 
   --text-xs: 0.75rem;   /* 12 */
   --text-sm: 0.8125rem; /* 13 */
-  --text-base: 1.0625rem; /* 17 */
-  --text-md: 1.0625rem; /* 17 */
-  --text-lg: 1.25rem;   /* 20 */
-  --text-xl: clamp(1.375rem, 1.1rem + 1vw, 1.875rem);
-  --text-2xl: clamp(2rem, 1.3rem + 3vw, 3.75rem);
-  --text-display: clamp(3rem, 1.4rem + 6.2vw, 6.5rem);
+  --text-base: 1rem;       /* 16 */
+  --text-md: 1rem;         /* 16 */
+  --text-lg: 1.125rem;     /* 18 */
+  --text-xl: clamp(1.25rem, 1.05rem + 0.7vw, 1.5rem);
+  --text-2xl: clamp(1.75rem, 1.2rem + 2vw, 2.75rem);
+  --text-display: clamp(2.5rem, 1.3rem + 4vw, 4.75rem);
 
   /* Type weights + small sizes — tune the whole site from here */
   --w-display: 400;          /* big serif headlines */
   --w-display-em: 380;       /* the italic line in headlines */
   --w-serif: 430;            /* smaller serif titles (notes, cards) */
-  --fs-label: 0.75rem;       /* spaced capitals: labels, buttons, nav (12px) */
+  --fs-label: 0.6875rem;     /* spaced capitals: labels, buttons, nav (11px) */
   --w-label: 550;
-  --ls-label: 0.17em;
+  --ls-label: 0.18em;
 
   /* Layout */
   --max: 1520px;
@@ -343,9 +343,9 @@ ol {
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1.75rem;
-  min-height: 48px;
-  padding: 0 1.4rem;
+  gap: 1.5rem;
+  min-height: 46px;
+  padding: 0 1.3rem;
   border-radius: 999px;
   font-size: var(--fs-label);
   font-weight: var(--w-label);
@@ -375,8 +375,8 @@ ol {
   display: inline-flex;
   align-items: center;
   gap: 1.25rem;
-  min-height: 48px;
-  padding: 0 1.4rem;
+  min-height: 46px;
+  padding: 0 1.3rem;
   border-radius: 999px;
   background: var(--ink);
   color: var(--bg);
@@ -621,7 +621,89 @@ a:focus-visible .arrow--w {
 
 /* Decode: the visible copy is aria-hidden, a hidden copy keeps the real text for screen readers */
 .fx-decode-vis {
-  white-space: pre;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Render pass (effects.ts → render) ─────────────────────────
+ * fx.ts fills [data-render] with tiles that clear from the centre outwards,
+ * each one briefly framed by bucket corners — like a 3D render finishing.
+ * Only shown when fx.ts switches it on (html.fx-render), so no JS = no cover.
+ */
+.render {
+  display: none;
+}
+.fx-render .render {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 8), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--rows, 4), minmax(0, 1fr));
+  pointer-events: none;
+}
+.fx-render .render.is-done {
+  display: none;
+}
+.render__tile {
+  position: relative;
+  background-color: rgb(11 12 12 / 0.92);
+  box-shadow: inset 0 0 0 0.5px rgb(235 230 220 / 0.08);
+}
+.render__tile::before {
+  --c: rgb(235 230 220 / 0.85);
+  --s: 7px;
+  content: '';
+  position: absolute;
+  inset: 3px;
+  opacity: 0;
+  background:
+    linear-gradient(var(--c), var(--c)) 0 0 / var(--s) 1px,
+    linear-gradient(var(--c), var(--c)) 0 0 / 1px var(--s),
+    linear-gradient(var(--c), var(--c)) 100% 0 / var(--s) 1px,
+    linear-gradient(var(--c), var(--c)) 100% 0 / 1px var(--s),
+    linear-gradient(var(--c), var(--c)) 0 100% / var(--s) 1px,
+    linear-gradient(var(--c), var(--c)) 0 100% / 1px var(--s),
+    linear-gradient(var(--c), var(--c)) 100% 100% / var(--s) 1px,
+    linear-gradient(var(--c), var(--c)) 100% 100% / 1px var(--s);
+  background-repeat: no-repeat;
+}
+.render.is-rendering .render__tile,
+.render.is-rendering .render__tile::before {
+  animation-duration: var(--tile-t, 360ms);
+  animation-delay: calc(var(--o, 0) * var(--step, 30ms));
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+.render.is-rendering .render__tile {
+  animation-name: fx-tile;
+}
+.render.is-rendering .render__tile::before {
+  animation-name: fx-tile-mark;
+}
+@keyframes fx-tile {
+  0%,
+  30% {
+    background-color: rgb(11 12 12 / 0.92);
+  }
+  62% {
+    background-color: rgb(11 12 12 / 0.4);
+  }
+  100% {
+    background-color: rgb(11 12 12 / 0);
+    box-shadow: inset 0 0 0 0.5px rgb(235 230 220 / 0);
+  }
+}
+@keyframes fx-tile-mark {
+  0% {
+    opacity: 0;
+  }
+  10%,
+  72% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 /* Wordmark dot breathes slowly */
@@ -712,7 +794,13 @@ html.intro-open [data-intro='stage'] {
     transform: none;
   }
   .fx-lens,
-  .fx-preview {
-    display: none;
+  .fx-preview,
+  .render {
+    display: none !important;
+  }
+}
+@media print {
+  .render {
+    display: none !important;
   }
 }

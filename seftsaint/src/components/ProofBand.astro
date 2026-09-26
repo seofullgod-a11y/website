@@ -15,11 +15,11 @@ const p = site.proof;
 const countUp = promote('countUp');
 ---
 
-<section class="pb" aria-labelledby="pb-title">
+<section class="pb" aria-labelledby="pb-title" data-hud={p.kicker} data-hud-no={no}>
   <div class="pb__inner">
-    <h2 id="pb-title" class="eyebrow pb__kicker" data-reveal>
+    <h2 id="pb-title" class="eyebrow pb__kicker" data-reveal data-decode-area data-decode-reveal>
       {no && <span class="eyebrow__no" aria-hidden="true">{no}</span>}
-      {p.kicker}
+      <span data-decode>{p.kicker}</span>
     </h2>
 
     <dl class="pb__stats">
@@ -42,10 +42,10 @@ const countUp = promote('countUp');
     </dl>
 
     <div class="pb__foot" data-reveal style="--reveal-delay:200ms">
-      <p class="pb__built">
-        <span class="eyebrow">{p.builtWith}</span>
+      <p class="pb__built" data-decode-area data-decode-reveal>
+        <span class="eyebrow" data-decode>{p.builtWith}</span>
         <span class="pb__tools">
-          {p.tools.map((t) => <span>{t}</span>)}
+          {p.tools.map((t) => <span data-decode>{t}</span>)}
         </span>
       </p>
       <p class="pb__asof">{p.asOf}</p>
@@ -84,7 +84,7 @@ const countUp = promote('countUp');
   }
   .pb__value {
     margin: 0;
-    font-size: clamp(3rem, 1.6rem + 4.2vw, 6rem);
+    font-size: clamp(2.25rem, 1.4rem + 2.6vw, 4rem);
     line-height: 0.9;
     letter-spacing: -0.04em;
     font-variant-numeric: lining-nums tabular-nums;
@@ -94,12 +94,12 @@ const countUp = promote('countUp');
     gap: 0.2rem;
   }
   .pb__label-main {
-    font-size: 1.0625rem;
+    font-size: 0.9375rem;
     font-weight: 500;
     color: var(--ink);
   }
   .pb__note {
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     color: var(--ink-3);
   }
 
@@ -124,14 +124,14 @@ const countUp = promote('countUp');
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem 1.75rem;
-    font-size: 0.875rem;
-    font-weight: 550;
-    letter-spacing: 0.12em;
+    font-size: var(--fs-label);
+    font-weight: var(--w-label);
+    letter-spacing: var(--ls-label);
     text-transform: uppercase;
     color: var(--ink-2);
   }
   .pb__asof {
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     color: var(--ink-3);
   }
 </style>

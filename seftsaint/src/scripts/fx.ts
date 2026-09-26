@@ -4,6 +4,8 @@
  * Nothing here is required for the site to work.
  */
 
+import { scramble } from './scramble';
+
 const root = document.documentElement;
 const fx = new Set((root.dataset.fx ?? '').split(/\s+/).filter(Boolean));
 const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -349,16 +351,23 @@ if (fx.has('hoverPreview') && fine.matches && motionOK()) {
   }
 }
 
-/* ── Decode on hover ───────────────────────────────────────── */
+/* ── Decode: text scrambles, then settles ──────────────────────
+ * [data-decode]       a text-only element that scrambles
+ * [data-decode-area]  hovering (mouse), tapping (touch) or focusing it plays every
+ *                     [data-decode] inside, plus the section number (.eyebrow__no)
+ * [data-decode-reveal] also plays once when it scrolls into view
+ * Screen readers get a visually-hidden copy of the real text; the moving copy is aria-hidden.
+ */
 if (fx.has('decode') && motionOK()) {
-  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/#+*<>';
-  const KEEP = /[\s·&/—–-]/;
-  const groups = new Map<Element, Array<() => void>>();
-
-  document.querySelectorAll<HTMLElement>('[data-decode]').forEach((el) => {
-    const text = el.textContent ?? '';
-    if (!text.trim()) return;
-    // Visible copy is decorative; a visually-hidden copy keeps the real text for screen readers.
+  const groups = new Map<Element, Array<{ vis: HTMLElement; text: string }>>();
+  const targets = new Set([
+    ...document.querySelectorAll<HTMLElement>('[data-decode]'),
+    ...document.querySelectorAll<HTMLElement>('[data-decode-area] .eyebrow__no, [data-decode-area].eyebrow__no'),
+  ]);
+  targets.forEach((el) => {
+    const text = (el.textContent ?? '').replace(/\s+/g, ' ').trim();
+    if (!text) return;
+    // The visible copy is decorative; a visually-hidden copy keeps the real text for screen readers.
     el.textContent = '';
     const vis = document.createElement('span');
     vis.className = 'fx-decode-vis';
@@ -368,43 +377,160 @@ if (fx.has('decode') && motionOK()) {
     sr.className = 'visually-hidden';
     sr.textContent = text;
     el.append(vis, sr);
-
-    let running = false;
-    const run = () => {
-      if (running) return;
-      running = true;
-      const start = performance.now();
-      const D = 320;
-      let last = 0;
-      const frame = (t: number) => {
-        const p = Math.min(1, (t - start) / D);
-        if (t - last > 34 || p === 1) {
-          last = t;
-          const revealed = Math.floor(p * text.length);
-          vis.textContent = [...text]
-            .map((c, i) => (i < revealed || KEEP.test(c) ? c : CHARS[(Math.random() * CHARS.length) | 0]))
-            .join('');
-        }
-        if (p < 1) requestAnimationFrame(frame);
-        else {
-          vis.textContent = text;
-          running = false;
-        }
-      };
-      requestAnimationFrame(frame);
-    };
-
     const area = el.closest('[data-decode-area]') ?? el;
     if (!groups.has(area)) groups.set(area, []);
-    groups.get(area)!.push(run);
+    groups.get(area)!.push({ vis, text });
   });
 
-  groups.forEach((runs, area) => {
+  const lastRun = new WeakMap<Element, number>();
+  const run = (area: Element) => {
+    const now = performance.now();
+    if (now - (lastRun.get(area) ?? -1e6) < 450) return; // hover + focus from one click = one run
+    lastRun.set(area, now);
+    groups.get(area)?.forEach(({ vis, text }) => scramble(vis, text));
+  };
+
+  groups.forEach((_, area) => {
     area.addEventListener('pointerenter', (e) => {
-      if ((e as PointerEvent).pointerType === 'mouse') runs.forEach((r) => r());
+      if ((e as PointerEvent).pointerType === 'mouse') run(area);
     });
-    area.addEventListener('focusin', () => runs.forEach((r) => r()));
+    area.addEventListener(
+      'pointerdown',
+      (e) => {
+        if ((e as PointerEvent).pointerType !== 'mouse') run(area);
+      },
+      { passive: true },
+    );
+    area.addEventListener('focusin', () => run(area));
+    // Other scripts can ask for a run, e.g. when the partner card appears.
+    area.addEventListener('decode:play', () => run(area));
   });
+
+  // Section labels decode once as they arrive. In the hero this follows the intro's own timing.
+  const reveals = [...document.querySelectorAll<HTMLElement>('[data-decode-reveal]')].filter((el) => groups.has(el));
+  if (reveals.length && 'IntersectionObserver' in window) {
+    const intro = root.classList.contains('intro');
+    const play = (el: HTMLElement, k: number) => {
+      const introEl = intro ? el.closest<HTMLElement>('[data-intro]') : null;
+      const d = introEl ? parseFloat(introEl.style.getPropertyValue('--d')) || 0 : 0;
+      window.setTimeout(() => run(el), introEl ? d + 180 : 140 + k * 90);
+    };
+    const io = new IntersectionObserver(
+      (entries) => {
+        let k = 0;
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          io.unobserve(e.target);
+          play(e.target as HTMLElement, k++);
+        }
+      },
+      { rootMargin: '0px 0px -12% 0px', threshold: 0.6 },
+    );
+    reveals.forEach((el) => io.observe(el));
+  }
+}
+
+/* ── Render pass: frames render in, tile by tile ──────────────
+ * [data-render] sits over an image. fx.ts fills it with tiles (the frame looks like
+ * an unrendered viewport); the first time it's on screen the tiles clear from the
+ * centre out. `render:replay` (sent by the build stepper) runs it again, quickly.
+ * Optional: data-render-tile="52" (tile size in px). Styles: global.css → Render pass.
+ */
+if (fx.has('render') && motionOK() && 'IntersectionObserver' in window) {
+  const frames = [...document.querySelectorAll<HTMLElement>('[data-render]')];
+  if (frames.length) {
+    const timers = new WeakMap<HTMLElement, number>();
+    const build = (el: HTMLElement) => {
+      const r = el.getBoundingClientRect();
+      const size = Number(el.dataset.renderTile) || 96;
+      const cols = clamp(Math.round(r.width / size) || 8, 3, 14);
+      const rows = clamp(Math.round(r.height / size) || 4, 2, 8);
+      el.style.setProperty('--cols', String(cols));
+      el.style.setProperty('--rows', String(rows));
+      // Order: distance from the centre, with a little jitter — like render buckets.
+      const cells: Array<{ d: number; x: number; y: number }> = [];
+      for (let y = 0; y < rows; y++)
+        for (let x = 0; x < cols; x++)
+          cells.push({ x, y, d: Math.hypot(x + 0.5 - cols / 2, (y + 0.5 - rows / 2) * 1.2) + Math.random() * 0.9 });
+      const order = [...cells].sort((a, b) => a.d - b.d);
+      const frag = document.createDocumentFragment();
+      cells.forEach((c) => {
+        const t = document.createElement('span');
+        t.className = 'render__tile';
+        t.style.setProperty('--o', String(order.indexOf(c)));
+        frag.append(t);
+      });
+      el.replaceChildren(frag);
+    };
+    const play = (el: HTMLElement, quick = false) => {
+      const n = el.childElementCount;
+      const step = quick ? 12 : 30;
+      const tile = quick ? 240 : 360;
+      el.style.setProperty('--step', `${step}ms`);
+      el.style.setProperty('--tile-t', `${tile}ms`);
+      el.classList.remove('is-done', 'is-rendering');
+      void el.offsetWidth; // restart the animations
+      el.classList.add('is-rendering');
+      window.clearTimeout(timers.get(el));
+      timers.set(
+        el,
+        window.setTimeout(() => el.classList.add('is-done'), (n - 1) * step + tile + 80),
+      );
+    };
+
+    frames.forEach(build);
+    root.classList.add('fx-render');
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          io.unobserve(e.target);
+          play(e.target as HTMLElement);
+        }
+      },
+      { rootMargin: '0px 0px -8% 0px', threshold: 0.4 },
+    );
+    frames.forEach((el) => {
+      io.observe(el);
+      el.addEventListener('render:replay', () => {
+        // Only after its first render — never earlier than the visitor gets there.
+        if (el.classList.contains('is-rendering') || el.classList.contains('is-done')) play(el, true);
+      });
+    });
+    // Never leave a frame covered when printing.
+    window.addEventListener('beforeprint', () => frames.forEach((el) => el.classList.add('is-done')));
+  }
+}
+
+/* ── HUD: the section you're in, in the header (home, wide screens) ── */
+if (fx.has('hud') && 'IntersectionObserver' in window) {
+  const hud = document.querySelector<HTMLElement>('[data-hud-el]');
+  const header = document.querySelector<HTMLElement>('[data-header]');
+  const sections = [...document.querySelectorAll<HTMLElement>('[data-hud]')];
+  const noEl = hud?.querySelector<HTMLElement>('[data-hud-no]');
+  const nameEl = hud?.querySelector<HTMLElement>('[data-hud-name]');
+  const totalEl = hud?.querySelector<HTMLElement>('[data-hud-total]');
+  if (hud && header && noEl && nameEl && sections.length) {
+    if (totalEl) totalEl.textContent = pad(sections.length);
+    let current: HTMLElement | null = null;
+    const set = (s: HTMLElement | null) => {
+      if (s === current) return;
+      current = s;
+      header.classList.toggle('has-hud', !!s);
+      if (!s) return;
+      scramble(noEl, s.dataset.hudNo || pad(sections.indexOf(s) + 1), { duration: 380 });
+      scramble(nameEl, s.dataset.hud ?? '');
+    };
+    const inView = new Set<Element>();
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => (e.isIntersecting ? inView.add(e.target) : inView.delete(e.target)));
+        set(sections.find((s) => inView.has(s)) ?? null);
+      },
+      { rootMargin: '-45% 0px -54% 0px', threshold: 0 },
+    );
+    sections.forEach((s) => io.observe(s));
+  }
 }
 
 /* ── Reading progress ──────────────────────────────────────── */

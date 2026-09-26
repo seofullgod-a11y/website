@@ -50,7 +50,13 @@ if (nudge) {
       nudge.hidden = false;
       nudge.classList.toggle('is-away', partnerOnScreen);
       // two frames so the entry transition runs
-      requestAnimationFrame(() => requestAnimationFrame(() => nudge.classList.add('is-on')));
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          nudge.classList.add('is-on');
+          // "New quest" decodes as the card arrives (fx.ts → decode).
+          window.setTimeout(() => nudge.dispatchEvent(new CustomEvent('decode:play')), 160);
+        }),
+      );
     }, delay);
   };
 

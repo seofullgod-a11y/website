@@ -28,11 +28,13 @@ const backdrop = backdropImg ? await getImage({ src: backdropImg, width: 1920, f
   class:list={['partner', { 'partner--backdrop': !!backdrop }]}
   aria-labelledby="partner-title"
   style={backdrop ? `--partner-bg:url(${backdrop.src})` : undefined}
+  data-hud={ui.nav.partner}
+  data-hud-no={no}
 >
   <div class="partner__inner">
-    <p class="eyebrow" data-reveal>
+    <p class="eyebrow" data-reveal data-decode-area data-decode-reveal>
       {no && <span class="eyebrow__no" aria-hidden="true">{no}</span>}
-      {p.kicker}
+      <span data-decode>{p.kicker}</span>
     </p>
 
     <div class="partner__top">
@@ -48,14 +50,14 @@ const backdrop = backdropImg ? await getImage({ src: backdropImg, width: 1920, f
         <div class="partner__cta">
           {
             mailto && (
-              <a class="btn-solid" href={mailto}>
-                {p.ctaTalk}
+              <a class="btn-solid" href={mailto} data-decode-area>
+                <span data-decode>{p.ctaTalk}</span>
                 <Arrow dir="ne" />
               </a>
             )
           }
-          <a class="link-line" href={site.xUrl} target="_blank" rel="noopener me">
-            {p.ctaX}
+          <a class="link-line" href={site.xUrl} target="_blank" rel="noopener me" data-decode-area>
+            <span data-decode>{p.ctaX}</span>
             <Arrow dir="ne" />
             <span class="visually-hidden">(opens in a new tab)</span>
           </a>
@@ -101,13 +103,17 @@ const backdrop = backdropImg ? await getImage({ src: backdropImg, width: 1920, f
         {p.proofNote && <p class="proof__note">{p.proofNote}</p>}
       </div>
 
-      <div class="partner__unlocks" data-reveal style="--reveal-delay:80ms">
-        <p class="eyebrow">{p.unlocksTitle}</p>
+      <div class="partner__unlocks" data-reveal style="--reveal-delay:80ms" data-decode-area data-decode-reveal>
+        <p class="eyebrow">
+          <span data-decode>{p.unlocksTitle}</span>
+        </p>
         <ol class="unlocks" role="list">
           {
             p.unlocks.map((u, i) => (
               <li class="unlock">
-                <span class="unlock__no mono">{pad(i + 1)}</span>
+                <span class="unlock__no mono" data-decode>
+                  {pad(i + 1)}
+                </span>
                 <span class="unlock__title">{u.title}</span>
                 <span class="unlock__text">{u.text}</span>
               </li>
@@ -165,7 +171,7 @@ const backdrop = backdropImg ? await getImage({ src: backdropImg, width: 1920, f
     }
   }
   .partner__title {
-    font-size: clamp(3.25rem, 1.4rem + 6.2vw, 8rem);
+    font-size: clamp(2.5rem, 1.3rem + 3.8vw, 5.25rem);
     line-height: 0.92;
     letter-spacing: -0.035em;
   }
@@ -178,7 +184,7 @@ const backdrop = backdropImg ? await getImage({ src: backdropImg, width: 1920, f
   }
   .partner__lead {
     font-family: var(--font-display);
-    font-size: clamp(1.375rem, 1.1rem + 0.8vw, 1.75rem);
+    font-size: clamp(1.1875rem, 1.05rem + 0.5vw, 1.4375rem);
     font-weight: var(--w-serif);
     letter-spacing: -0.015em;
     line-height: 1.25;
@@ -259,7 +265,7 @@ const backdrop = backdropImg ? await getImage({ src: backdropImg, width: 1920, f
   }
   .proof__value {
     margin: 0;
-    font-size: clamp(2.25rem, 1.3rem + 3vw, 4.25rem);
+    font-size: clamp(1.875rem, 1.3rem + 1.8vw, 3rem);
     line-height: 1;
     font-variant-numeric: lining-nums tabular-nums;
   }
@@ -293,13 +299,13 @@ const backdrop = backdropImg ? await getImage({ src: backdropImg, width: 1920, f
   }
   .unlock__title {
     font-family: var(--font-display);
-    font-size: 1.25rem;
+    font-size: 1.0625rem;
     font-weight: var(--w-serif);
     letter-spacing: -0.01em;
   }
   .unlock__text {
     color: var(--ink-2);
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     line-height: 1.55;
   }
   @media (max-width: 560px) {

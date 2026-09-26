@@ -205,11 +205,13 @@ export const site = {
       countUp: true,
     },
 
-    /** The corner card. */
+    /** The corner card — styled like a quest. */
     nudge: {
-      kicker: 'Open to partners',
+      kicker: 'New quest',
       title: 'Back the next world.',
       text: 'The latest build was made on a 16GB MacBook — and it’s hit its limit.',
+      /** The quest's goals, shown as open checkboxes. Keep them true. [] = none. */
+      objectives: ['Hardware that keeps up with Unreal', 'A partner for the next world'],
       cta: 'See how',
       /** Days the card stays away after someone closes it. */
       snoozeDays: 7,

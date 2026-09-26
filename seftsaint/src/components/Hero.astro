@@ -11,6 +11,7 @@ import { getUpdatesFor } from '../lib/content';
 import { resolveImage, resolveVideo } from '../lib/media';
 import { formatDate } from '../lib/format';
 import Arrow from './Arrow.astro';
+import { effects } from '../data/effects';
 
 interface Props {
   project?: Project;
@@ -92,7 +93,9 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
   </div>
 
   <div class="hero__content">
-    <p class="eyebrow eyebrow--rule hero__kicker" data-intro="up" style="--d:200ms">{h.kicker}</p>
+    <p class="eyebrow eyebrow--rule hero__kicker" data-intro="up" style="--d:200ms" data-decode-area data-decode-reveal>
+      <span data-decode>{h.kicker}</span>
+    </p>
     <h1 id="hero-title" class="display hero__title">
       <span class="hero__line" data-intro="rise" style="--d:300ms"><span>{line1}</span></span>
       {
@@ -118,13 +121,14 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
             data-play-meta={latest ? `${formatDate(latest.date)} · ${latest.label ?? latest.title}` : undefined}
             data-play-post={latestPost || undefined}
             aria-haspopup="dialog"
+            data-decode-area
           >
             <span class="hero__watch-icon" aria-hidden="true">
               <svg viewBox="0 0 16 16">
                 <path d="M5.5 3.5v9l7-4.5z" fill="currentColor" />
               </svg>
             </span>
-            {h.ctaWatch}
+            <span data-decode>{h.ctaWatch}</span>
           </button>
         ) : (
           latestPost && (
@@ -136,8 +140,8 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
           )
         )
       }
-      <a class="link-line hero__explore" href="#work">
-        {h.ctaWork}
+      <a class="link-line hero__explore" href="#work" data-decode-area>
+        <span data-decode>{h.ctaWork}</span>
         <Arrow dir="s" />
       </a>
     </div>
@@ -156,18 +160,48 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
     }
   </div>
 
-  <p class="hero__caption eyebrow" data-intro="up" style="--d:1500ms">
-    <span>{h.caption[0]}</span>
-    <span>{h.caption[1]}</span>
+  <p class="hero__caption eyebrow" data-intro="up" style="--d:1500ms" data-decode-area data-decode-reveal>
+    <span data-decode>{h.caption[0]}</span>
+    <span data-decode>{h.caption[1]}</span>
   </p>
 
-  <ul class="hero__words eyebrow" role="list" data-intro="up" style="--d:1650ms" aria-hidden="true">
-    {h.words.map((w) => <li>{w}</li>)}
+  <ul
+    class="hero__words eyebrow"
+    role="list"
+    data-intro="up"
+    style="--d:1650ms"
+    aria-hidden="true"
+    data-decode-area
+    data-decode-reveal
+  >
+    {
+      h.words.map((w) => (
+        <li>
+          <span data-decode>{w}</span>
+        </li>
+      ))
+    }
   </ul>
 
-  <p class="hero__scroll eyebrow" data-intro="up" style="--d:1750ms" aria-hidden="true">
+  {
+    effects.intro && effects.loading && (
+      <p class="hero__loading eyebrow" data-loading aria-hidden="true">
+        <span class="hero__loading-row">
+          <span>{ui.hero.loading}</span>
+          <span class="hero__loading-pct mono" data-loading-pct>
+            000%
+          </span>
+        </span>
+        <span class="hero__loading-bar">
+          <span data-loading-bar />
+        </span>
+      </p>
+    )
+  }
+
+  <p class="hero__scroll eyebrow" data-intro="up" style="--d:1750ms" aria-hidden="true" data-decode-area data-decode-reveal>
     <span class="hero__scroll-line"></span>
-    {ui.hero.scroll}
+    <span data-decode>{ui.hero.scroll}</span>
   </p>
 
   {
@@ -299,7 +333,7 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
     text-shadow: 0 1px 12px rgb(0 0 0 / 0.55);
   }
   .hero__title {
-    font-size: clamp(3.5rem, 1.2rem + 7.6vw, 9.5rem);
+    font-size: clamp(2.75rem, 1rem + 5.6vw, 6.75rem);
     line-height: 0.9;
     letter-spacing: -0.035em;
   }
@@ -320,7 +354,7 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
     margin-top: clamp(1.5rem, 1rem + 1.5vw, 2.25rem);
     margin-left: clamp(0rem, -1rem + 3.5vw, 3.6rem);
     max-width: 34ch;
-    font-size: clamp(1.125rem, 0.98rem + 0.5vw, 1.4375rem);
+    font-size: clamp(1rem, 0.94rem + 0.25vw, 1.1875rem);
     line-height: 1.5;
     color: var(--ink);
     text-shadow: 0 1px 16px rgb(0 0 0 / 0.5);
@@ -347,7 +381,7 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
     gap: 0.35rem 0.75rem;
     margin-top: 1.75rem;
     margin-left: clamp(0rem, -1rem + 3.5vw, 3.6rem);
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     font-weight: 500;
     color: var(--ink);
     text-shadow: 0 1px 12px rgb(0 0 0 / 0.6);
@@ -452,6 +486,49 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
       transform: translateY(350%);
     }
   }
+  /* First visit only: a small "loading world" counter while the footage comes up */
+  .hero__loading {
+    display: none;
+  }
+  :global(html.intro) .hero__loading {
+    position: absolute;
+    left: var(--gutter);
+    bottom: 2.25rem;
+    display: grid;
+    gap: 0.7rem;
+    width: 12.5rem;
+    color: var(--ink-2);
+    line-height: 1;
+    text-shadow: 0 1px 12px rgb(0 0 0 / 0.55);
+    transition: opacity 500ms var(--ease);
+  }
+  :global(html.intro) .hero__loading.is-done {
+    opacity: 0;
+  }
+  .hero__loading-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .hero__loading-pct {
+    color: var(--ink);
+    letter-spacing: 0.06em;
+    font-variant-numeric: tabular-nums;
+  }
+  .hero__loading-bar {
+    position: relative;
+    height: 1px;
+    background: var(--line-2);
+    overflow: hidden;
+  }
+  .hero__loading-bar > span {
+    position: absolute;
+    inset: 0;
+    background: var(--ink);
+    transform: scaleX(var(--p, 0));
+    transform-origin: 0 50%;
+  }
+
   .hero__horizon {
     position: absolute;
     left: 0;
@@ -525,7 +602,7 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
     }
     .hero__proof {
       margin-top: 1.25rem;
-      font-size: 0.875rem;
+      font-size: 0.8125rem;
     }
   }
 

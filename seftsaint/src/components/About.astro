@@ -15,12 +15,12 @@ const lastLine = a.statement.at(-1);
 const firstLines = a.statement.slice(0, -1);
 ---
 
-<section id="about" class="lab" aria-labelledby="lab-title">
+<section id="about" class="lab" aria-labelledby="lab-title" data-hud={a.kicker} data-hud-no={no}>
   <div class="lab__grid">
     <div class="lab__main" data-reveal>
-      <p class="eyebrow">
+      <p class="eyebrow" data-decode-area data-decode-reveal>
         {no && <span class="eyebrow__no" aria-hidden="true">{no}</span>}
-        {a.kicker}
+        <span data-decode>{a.kicker}</span>
       </p>
       <h2 id="lab-title" class="display lab__statement">
         {firstLines.map((l) => <span>{l}</span>)}
@@ -33,11 +33,13 @@ const firstLines = a.statement.slice(0, -1);
     </div>
 
     <aside class="lab__side" data-reveal style="--reveal-delay:80ms">
-      <dl class="lab__kit">
+      <dl class="lab__kit" data-decode-area data-decode-reveal>
         {
           a.toolkit.map((g) => (
             <div class="lab__kit-row">
-              <dt class="eyebrow">{g.label}</dt>
+              <dt class="eyebrow">
+                <span data-decode>{g.label}</span>
+              </dt>
               <dd>{g.items.join(' · ')}</dd>
             </div>
           ))
@@ -59,7 +61,7 @@ const firstLines = a.statement.slice(0, -1);
   .lab {
     max-width: var(--max);
     margin-inline: auto;
-    padding: clamp(5rem, 3rem + 6vw, 9rem) var(--gutter) 0;
+    padding: clamp(3.5rem, 2rem + 4vw, 6.5rem) var(--gutter) 0;
   }
   .lab__grid {
     display: grid;
@@ -81,7 +83,7 @@ const firstLines = a.statement.slice(0, -1);
   }
   .lab__statement {
     margin-top: 1.5rem;
-    font-size: clamp(2.5rem, 1.4rem + 3.8vw, 5.25rem);
+    font-size: clamp(2rem, 1.2rem + 2.6vw, 3.75rem);
     line-height: 0.98;
   }
   .lab__statement span,
@@ -96,7 +98,7 @@ const firstLines = a.statement.slice(0, -1);
     max-width: 50ch;
   }
   .lab__lead {
-    font-size: 1.1875rem;
+    font-size: 1.0625rem;
     line-height: 1.6;
   }
   .lab__body {
@@ -131,7 +133,7 @@ const firstLines = a.statement.slice(0, -1);
     align-items: center;
     gap: 0.6rem;
     font-family: var(--font-display);
-    font-size: clamp(1.75rem, 1.4rem + 1vw, 2.25rem);
+    font-size: clamp(1.375rem, 1.2rem + 0.6vw, 1.75rem);
     font-weight: var(--w-serif);
     letter-spacing: -0.02em;
   }

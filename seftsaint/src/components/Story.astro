@@ -35,13 +35,13 @@ const nextNo = String(chapters.length + 1).padStart(2, '0');
 const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0, 2);
 ---
 
-<section id="story" class="story" aria-labelledby="story-title" data-nudge-trigger>
+<section id="story" class="story" aria-labelledby="story-title" data-nudge-trigger data-hud={s.kicker} data-hud-no={no}>
   <div class="story__inner">
     <header class="story__head">
       <div data-reveal>
-        <p class="eyebrow">
+        <p class="eyebrow" data-decode-area data-decode-reveal>
           {no && <span class="eyebrow__no" aria-hidden="true">{no}</span>}
-          {s.kicker}
+          <span data-decode>{s.kicker}</span>
         </p>
         <h2 id="story-title" class="display story__title">
           <span>{h1}</span>
@@ -51,9 +51,9 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
       <div class="story__side" data-reveal style="--reveal-delay:80ms">
         <p class="story__intro">{s.intro}</p>
         <div class="story__now">
-          <p class="story__now-head">
+          <p class="story__now-head" data-decode-area data-decode-reveal>
             <span class="status-dot" aria-hidden="true"></span>
-            <span class="eyebrow">{ui.notes.now}</span>
+            <span class="eyebrow" data-decode>{ui.notes.now}</span>
             <time class="story__now-date" datetime={now.updated}>{formatDate(now.updated)}</time>
           </p>
           <dl class="story__now-list">
@@ -76,10 +76,10 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
           const views = u.stats?.views ?? 0;
           const top = views > 0 && views === maxViews;
           return (
-            <li class:list={['chapter', { 'chapter--top': top }]} data-reveal>
+            <li class:list={['chapter', { 'chapter--top': top }]} data-reveal data-decode-area>
               <div class="chapter__meta">
                 <p class="eyebrow chapter__no">
-                  {s.chapter} {no}
+                  <span data-decode>{`${s.chapter} ${no}`}</span>
                 </p>
                 <time class="chapter__date" datetime={u.date}>
                   {formatDate(u.date)}
@@ -98,6 +98,7 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
                     class="chapter__img"
                   />
                 )}
+                <span class="render" data-render data-render-tile="54" aria-hidden="true" />
               </a>
 
               <div class="chapter__main">
@@ -105,13 +106,13 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
                   <a href={u.project ? `/work/${u.project}/#${u.id}` : (u.sourceUrl ?? '#')}>{u.title}</a>
                 </h3>
                 {excerpt && <p class="chapter__excerpt">{excerpt}</p>}
-                {u.tools && u.tools.length > 0 && <p class="chapter__tools">{u.tools.slice(0, 3).join(' · ')}</p>}
+                {u.tools && u.tools.length > 0 && <p class="chapter__tools" data-decode>{u.tools.slice(0, 3).join(' · ')}</p>}
               </div>
 
               <div class="chapter__side">
                 {u.stats && (
                   <div class="chapter__stats">
-                    {top && <p class="chapter__badge">{s.mostViewed}</p>}
+                    {top && <p class="chapter__badge" data-decode>{s.mostViewed}</p>}
                     <p class="chapter__views">
                       <strong>{formatCount(u.stats.views)}</strong> {s.views}
                       <span class="chapter__likes">
@@ -134,17 +135,18 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
                       data-play-meta={`${formatDate(u.date)} · ${u.label ?? u.title}`}
                       data-play-post={u.sourceUrl ?? u.media?.sourceUrl}
                       aria-haspopup="dialog"
+                      data-decode-area
                     >
                       <svg viewBox="0 0 16 16" aria-hidden="true">
                         <path d="M5.5 3.5v9l7-4.5z" fill="currentColor" />
                       </svg>
-                      {ui.notes.watch}
+                      <span data-decode>{ui.notes.watch}</span>
                       <span class="visually-hidden">: {u.title}</span>
                     </button>
                   )}
                   {u.sourceUrl && (
-                    <a class="chapter__link" href={u.sourceUrl} target="_blank" rel="noopener">
-                      {ui.notes.onX}
+                    <a class="chapter__link" href={u.sourceUrl} target="_blank" rel="noopener" data-decode-area>
+                      <span data-decode>{ui.notes.onX}</span>
                       <Arrow dir="ne" />
                       <span class="visually-hidden">: {u.title} (opens in a new tab)</span>
                     </a>
@@ -158,10 +160,10 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
 
       {
         site.partner.enabled && (
-          <li class="chapter chapter--next" data-reveal>
+          <li class="chapter chapter--next" data-reveal data-decode-area>
             <div class="chapter__meta">
               <p class="eyebrow chapter__no">
-                {s.chapter} {nextNo}
+                <span data-decode>{`${s.chapter} ${nextNo}`}</span>
               </p>
               <span class="chapter__date">—</span>
             </div>
@@ -172,8 +174,8 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
               <p class="chapter__excerpt">{s.next.text}</p>
             </div>
             <div class="chapter__side">
-              <a class="btn-line" href={partnerHref}>
-                {s.next.cta}
+              <a class="btn-line" href={partnerHref} data-decode-area>
+                <span data-decode>{s.next.cta}</span>
                 <Arrow dir="e" />
               </a>
             </div>
@@ -189,7 +191,7 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
   .story__inner {
     max-width: var(--max);
     margin-inline: auto;
-    padding: clamp(5rem, 3rem + 6vw, 9rem) var(--gutter) 0;
+    padding: clamp(4.5rem, 2.5rem + 5vw, 8rem) var(--gutter) 0;
   }
 
   /* Head: title left, intro + now right */
@@ -212,7 +214,7 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
   }
   .story__title {
     margin-top: 1.25rem;
-    font-size: clamp(2.75rem, 1.5rem + 4vw, 5.75rem);
+    font-size: clamp(2.25rem, 1.3rem + 2.6vw, 4rem);
     line-height: 0.95;
   }
   .story__title span,
@@ -224,7 +226,7 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
     padding-left: 0.3em;
   }
   .story__intro {
-    font-size: 1.125rem;
+    font-size: 1rem;
     line-height: 1.6;
     color: var(--ink-2);
     max-width: 44ch;
@@ -263,7 +265,7 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
   }
   .story__now-list dd {
     margin: 0.15rem 0 0;
-    font-size: 1rem;
+    font-size: 0.9375rem;
     line-height: 1.5;
   }
 
@@ -320,11 +322,12 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
     color: var(--ink);
   }
   .chapter__date {
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     color: var(--ink-3);
   }
 
   .chapter__thumb {
+    position: relative;
     display: block;
     aspect-ratio: 16 / 9;
     border-radius: 2px;
@@ -353,7 +356,7 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
 
   .chapter__title {
     font-family: var(--font-display);
-    font-size: clamp(1.625rem, 1.3rem + 1vw, 2.25rem);
+    font-size: clamp(1.3125rem, 1.15rem + 0.5vw, 1.625rem);
     font-weight: var(--w-serif);
     letter-spacing: -0.02em;
     line-height: 1.12;
@@ -369,7 +372,7 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
   .chapter__excerpt {
     margin-top: 0.6rem;
     max-width: 48ch;
-    font-size: 1.0625rem;
+    font-size: 0.9375rem;
     line-height: 1.55;
     color: var(--ink-2);
   }
@@ -411,12 +414,12 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
     gap: 0.5rem;
   }
   .chapter__views {
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     color: var(--ink-2);
   }
   .chapter__views strong {
     font-family: var(--font-display);
-    font-size: 1.625rem;
+    font-size: 1.3125rem;
     font-weight: var(--w-serif);
     letter-spacing: -0.02em;
     color: var(--ink);
@@ -495,7 +498,7 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
 
   .story__asof {
     margin-top: 1rem;
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     color: var(--ink-3);
   }
 

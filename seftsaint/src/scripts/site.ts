@@ -6,6 +6,8 @@
  *     scrolled away or the tab is hidden; nothing loads until needed.
  */
 
+import { scramble, fxOn } from './scramble';
+
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
 const saveData = Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData);
@@ -350,12 +352,19 @@ document.querySelectorAll<HTMLElement>('[data-builds]').forEach((root) => {
   const link = root.querySelector<HTMLAnchorElement>('[data-build-link]');
   const date = root.querySelector<HTMLElement>('[data-build-date]');
   const title = root.querySelector<HTMLElement>('[data-build-title]');
+  const titleSr = root.querySelector<HTMLElement>('[data-build-title-sr]');
   const count = root.querySelector<HTMLElement>('[data-build-count]');
+  const track = root.querySelector<HTMLElement>('[data-levels]');
+  const levels = [...root.querySelectorAll<HTMLButtonElement>('[data-build-go]')];
+  const render = root.querySelector<HTMLElement>('[data-render]');
   const base = link?.getAttribute('href')?.split('#')[0] ?? '';
+  const decode = fxOn('decode');
   let current = Number(root.dataset.default ?? pics.length - 1);
 
   const show = (i: number) => {
-    current = (i + pics.length) % pics.length;
+    const next = (i + pics.length) % pics.length;
+    if (next === current) return;
+    current = next;
     const d = pics[current].dataset;
     pics.forEach((p, k) => p.classList.toggle('is-active', k === current));
     if (link && d.id) {
@@ -363,17 +372,36 @@ document.querySelectorAll<HTMLElement>('[data-builds]').forEach((root) => {
       link.setAttribute('aria-label', `${link.getAttribute('aria-label')?.split(' — ')[0]} — ${d.title ?? ''}`);
     }
     if (date) {
-      date.textContent = d.date ?? '';
+      if (decode) scramble(date, d.date ?? '', { duration: 420 });
+      else date.textContent = d.date ?? '';
       if (d.iso) date.setAttribute('datetime', d.iso);
     }
-    if (title) title.textContent = d.title ?? '';
+    if (title) {
+      if (decode) scramble(title, d.title ?? '');
+      else title.textContent = d.title ?? '';
+    }
+    if (titleSr) titleSr.textContent = d.title ?? '';
     if (count) count.textContent = String(current + 1).padStart(2, '0');
+    // Level track: where you are, what's behind you
+    track?.style.setProperty('--at', String(current));
+    levels.forEach((b, k) => {
+      b.setAttribute('aria-pressed', String(k === current));
+      b.classList.toggle('is-cleared', k < current);
+    });
+    // Re-render the frame (fx.ts → render)
+    render?.dispatchEvent(new CustomEvent('render:replay'));
   };
   root.querySelector('[data-build-prev]')?.addEventListener('click', () => show(current - 1));
   root.querySelector('[data-build-next]')?.addEventListener('click', () => show(current + 1));
+  levels.forEach((b) => b.addEventListener('click', () => show(Number(b.dataset.buildGo))));
   root.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft') show(current - 1);
-    if (e.key === 'ArrowRight') show(current + 1);
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    const onLevel = levels.includes(document.activeElement as HTMLButtonElement);
+    show(current + (e.key === 'ArrowLeft' ? -1 : 1));
+    if (onLevel) {
+      e.preventDefault();
+      levels[current]?.focus();
+    }
   });
   // Load every frame once the strip is near, so stepping is instant.
   if ('IntersectionObserver' in window) {

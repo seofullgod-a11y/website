@@ -71,3 +71,33 @@ if (counters.length && !reduceMotion.matches) {
   }
   window.addEventListener('beforeprint', () => counters.forEach((el) => (el.textContent = el.dataset.count ?? '')));
 }
+
+/* ── First visit: "Loading world 000% → 100%" ─────────────────
+ * Tied to the real thing: it creeps up while the hero footage loads (holding
+ * short of 100%), and finishes once the intro opens the world. Then it fades,
+ * and the scroll cue takes its place. Only exists during the intro.
+ */
+const loading = document.querySelector<HTMLElement>('[data-loading]');
+const html = document.documentElement;
+if (loading && html.classList.contains('intro') && !reduceMotion.matches) {
+  const pct = loading.querySelector<HTMLElement>('[data-loading-pct]');
+  const bar = loading.querySelector<HTMLElement>('[data-loading-bar]');
+  const MIN = 1150; // never faster than this, so it reads
+  const t0 = performance.now();
+  let shown = 0;
+  const tick = (now: number) => {
+    if (!html.classList.contains('intro')) return; // intro over (or skipped for print)
+    const k = (now - t0) / MIN;
+    const target = html.classList.contains('intro-open') ? Math.min(1, k) : Math.min(0.88, k * 0.88);
+    shown = Math.max(shown, target);
+    const p = 1 - Math.pow(1 - shown, 2);
+    if (pct) pct.textContent = `${String(Math.round(p * 100)).padStart(3, '0')}%`;
+    bar?.style.setProperty('--p', p.toFixed(3));
+    if (shown >= 1) {
+      window.setTimeout(() => loading.classList.add('is-done'), 180);
+      return;
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}

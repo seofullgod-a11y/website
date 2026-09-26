@@ -25,8 +25,23 @@ export const effects = {
   parallax: true,
   /** A very soft light follows the cursor over the dark background. */
   lensLight: false,
-  /** Small mono labels briefly "decode" when you hover them. */
-  decode: false,
+  /**
+   * Labels "decode": the letters shuffle, then settle back into the real words.
+   * Plays on hover (mouse), on tap (phones), on keyboard focus, and once for each
+   * section label as it scrolls into view. Screen readers always get the real text.
+   */
+  decode: true,
+  /**
+   * Frames render in tile by tile, like a 3D render — the featured strip and the
+   * story thumbnails, once each as they arrive (and again, quickly, when you switch builds).
+   */
+  render: true,
+  /** Featured world: a level-select track under the strip (01 Godot → 04 Last update → next world, locked). */
+  levels: true,
+  /** First-visit intro: a small "Loading world 000% → 100%" counter at the bottom of the hero. */
+  loading: true,
+  /** Home, wide screens: the header shows which section you're in ("02 / 05 — Featured world"). */
+  hud: true,
   /** Thin reading-progress line under the header. */
   scrollProgress: true,
   /** The dot in the wordmark breathes slowly — a quiet "in progress" signal. */

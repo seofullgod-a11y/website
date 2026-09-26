@@ -27,6 +27,8 @@ export const ui = {
     followX: 'Follow on X',
     latest: 'Latest',
     scroll: 'Scroll',
+    /** First-visit counter at the bottom of the hero (effects.ts → loading). */
+    loading: 'Loading world',
     pauseFootage: 'Pause footage',
     playFootage: 'Play footage',
   },
@@ -36,6 +38,9 @@ export const ui = {
     next: 'Next build',
     builds: 'Builds',
     showBuild: 'Show build',
+    /** The locked node at the end of the level track. */
+    nextWorld: 'Next world',
+    locked: 'locked',
   },
 
   notes: {
@@ -126,6 +131,8 @@ export const ui = {
     closeNudge: 'Close — don’t show for a while',
     /** Announced after "Copy email". */
     copiedAnnounce: 'Email address copied',
+    /** Screen-reader name of the list of goals on the corner card. */
+    objectives: 'Objectives',
   },
 
   journal: {

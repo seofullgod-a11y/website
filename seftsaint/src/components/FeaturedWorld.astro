@@ -13,6 +13,8 @@ import { getUpdatesFor } from '../lib/content';
 import { resolveImage } from '../lib/media';
 import { formatDateNumeric } from '../lib/format';
 import Arrow from './Arrow.astro';
+import { effects } from '../data/effects';
+import { partnerHref } from '../lib/partner';
 
 interface Props {
   project: Project;
@@ -30,25 +32,29 @@ const last = builds.length - 1;
 const pad = (n: number) => String(n).padStart(2, '0');
 const statusLabel = ui.status[p.status];
 const shortNote = p.statusShort ?? '';
+// Level-select track under the strip (effects.ts → levels). Ends on a locked "next world".
+const levels = effects.levels && builds.length > 1;
+const nextLevel = levels && site.partner.enabled;
+const cols = builds.length + (nextLevel ? 1 : 0);
 ---
 
-<section id="work" class="world" aria-labelledby="world-title">
+<section id="work" class="world" aria-labelledby="world-title" data-hud={f.kicker} data-hud-no={no}>
   <div class="world__grid">
     <div class="world__text" data-reveal>
-      <p class="eyebrow">
+      <p class="eyebrow" data-decode-area data-decode-reveal>
         {no && <span class="eyebrow__no" aria-hidden="true">{no}</span>}
-        {f.kicker}
+        <span data-decode>{f.kicker}</span>
       </p>
       <h2 id="world-title" class="display world__title">{p.title}</h2>
       {p.workingTitle && <p class="world__wt eyebrow">{ui.project.workingTitle}</p>}
       <p class="world__line">{p.oneLiner ?? p.summary}</p>
-      <p class="world__status">
+      <p class="world__status" data-decode-area>
         <span class="status-dot" aria-hidden="true"></span>
-        <span class="eyebrow world__status-label">{statusLabel}</span>
+        <span class="eyebrow world__status-label" data-decode>{statusLabel}</span>
         {shortNote && <span class="world__status-note">— {shortNote}</span>}
       </p>
-      <a class="link-line world__cta" href={href}>
-        {f.cta}
+      <a class="link-line world__cta" href={href} data-decode-area>
+        <span data-decode>{f.cta}</span>
         <Arrow dir="e" />
       </a>
     </div>
@@ -56,9 +62,15 @@ const shortNote = p.statusShort ?? '';
     {
       builds.length > 0 && (
         <div class="world__stage" data-reveal style="--reveal-delay:80ms" data-builds data-default={last}>
-          <a class="world__frame" href={`${href}#${builds[last].u.id}`} data-build-link aria-label={`${p.title} — ${builds[last].u.title}`}>
+          <a
+            class="world__frame"
+            href={`${href}#${builds[last].u.id}`}
+            data-build-link
+            aria-label={`${p.title} — ${builds[last].u.title}`}
+            data-decode-area
+          >
             <span class="world__enter" aria-hidden="true">
-              {f.cta}
+              <span data-decode>{f.cta}</span>
               <Arrow dir="e" />
             </span>
             {builds.map((b, i) => (
@@ -81,25 +93,76 @@ const shortNote = p.statusShort ?? '';
                 }}
               />
             ))}
+            <span class="render" data-render aria-hidden="true" />
             <ul class="world__words eyebrow" role="list" aria-hidden="true">
               {f.words.map((w) => (
-                <li>{w}</li>
+                <li>
+                  <span data-decode>{w}</span>
+                </li>
               ))}
             </ul>
           </a>
+
+          {levels && (
+            <ol class="levels" role="list" aria-label={ui.featured.builds} data-levels style={`--n:${cols};--b:${builds.length};--at:${last}`}>
+              {builds.map((b, i) => (
+                <li>
+                  <button
+                    type="button"
+                    class:list={['level', { 'is-cleared': i < last }]}
+                    data-build-go={i}
+                    aria-pressed={i === last ? 'true' : 'false'}
+                    data-decode-area
+                  >
+                    <span class="level__node" aria-hidden="true" />
+                    <span class="level__no mono" aria-hidden="true">
+                      {pad(i + 1)}
+                    </span>
+                    <span class="level__name" aria-hidden="true">
+                      <span data-decode>{b.u.label ?? b.u.title}</span>
+                    </span>
+                    <span class="visually-hidden">
+                      {pad(i + 1)} — {b.u.title}
+                    </span>
+                  </button>
+                </li>
+              ))}
+              {nextLevel && (
+                <li>
+                  <a class="level level--locked" href={partnerHref} data-decode-area>
+                    <span class="level__node" aria-hidden="true" />
+                    <span class="level__no mono" aria-hidden="true">
+                      {pad(cols)}
+                    </span>
+                    <span class="level__name" aria-hidden="true">
+                      <span data-decode>{ui.featured.nextWorld}</span>
+                    </span>
+                    <span class="visually-hidden">
+                      {ui.featured.nextWorld} ({ui.featured.locked}) — {site.story.next.cta}
+                    </span>
+                  </a>
+                </li>
+              )}
+            </ol>
+          )}
 
           <div class="world__bar">
             <p class="world__caption" aria-live="polite">
               <time class="mono" data-build-date datetime={builds[last].u.date}>
                 {formatDateNumeric(builds[last].u.date)}
               </time>
-              <span class="world__caption-title" data-build-title>
+              <span class="world__caption-title" data-build-title aria-hidden="true">
+                {builds[last].u.title}
+              </span>
+              <span class="visually-hidden" data-build-title-sr>
                 {builds[last].u.title}
               </span>
             </p>
-            <p class="world__count mono" aria-hidden="true">
-              <span data-build-count>{pad(last + 1)}</span> / {pad(builds.length)}
-            </p>
+            {!levels && (
+              <p class="world__count mono" aria-hidden="true">
+                <span data-build-count>{pad(last + 1)}</span> / {pad(builds.length)}
+              </p>
+            )}
             {builds.length > 1 && (
               <div class="world__nav" role="group" aria-label={ui.featured.builds}>
                 <button type="button" class="round-btn" data-build-prev aria-label={ui.featured.previous}>
@@ -121,7 +184,7 @@ const shortNote = p.statusShort ?? '';
   .world {
     max-width: var(--max);
     margin-inline: auto;
-    padding: clamp(4.5rem, 3rem + 5vw, 8rem) var(--gutter) clamp(4rem, 3rem + 4vw, 7rem);
+    padding: clamp(4.5rem, 3rem + 5vw, 8rem) var(--gutter) clamp(3rem, 2rem + 3vw, 5rem);
   }
   .world__grid {
     display: grid;
@@ -143,7 +206,7 @@ const shortNote = p.statusShort ?? '';
 
   .world__title {
     margin-top: 1.25rem;
-    font-size: clamp(3rem, 1.6rem + 3.8vw, 5.5rem);
+    font-size: clamp(2.25rem, 1.3rem + 2.4vw, 3.75rem);
     line-height: 0.92;
     letter-spacing: -0.03em;
   }
@@ -155,8 +218,8 @@ const shortNote = p.statusShort ?? '';
     margin-top: 1.25rem;
     max-width: 34ch;
     color: var(--ink-2);
-    font-size: 1.125rem;
-    line-height: 1.6;
+    font-size: 1rem;
+    line-height: 1.65;
   }
   .world__status {
     display: flex;
@@ -164,7 +227,7 @@ const shortNote = p.statusShort ?? '';
     align-items: center;
     gap: 0.35rem 0.75rem;
     margin-top: 1.5rem;
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     color: var(--ink-2);
   }
   .world__status-label {
@@ -285,6 +348,128 @@ const shortNote = p.statusShort ?? '';
     }
   }
 
+  /* ── Level select ── */
+  .levels {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+    margin-top: 1.5rem;
+    list-style: none;
+  }
+  /* The path: solid through the builds, dashed to the locked one, lit up to where you are */
+  .levels::before,
+  .levels::after {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    height: 1px;
+    pointer-events: none;
+  }
+  .levels::before {
+    width: calc((var(--n) - 1) / var(--n) * 100%);
+    background: linear-gradient(
+      90deg,
+      var(--line-2) 0 calc((var(--b) - 1) / (var(--n) - 1) * 100%),
+      transparent 0
+    );
+  }
+  .levels::after {
+    width: calc(var(--at) / var(--n) * 100%);
+    background: var(--ink);
+    transition: width 700ms var(--ease);
+  }
+  .levels li:last-child:has(.level--locked)::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: calc((var(--n) - 2) / var(--n) * 100% + 5px);
+    width: calc(1 / var(--n) * 100%);
+    border-top: 1px dashed var(--line-2);
+    pointer-events: none;
+  }
+  .level {
+    position: relative;
+    display: grid;
+    justify-items: start;
+    align-content: start;
+    gap: 0.55rem 0.6rem;
+    grid-template-columns: auto minmax(0, 1fr);
+    width: 100%;
+    min-height: 44px;
+    padding: 0 0.5rem 0.25rem 0;
+    text-align: left;
+    color: var(--ink-3);
+    transition: color var(--t-fast) var(--ease);
+  }
+  .level__node {
+    grid-column: 1 / -1;
+    position: relative;
+    z-index: 1;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--bg);
+    box-shadow: inset 0 0 0 1px var(--ink-faint);
+    transition:
+      background-color var(--t) var(--ease),
+      box-shadow var(--t) var(--ease);
+  }
+  .level__no {
+    font-size: var(--fs-label);
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+    transition: color var(--t-fast) var(--ease);
+  }
+  .level__name {
+    min-width: 0;
+    font-size: var(--fs-label);
+    font-weight: var(--w-label);
+    letter-spacing: var(--ls-label);
+    line-height: 1.5;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .level:hover,
+  .level:focus-visible {
+    color: var(--ink-2);
+  }
+  .level.is-cleared .level__node {
+    background: var(--ink-3);
+    box-shadow: none;
+  }
+  .level[aria-pressed='true'] {
+    color: var(--ink);
+  }
+  .level[aria-pressed='true'] .level__no {
+    color: var(--ink-2);
+  }
+  .level[aria-pressed='true'] .level__node {
+    background: var(--ink);
+    box-shadow: 0 0 0 4px rgb(235 230 220 / 0.14);
+  }
+  .level:not([aria-pressed='true']):hover .level__node {
+    box-shadow: inset 0 0 0 1px var(--ink-2);
+  }
+  /* Locked: a dashed ring, and it leads to the partner section */
+  .level--locked {
+    color: var(--ink-faint);
+  }
+  .level--locked .level__node {
+    box-shadow: none;
+    border: 1px dashed var(--ink-3);
+  }
+  .level--locked:hover .level__node {
+    border-color: var(--ink);
+  }
+  @media (max-width: 640px) {
+    .level__name {
+      display: none;
+    }
+  }
+
   .world__bar {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto auto;
@@ -297,13 +482,14 @@ const shortNote = p.statusShort ?? '';
     align-items: baseline;
     gap: 1rem;
     min-width: 0;
-    font-size: 1rem;
+    font-size: 0.9375rem;
   }
   .world__caption time {
     color: var(--ink-3);
     flex: none;
   }
   .world__caption-title {
+    min-width: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

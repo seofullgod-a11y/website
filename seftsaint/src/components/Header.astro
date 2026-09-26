@@ -7,6 +7,8 @@ import Arrow from './Arrow.astro';
 
 const isHome = Astro.url.pathname === '/' || Astro.url.pathname === '';
 const talk = promote('headerPill');
+/** Section indicator (home only) — effects.ts → hud. Filled in by fx.ts. */
+const hud = isHome && effects.hud;
 const nav = [
   { key: 'work', href: '/#work', label: ui.nav.work },
   { key: 'about', href: '/#about', label: ui.nav.about },
@@ -18,19 +20,40 @@ const nav = [
 <header class="header" data-header>
   <div class="header__inner">
     <div class="header__brand">
-      <a class="wordmark" href="/" aria-label={`${site.name} — ${ui.nav.home}`} aria-current={isHome ? 'page' : undefined}>
-        {site.name}
+      <a
+        class="wordmark"
+        href="/"
+        aria-label={`${site.name} — ${ui.nav.home}`}
+        aria-current={isHome ? 'page' : undefined}
+        data-decode-area
+      >
+        <span data-decode>{site.name}</span>
       </a>
-      <p class="header__tags" aria-hidden="true">
+      <div class="header__meta" aria-hidden="true">
+        <p class="header__tags">
+          {
+            site.disciplines.map((d, i) => (
+              <>
+                {i > 0 && <span class="header__slash">/</span>}
+                <span>{d}</span>
+              </>
+            ))
+          }
+        </p>
         {
-          site.disciplines.map((d, i) => (
-            <>
-              {i > 0 && <span class="header__slash">/</span>}
-              <span>{d}</span>
-            </>
-          ))
+          hud && (
+            <p class="header__hud" data-hud-el>
+              <span class="header__hud-no" data-hud-no>
+                01
+              </span>
+              <span class="header__slash">/</span>
+              <span data-hud-total>05</span>
+              <span class="header__hud-rule" />
+              <span class="header__hud-name" data-hud-name />
+            </p>
+          )
         }
-      </p>
+      </div>
     </div>
 
     <nav class="nav" aria-label="Main">
@@ -38,15 +61,15 @@ const nav = [
         {
           nav.map((item) => (
             <li>
-              <a class="nav__link" href={item.href}>
-                {item.label}
+              <a class="nav__link" href={item.href} data-decode-area>
+                <span data-decode>{item.label}</span>
               </a>
             </li>
           ))
         }
         <li>
-          <a class="nav__link" href={site.xUrl} target="_blank" rel="noopener me">
-            {ui.nav.x}
+          <a class="nav__link" href={site.xUrl} target="_blank" rel="noopener me" data-decode-area>
+            <span data-decode>{ui.nav.x}</span>
             <Arrow dir="ne" />
             <span class="visually-hidden">(opens in a new tab)</span>
           </a>
@@ -56,8 +79,8 @@ const nav = [
 
     {
       talk && (
-        <a class="btn-line btn-line--sm header__talk" href={partnerHref}>
-          {ui.nav.talk}
+        <a class="btn-line btn-line--sm header__talk" href={partnerHref} data-decode-area>
+          <span data-decode>{ui.nav.talk}</span>
           <Arrow dir="ne" />
         </a>
       )
@@ -164,16 +187,16 @@ const nav = [
   }
   .wordmark {
     font-family: var(--font-display);
-    font-size: 1.6875rem;
+    font-size: 1.4375rem;
     font-weight: 440;
     letter-spacing: -0.025em;
     line-height: 1;
     padding-block: 0.4rem;
     white-space: nowrap;
   }
-  .header__tags {
+  /* Disciplines — and, once you scroll into a section, which one you're in */
+  .header__meta {
     display: none;
-    gap: 0.9rem;
     font-size: 0.6875rem;
     font-weight: 500;
     letter-spacing: 0.22em;
@@ -181,13 +204,49 @@ const nav = [
     color: var(--ink-3);
     white-space: nowrap;
   }
+  @media (min-width: 1180px) {
+    .header__meta {
+      display: grid;
+    }
+  }
+  .header__tags,
+  .header__hud {
+    grid-area: 1 / 1;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    transition:
+      opacity 400ms var(--ease),
+      transform 400ms var(--ease);
+  }
   .header__slash {
     color: var(--ink-faint);
   }
-  @media (min-width: 1180px) {
-    .header__tags {
-      display: flex;
-    }
+  .header__hud {
+    gap: 0.6rem;
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  .header__hud-no {
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .header__hud-rule {
+    width: 1.5rem;
+    height: 1px;
+    margin-inline: 0.35rem;
+    background: var(--line-2);
+  }
+  .header__hud-name {
+    color: var(--ink-2);
+  }
+  .header:global(.has-hud) .header__tags {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  .header:global(.has-hud) .header__hud {
+    opacity: 1;
+    transform: none;
   }
 
   .nav {
@@ -269,7 +328,7 @@ const nav = [
       margin-left: auto;
     }
     .wordmark {
-      font-size: 1.5rem;
+      font-size: 1.3125rem;
     }
   }
 
@@ -301,7 +360,7 @@ const nav = [
     padding-block: 1rem;
     border-bottom: 1px solid var(--line);
     font-family: var(--font-display);
-    font-size: clamp(2rem, 1.4rem + 3vw, 2.75rem);
+    font-size: clamp(1.75rem, 1.4rem + 1.6vw, 2.25rem);
     font-weight: var(--w-display);
     letter-spacing: -0.02em;
     line-height: 1.1;
