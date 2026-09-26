@@ -12,6 +12,7 @@ import { ui } from '../../data/ui';
 import { getProjects, getUpdatesFor } from '../../lib/content';
 import { formatDate } from '../../lib/format';
 import { resolveImage } from '../../lib/media';
+import { promote, partnerHref, partnerMailto } from '../../lib/partner';
 
 export function getStaticPaths() {
   return getProjects().map((project) => ({ params: { slug: project.slug }, props: { project } }));
@@ -30,6 +31,9 @@ const updates = getUpdatesFor(p.slug); // oldest → newest
 const latestUpdate = updates.at(-1);
 const total = updates.length;
 const pad = (n: number) => String(n).padStart(2, '0');
+// A paused project is the honest place to ask for help (site.ts → partner.projectNote).
+const partnerNote = promote('projectNote') && p.status === 'paused';
+const mailto = partnerMailto();
 
 // Progress sits after the first long-form section (usually "Concept").
 const sections: ProjectSection[] = p.sections ?? [];
@@ -148,7 +152,7 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
 
       {
         total > 0 && (
-          <section id="progress" class="p-section p-section--wide" aria-labelledby="h-progress">
+          <section id="progress" class="p-section p-section--wide" aria-labelledby="h-progress" data-nudge-trigger>
             <h2 id="h-progress" class="p-section__head mono" data-decode-area>
               <span data-decode>{ui.project.progress}</span>
               <span class="p-section__count">{ui.count.update(total)}</span>
@@ -262,6 +266,28 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
             <div class="p-section__content status-block" data-reveal>
               <StatusTag status={p.status} />
               <p>{p.statusNote}</p>
+              {partnerNote && (
+                <div class="status-partner">
+                  <p class="status-partner__kicker mono">
+                    <span class="status-partner__dot" aria-hidden="true" />
+                    {site.partner.heroLink}
+                  </p>
+                  <p class="status-partner__text">{site.partner.projectNote.text}</p>
+                  <div class="status-partner__actions">
+                    <a class="status-partner__cta" href={partnerHref}>
+                      {site.partner.projectNote.cta}
+                      <span class="arrow arrow--e" aria-hidden="true">
+                        →
+                      </span>
+                    </a>
+                    {mailto && (
+                      <a class="link link--quiet status-partner__mail" href={mailto}>
+                        {site.partner.ctaEmail}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </section>
         )
@@ -605,12 +631,68 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
     gap: 1rem;
     justify-items: start;
   }
-  .status-block p {
+  .status-block > p {
     font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
     line-height: 1.45;
     letter-spacing: -0.01em;
     color: var(--ink);
     max-width: 46ch;
+  }
+  .status-partner {
+    width: 100%;
+    max-width: 44rem;
+    margin-top: 0.75rem;
+    padding: 1.25rem 1.4rem 1.35rem;
+    background: var(--bg-raised);
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 1px var(--line);
+    border-left: 2px solid var(--accent);
+  }
+  .status-partner__kicker {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+  }
+  .status-partner__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .status-partner__text {
+    color: var(--ink-2);
+    font-size: 1rem;
+    line-height: 1.55;
+    max-width: 52ch;
+  }
+  .status-partner__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.25rem;
+    margin-top: 1rem;
+  }
+  .status-partner__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0 1.15rem;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--bg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background-color var(--t-fast) var(--ease);
+  }
+  .status-partner__cta:hover {
+    background: #d6e8c4;
+  }
+  .status-partner__mail {
+    font-size: 0.875rem;
+    min-height: 44px;
   }
 
   /* ── Sources ── */

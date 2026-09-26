@@ -1,11 +1,33 @@
 ---
 import { site } from '../data/site';
 import { ui } from '../data/ui';
+import { promote, partnerHref, partnerMailto } from '../lib/partner';
+
+const partner = promote('footer');
+const mailto = partnerMailto();
 
 const year = new Date().getFullYear();
 ---
 
 <footer class="footer">
+  {
+    partner && (
+      <div class="container footer__partner">
+        <a class="footer__partner-link" href={partnerHref}>
+          <span class="footer__dot" aria-hidden="true" />
+          {site.partner.footerLine}
+          <span class="arrow arrow--e" aria-hidden="true">
+            →
+          </span>
+        </a>
+        {mailto && site.email && (
+          <a class="link link--quiet footer__mail mono" href={mailto}>
+            {site.email}
+          </a>
+        )}
+      </div>
+    )
+  }
   <div class="container footer__inner">
     <p class="footer__brand">
       <span class="footer__name">{site.name}</span>
@@ -34,6 +56,45 @@ const year = new Date().getFullYear();
     border-top: 1px solid var(--line);
     padding-block: 2rem 2.5rem;
     padding-bottom: max(2.5rem, env(safe-area-inset-bottom));
+  }
+  .footer__partner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 2rem;
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .footer__partner-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-height: 44px;
+    font-size: var(--text-lg);
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+  }
+  .footer__partner-link .arrow--e {
+    color: var(--accent);
+    transition: transform var(--t-fast) var(--ease);
+  }
+  .footer__partner-link:hover .arrow--e {
+    transform: translateX(4px);
+  }
+  .footer__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  .footer__mail {
+    text-transform: none;
+    color: var(--ink-3);
+    min-height: 32px;
   }
   .footer__inner {
     display: flex;

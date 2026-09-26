@@ -3,6 +3,7 @@ import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Lightbox from '../components/Lightbox.astro';
+import PartnerNudge from '../components/PartnerNudge.astro';
 import { site } from '../data/site';
 import { ui } from '../data/ui';
 import { effects, enabledEffects } from '../data/effects';
@@ -16,10 +17,18 @@ interface Props {
   type?: 'website' | 'article';
   /** Extra JSON-LD object for this page. */
   jsonLd?: Record<string, unknown>;
+  /** Play the first-visit intro (home page only — see effects.ts). */
+  intro?: boolean;
 }
 
-const { title, description = site.meta.description, ogImage = site.meta.ogImage, type = 'website', jsonLd } =
-  Astro.props;
+const {
+  title,
+  description = site.meta.description,
+  ogImage = site.meta.ogImage,
+  type = 'website',
+  jsonLd,
+  intro = false,
+} = Astro.props;
 
 const fullTitle = title ? `${title} — ${site.name}` : site.meta.title;
 const base = site.url || (Astro.site ? Astro.site.origin : '');
@@ -65,6 +74,53 @@ const handle = site.handle.startsWith('@') ? site.handle : `@${site.handle}`;
 
     <!-- Enables reveal animations only when JS runs, so content is never hidden without it. -->
     <script is:inline>document.documentElement.classList.add('js');</script>
+    {
+      intro && (
+        <script is:inline>
+          (function () {
+            var d = document.documentElement;
+            try {
+              if (matchMedia('(prefers-reduced-motion: reduce)').matches || location.hash) return;
+              if (sessionStorage.getItem('seftsaint:intro') === '1') return;
+              sessionStorage.setItem('seftsaint:intro', '1');
+            } catch (e) {
+              return;
+            }
+            d.classList.add('intro');
+            var done = function () {
+              d.classList.remove('intro', 'intro-go', 'intro-open');
+            };
+            var start = function () {
+              requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                  d.classList.add('intro-go');
+                });
+              });
+              // Open the frame once the poster is there (at most 700 ms of waiting).
+              var img = document.querySelector('[data-intro="frame"] .media__img');
+              var opened = false;
+              var open = function () {
+                if (opened) return;
+                opened = true;
+                d.classList.add('intro-open');
+                setTimeout(done, 2400);
+              };
+              if (img && !img.complete) {
+                img.addEventListener('load', open, { once: true });
+                img.addEventListener('error', open, { once: true });
+                setTimeout(open, 700);
+              } else {
+                setTimeout(open, 80);
+              }
+            };
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+            else start();
+            addEventListener('beforeprint', done);
+            setTimeout(done, 5000); // never leave anything hidden
+          })();
+        </script>
+      )
+    }
   </head>
   <body>
     <a class="skip-link" href="#main">{ui.skipToContent}</a>
@@ -74,10 +130,13 @@ const handle = site.handle.startsWith('@') ? site.handle : `@${site.handle}`;
       <slot />
     </main>
     <Footer />
+    <PartnerNudge />
     <Lightbox />
     <script>
       import '../scripts/site.ts';
       import '../scripts/fx.ts';
+      import '../scripts/partner.ts';
+      import '../scripts/intro.ts';
     </script>
   </body>
 </html>

@@ -92,6 +92,22 @@ export const ui = {
     compareHint: 'Drag the divider',
   },
 
+  about: {
+    soFar: 'So far',
+    toolkit: 'Toolkit',
+    tools: 'Tools',
+    ai: 'AI',
+    now: 'Now',
+  },
+
+  partner: {
+    /** Screen-reader name of the corner card. */
+    nudgeLabel: 'Partner invitation',
+    closeNudge: 'Close — don’t show for a while',
+    /** Announced after "Copy email". */
+    copiedAnnounce: 'Email address copied',
+  },
+
   journal: {
     intro: 'Short notes on what I’m making, testing, pausing and coming back to.',
     viewPost: 'More on X',

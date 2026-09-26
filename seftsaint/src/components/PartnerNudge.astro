@@ -1,0 +1,262 @@
+---
+/**
+ * Corner card: a quiet invitation to the partner section.
+ *
+ * - Hidden until the visitor has seen the work: after watching a demo, or after
+ *   scrolling past the featured project (elements marked data-nudge-trigger).
+ * - Never shows while the partner section itself is on screen, and stays away for
+ *   the rest of the visit once someone has seen that section.
+ * - "×" keeps it away for `snoozeDays` (site.ts → partner.nudge).
+ * - Without JavaScript it simply never appears.
+ * Logic: src/scripts/partner.ts
+ */
+import { getImage } from 'astro:assets';
+import { site } from '../data/site';
+import { ui } from '../data/ui';
+import { resolveImage } from '../lib/media';
+import { promote, partnerMailto, partnerHref } from '../lib/partner';
+
+const p = site.partner;
+const show = promote('nudge');
+const img = show ? resolveImage(p.media?.image) : undefined;
+const thumb = img ? await getImage({ src: img, width: 720, height: 315, fit: 'cover', format: 'webp', quality: 72 }) : undefined;
+const mailto = partnerMailto();
+---
+
+{
+  show && (
+    <aside class="nudge" data-nudge data-snooze={p.nudge.snoozeDays} aria-label={ui.partner.nudgeLabel} hidden>
+      {thumb && (
+        <a class="nudge__media" href={partnerHref} tabindex="-1" aria-hidden="true" data-nudge-cta>
+          <img src={thumb.src} width={360} height={158} alt="" loading="lazy" decoding="async" />
+          <span class="nudge__made mono">{p.madeOn}</span>
+        </a>
+      )}
+      <div class="nudge__body">
+        <p class="nudge__kicker mono">
+          <span class="nudge__dot" aria-hidden="true" />
+          {p.nudge.kicker}
+        </p>
+        <p class="nudge__title">{p.nudge.title}</p>
+        <p class="nudge__text">{p.nudge.text}</p>
+        <div class="nudge__actions">
+          <a class="nudge__cta" href={partnerHref} data-nudge-cta>
+            {p.nudge.cta}
+            <span class="arrow arrow--e" aria-hidden="true">
+              →
+            </span>
+          </a>
+          {mailto && (
+            <a class="nudge__mail" href={mailto} data-nudge-cta>
+              {p.ctaEmail}
+            </a>
+          )}
+        </div>
+      </div>
+      <button class="nudge__close" type="button" data-nudge-close aria-label={ui.partner.closeNudge}>
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.4" fill="none" />
+        </svg>
+      </button>
+    </aside>
+  )
+}
+
+<style>
+  .nudge {
+    position: fixed;
+    right: max(16px, env(safe-area-inset-right));
+    bottom: max(16px, env(safe-area-inset-bottom));
+    z-index: 60;
+    width: 360px;
+    background: var(--bg-raised);
+    border-radius: 6px;
+    box-shadow:
+      inset 0 0 0 1px var(--line-2),
+      0 24px 60px rgb(0 0 0 / 0.55),
+      0 2px 8px rgb(0 0 0 / 0.35);
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 300ms var(--ease),
+      transform 300ms var(--ease);
+  }
+  .nudge[hidden] {
+    display: none;
+  }
+  .nudge.is-on {
+    opacity: 1;
+    transform: none;
+  }
+  /* Partner section on screen → step aside */
+  .nudge.is-on.is-away {
+    opacity: 0;
+    transform: translateY(14px);
+    pointer-events: none;
+  }
+
+  .nudge__media {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 7;
+    background: var(--frame);
+    overflow: hidden;
+  }
+  .nudge__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 700ms var(--ease);
+  }
+  .nudge__media:hover img {
+    transform: scale(1.03);
+  }
+  .nudge__made {
+    position: absolute;
+    left: 10px;
+    bottom: 8px;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: rgb(13 14 15 / 0.72);
+    color: var(--ink);
+    font-size: 0.6875rem;
+    text-transform: none;
+  }
+
+  .nudge__body {
+    padding: 1rem 1.1rem 1.1rem;
+  }
+  .nudge__kicker {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--accent);
+    margin-bottom: 0.55rem;
+  }
+  .nudge__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  [data-fx~='pulse'] .nudge__dot {
+    animation: fx-breathe 3.6s ease-in-out infinite;
+  }
+  .nudge__title {
+    font-size: 1.0625rem;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    line-height: 1.3;
+  }
+  .nudge__text {
+    margin-top: 0.35rem;
+    color: var(--ink-2);
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+  .nudge__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem 1.1rem;
+    margin-top: 0.9rem;
+  }
+  .nudge__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 40px;
+    padding: 0 1rem;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--bg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background-color var(--t-fast) var(--ease);
+  }
+  .nudge__cta:hover {
+    background: #d6e8c4;
+  }
+  .nudge__mail {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    font-size: 0.875rem;
+    color: var(--ink-2);
+    transition: color var(--t-fast) var(--ease);
+  }
+  .nudge__mail:hover {
+    color: var(--ink);
+  }
+
+  .nudge__close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--ink);
+    background: rgb(13 14 15 / 0.6);
+    box-shadow: inset 0 0 0 1px rgb(236 233 226 / 0.16);
+    transition: background-color var(--t-fast) var(--ease);
+  }
+  .nudge__close:hover {
+    background: rgb(13 14 15 / 0.9);
+  }
+  .nudge__close svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* Phones: a compact bar along the bottom — no image, no paragraph */
+  @media (max-width: 560px) {
+    .nudge {
+      left: 12px;
+      right: 12px;
+      bottom: max(12px, env(safe-area-inset-bottom));
+      width: auto;
+    }
+    .nudge__media,
+    .nudge__text {
+      display: none;
+    }
+    .nudge__body {
+      padding: 0.85rem 3rem 0.9rem 1rem;
+    }
+    .nudge__kicker {
+      margin-bottom: 0.3rem;
+    }
+    .nudge__title {
+      font-size: 0.9375rem;
+    }
+    .nudge__actions {
+      margin-top: 0.65rem;
+    }
+    .nudge__close {
+      top: 50%;
+      right: 6px;
+      width: 40px;
+      height: 40px;
+      transform: translateY(-50%);
+      background: transparent;
+      box-shadow: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nudge,
+    .nudge.is-on.is-away {
+      transform: none;
+    }
+  }
+  @media print {
+    .nudge {
+      display: none !important;
+    }
+  }
+</style>

@@ -6,6 +6,7 @@ import { ui } from '../data/ui';
 import type { Project } from '../data/types';
 import { getUpdatesFor } from '../lib/content';
 import { formatDate } from '../lib/format';
+import { effects } from '../data/effects';
 
 interface Props {
   project?: Project;
@@ -16,18 +17,27 @@ const updates = project ? getUpdatesFor(project.slug) : [];
 const latest = updates.at(-1);
 const lastDate = latest?.date ?? project?.period?.end ?? project?.period?.start;
 const [line1, line2] = site.hero.headline;
+const facts = site.hero.facts ?? [];
 ---
 
 <section class="hero container" aria-labelledby="hero-title">
   <div class="hero__grid">
     <div class="hero__text">
-      <p class="hero__kicker mono" data-decode-area><span data-decode>{site.hero.kicker}</span></p>
+      <p class="hero__kicker mono" data-decode-area data-intro="up" style="--d:120ms">
+        <span data-decode>{site.hero.kicker}</span>
+      </p>
       <h1 id="hero-title" class="hero__title">
-        <span class="hero__line">{line1}</span>
-        {line2 && <span class="hero__line serif-italic">{line2}</span>}
+        <span class="hero__line" data-intro="rise" style="--d:220ms"><span class="hero__line-in">{line1}</span></span>
+        {
+          line2 && (
+            <span class="hero__line serif-italic" data-intro="rise" style="--d:340ms">
+              <span class="hero__line-in">{line2}</span>
+            </span>
+          )
+        }
       </h1>
-      <p class="hero__intro">{site.hero.intro}</p>
-      <div class="hero__actions">
+      <p class="hero__intro" data-intro="up" style="--d:620ms">{site.hero.intro}</p>
+      <div class="hero__actions" data-intro="up" style="--d:720ms">
         <a class="btn" href="#work">
           {ui.hero.viewWork}
           <span class="arrow arrow--s" aria-hidden="true">↓</span>
@@ -40,7 +50,7 @@ const [line1, line2] = site.hero.headline;
       </div>
       {
         site.partner.enabled && (
-          <a class="hero__partner" href="#partner">
+          <a class="hero__partner" href="#partner" data-intro="up" style="--d:820ms">
             <span class="hero__partner-dot" aria-hidden="true" />
             {site.partner.heroLink}
             <span class="arrow arrow--e" aria-hidden="true">
@@ -53,8 +63,9 @@ const [line1, line2] = site.hero.headline;
 
     {
       project && (
-        <div class="hero__media">
+        <div class="hero__media" data-intro="frame">
           <Media
+            intro={effects.intro}
             item={project.cover}
             mode="preview"
             priority
@@ -66,7 +77,7 @@ const [line1, line2] = site.hero.headline;
             title={latest?.title ?? project.title}
             meta={latest ? `${formatDate(latest.date)} · ${latest.label ?? latest.title}` : undefined}
           />
-          <a class="hero__caption" href={`/work/${project.slug}/`} data-decode-area>
+          <a class="hero__caption" href={`/work/${project.slug}/`} data-decode-area data-intro="up" style="--d:1250ms">
             <span class="mono hero__caption-label" data-decode>{ui.hero.latest}</span>
             <span class="hero__caption-title">{project.title}</span>
             <StatusTag status={project.status} class="hero__caption-status" />
@@ -83,6 +94,24 @@ const [line1, line2] = site.hero.headline;
       )
     }
   </div>
+
+  {
+    facts.length > 0 && (
+      <dl class="hero__facts" data-intro="facts" style="--d:1350ms">
+        {facts.map((f, i) => (
+          <div class="hero__fact" data-intro="up" style={`--d:${1450 + i * 90}ms`}>
+            <dt class="hero__fact-label">{f.label}</dt>
+            <dd class="hero__fact-value">
+              <span aria-hidden="true" data-count={f.value} data-count-delay={1450 + i * 90}>
+                {f.value}
+              </span>
+              <span class="visually-hidden">{f.value}</span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+    )
+  }
 </section>
 
 <style>
@@ -118,7 +147,8 @@ const [line1, line2] = site.hero.headline;
     line-height: 0.94;
     letter-spacing: -0.045em;
   }
-  .hero__line {
+  .hero__line,
+  .hero__line-in {
     display: block;
   }
   .hero__line.serif-italic {
@@ -167,18 +197,80 @@ const [line1, line2] = site.hero.headline;
     min-height: 44px;
   }
 
+  /* Facts row — real numbers, one line of context each */
+  .hero__facts {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem var(--gap);
+    margin-top: clamp(2.5rem, 1.5rem + 3vw, 4.5rem);
+    padding-top: 1.5rem;
+  }
+  .hero__facts::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--line-2);
+    transform-origin: 0 50%;
+  }
+  @media (min-width: 800px) {
+    .hero__facts {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .hero__fact {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+    gap: 0.45rem;
+  }
+  .hero__fact-value {
+    margin: 0;
+    font-size: clamp(1.75rem, 1.2rem + 2vw, 2.75rem);
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .hero__fact-label {
+    color: var(--ink-3);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    max-width: 22ch;
+  }
+
+  /* "Open to partners & investors" — a chip, so it reads as a status, not a footnote */
   .hero__partner {
     display: inline-flex;
     align-items: center;
     gap: 0.6rem;
-    min-height: 32px;
-    margin-top: 1.25rem;
-    font-size: 0.8125rem;
-    color: var(--ink-2);
-    transition: color var(--t-fast) var(--ease);
+    min-height: 40px;
+    margin-top: 1.5rem;
+    padding: 0 1rem 0 0.85rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    color: var(--ink);
+    background: rgb(198 220 178 / 0.06);
+    box-shadow: inset 0 0 0 1px rgb(198 220 178 / 0.3);
+    transition:
+      background-color var(--t-fast) var(--ease),
+      box-shadow var(--t-fast) var(--ease);
   }
   .hero__partner:hover {
-    color: var(--ink);
+    background: rgb(198 220 178 / 0.12);
+    box-shadow: inset 0 0 0 1px rgb(198 220 178 / 0.55);
+  }
+  .hero__partner .arrow--e {
+    transition: transform var(--t-fast) var(--ease);
+  }
+  .hero__partner:hover .arrow--e {
+    transform: translateX(3px);
+  }
+  :global([data-fx~='pulse']) .hero__partner-dot {
+    animation: fx-breathe 3.6s ease-in-out infinite;
   }
   .hero__partner-dot {
     width: 6px;

@@ -2,6 +2,9 @@
 import { site } from '../data/site';
 import { ui } from '../data/ui';
 import { effects } from '../data/effects';
+import { promote } from '../lib/partner';
+
+const pill = promote('headerPill');
 
 const isHome = Astro.url.pathname === '/' || Astro.url.pathname === '';
 const nav = [
@@ -23,7 +26,8 @@ const nav = [
         {
           nav.map((item) => (
             <li class={`nav__item nav__item--${item.key}`}>
-              <a class="nav__link" href={item.href}>
+              <a class:list={['nav__link', { 'nav__link--pill': pill && item.key === 'partner' }]} href={item.href}>
+                {pill && item.key === 'partner' && <span class="nav__dot" aria-hidden="true" />}
                 {item.label}
               </a>
             </li>
@@ -127,6 +131,35 @@ const nav = [
     color: var(--ink);
   }
 
+  /* Partner: a dot + thin outline — the one nav item that asks for something */
+  .nav__link--pill {
+    position: relative;
+    gap: 0.45rem;
+    padding-inline: 0.8rem 0.85rem;
+    color: var(--ink);
+  }
+  .nav__link--pill::before {
+    content: '';
+    position: absolute;
+    inset: 7px 0;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px rgb(198 220 178 / 0.35);
+    background: rgb(198 220 178 / 0.05);
+    transition:
+      background-color var(--t-fast) var(--ease),
+      box-shadow var(--t-fast) var(--ease);
+  }
+  .nav__link--pill:hover::before {
+    background: rgb(198 220 178 / 0.1);
+    box-shadow: inset 0 0 0 1px rgb(198 220 178 / 0.6);
+  }
+  .nav__dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
   @media (max-width: 420px) {
     .wordmark {
       gap: 0.5rem;
@@ -140,6 +173,13 @@ const nav = [
     .nav__link {
       padding-inline: 0.3rem;
       font-size: 0.8125rem;
+    }
+    .nav__link--pill {
+      gap: 0.35rem;
+      padding-inline: 0.55rem 0.6rem;
+    }
+    .nav__link--pill::before {
+      inset: 9px 0;
     }
   }
   /* Very narrow phones: Journal is one scroll away, keep the bar on one line */

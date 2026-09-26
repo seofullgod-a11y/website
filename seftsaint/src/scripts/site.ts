@@ -62,7 +62,8 @@ if (revealEls.length) {
 /* ── 3. Video ──────────────────────────────────────────────── */
 /*
  * Three kinds of playback:
- *  - loop  (data-loop="view")  : short muted preview, plays while visible (mouse devices only)
+ *  - loop  (data-loop="view")  : short muted preview, starts as soon as it's on screen —
+ *                                phones and tablets too (muted + playsinline is allowed everywhere)
  *  - loop  (data-loop="hover") : short muted preview, plays while hovered
  *  - full  (data-full)         : the full demo, played inline on click, with sound + controls
  * plus the player overlay (<dialog data-lightbox>) opened by any [data-play-src] button.
@@ -70,7 +71,10 @@ if (revealEls.length) {
  */
 type State = 'idle' | 'loading' | 'playing' | 'paused' | 'ended' | 'error';
 
-const canAutoplay = () => finePointer.matches && !reduceMotion.matches && !saveData;
+/** Muted loops that start on their own: everywhere, except for visitors who asked for less motion or less data. */
+const canAutoplay = () => !reduceMotion.matches && !saveData;
+/** Hover previews need a mouse. */
+const canHoverPlay = () => finePointer.matches && canAutoplay();
 
 class Clip {
   started = false;
@@ -116,6 +120,11 @@ class Clip {
   }
   play() {
     if (this.state === 'error') return; // a broken file is never retried
+    if (this.key === 'loop') {
+      // iOS only autoplays when the element is muted *before* play().
+      this.video.muted = true;
+      this.video.defaultMuted = true;
+    }
     this.load();
     if (this.state !== 'playing') this.set('loading');
     this.video.play().catch(() => {
@@ -164,7 +173,7 @@ document.querySelectorAll<HTMLElement>('[data-loop]').forEach((root) => {
     // Hover preview — mouse only, and never while the full video is showing.
     const area = root.closest<HTMLElement>('a, [data-hover-area]') ?? root;
     area.addEventListener('pointerenter', (e) => {
-      if (e.pointerType !== 'mouse' || !canAutoplay()) return;
+      if (e.pointerType !== 'mouse' || !canHoverPlay()) return;
       const full = root.dataset.fullState;
       if (full && full !== 'idle') return;
       c.play();

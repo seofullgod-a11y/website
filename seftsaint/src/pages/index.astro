@@ -9,6 +9,7 @@ import About from '../components/About.astro';
 import Partner from '../components/Partner.astro';
 import { site } from '../data/site';
 import { ui } from '../data/ui';
+import { effects } from '../data/effects';
 import { getProjects, getUpdates } from '../lib/content';
 
 const projects = getProjects();
@@ -25,7 +26,7 @@ const jsonLd = {
 };
 ---
 
-<Base jsonLd={jsonLd}>
+<Base jsonLd={jsonLd} intro={effects.intro}>
   <Hero project={featured} />
 
   <section id="work" class="section container" aria-labelledby="work-title">
@@ -34,7 +35,7 @@ const jsonLd = {
     <ProjectList projects={others} startIndex={2} />
   </section>
 
-  <section id="journal" class="section container" aria-labelledby="journal-title">
+  <section id="journal" class="section container" aria-labelledby="journal-title" data-nudge-trigger>
     <SectionHead index="02" title={ui.sections.journal} id="journal-title" aside={ui.count.update(updateCount)} />
     <Journal />
   </section>

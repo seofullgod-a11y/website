@@ -9,6 +9,12 @@
  * ─────────────────────────────────────────────────────────────
  */
 export const effects = {
+  /**
+   * First visit to the home page: the hero frame opens from a line of light, the headline
+   * rises in, then the facts count up. Plays once per visit, never blocks the page,
+   * skipped for reduced motion and when arriving on a #link.
+   */
+  intro: true,
   /** Featured project: move across the big frame to scrub through its stages (Godot → … → latest). */
   evolution: true,
   /** Project page: drag a divider to compare the first and the latest frame. */

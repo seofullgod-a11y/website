@@ -5,6 +5,10 @@
  * so Esc, focus trapping and focus return are handled by the browser.
  */
 import { ui } from '../data/ui';
+import { site } from '../data/site';
+import { promote, partnerHref } from '../lib/partner';
+
+const partner = promote('afterVideo');
 ---
 
 <dialog class="lb" data-lightbox aria-labelledby="lb-title">
@@ -30,7 +34,15 @@ import { ui } from '../data/ui';
           </svg>
           <span>{ui.media.replay}</span>
         </button>
-        <a class="lb__btn lb__btn--light" data-lb-post href="#" target="_blank" rel="noopener">
+        {
+          partner && (
+            <a class="lb__btn lb__btn--accent" data-lb-partner href={partnerHref}>
+              <span>{site.partner.afterVideo}</span>
+              <span class="arrow arrow--e" aria-hidden="true">→</span>
+            </a>
+          )
+        }
+        <a class="lb__btn" data-lb-post href="#" target="_blank" rel="noopener">
           <span>{ui.media.moreOnX}</span>
           <span class="arrow arrow--ne" aria-hidden="true">↗</span>
         </a>
@@ -190,6 +202,25 @@ import { ui } from '../data/ui';
   }
   .lb__btn--light:hover {
     background: #fff;
+  }
+  .lb__btn--accent {
+    background: var(--accent);
+    color: var(--bg);
+    box-shadow: none;
+  }
+  .lb__btn--accent:hover {
+    background: #d6e8c4;
+  }
+  @media (max-width: 560px) {
+    .lb__end {
+      gap: 0.5rem;
+      padding: 0.75rem;
+    }
+    .lb__btn {
+      min-height: 38px;
+      padding: 0 0.85rem;
+      font-size: 0.8125rem;
+    }
   }
 
   .lb__error {

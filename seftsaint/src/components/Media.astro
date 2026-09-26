@@ -4,8 +4,8 @@
  *
  * mode="still"    image; if a `preview` exists it plays muted while hovered (mouse only).
  *                 Safe to put inside a link — no buttons are rendered.
- * mode="preview"  hero / cover: the `preview` loop plays muted while visible (mouse devices,
- *                 no reduced motion), with a pause button. "Play demo" opens the full `video`
+ * mode="preview"  hero / cover: the `preview` loop starts muted as soon as it's on screen (any
+ *                 device; not with reduced motion or Data Saver), with a pause button. "Play demo" opens the full `video`
  *                 in the player overlay — or links to X when there is no local video.
  * mode="player"   timeline: `preview` plays on hover; the big play button plays the full
  *                 `video` right here, with sound and controls. When it ends: watch again / more on X.
@@ -18,6 +18,8 @@ import { resolveMedia } from '../lib/media';
 import { ui } from '../data/ui';
 import { effects } from '../data/effects';
 import PlayButton from './PlayButton.astro';
+import { site } from '../data/site';
+import { promote, partnerHref } from '../lib/partner';
 
 interface Props {
   item: MediaItem;
@@ -34,6 +36,8 @@ interface Props {
   vtName?: string;
   /** Subtle cursor parallax (if enabled in src/data/effects.ts). */
   parallax?: boolean;
+  /** First-visit intro (hero only): renders the line of light the frame opens from. */
+  intro?: boolean;
   /** Title + meta line for the video player, e.g. "Last update" / "25 Sep 2026 · Unreal". */
   title?: string;
   meta?: string;
@@ -51,6 +55,7 @@ const {
   parallax = false,
   title,
   meta,
+  intro = false,
   class: className,
 } = Astro.props;
 
@@ -182,8 +187,13 @@ const devNotes = [
             </svg>
             {ui.media.replay}
           </button>
+          {promote('afterVideo') && (
+            <a class="media__end-btn media__end-btn--accent" href={partnerHref}>
+              {site.partner.afterVideo} <span class="arrow arrow--e">→</span>
+            </a>
+          )}
           {item.sourceUrl && (
-            <a class="media__end-btn media__end-btn--light" href={item.sourceUrl} target="_blank" rel="noopener">
+            <a class="media__end-btn" href={item.sourceUrl} target="_blank" rel="noopener">
               {ui.media.moreOnX} <span class="arrow arrow--ne">↗</span>
               <span class="visually-hidden">(opens in a new tab)</span>
             </a>
@@ -214,6 +224,8 @@ const devNotes = [
         </a>
       )
     }
+
+    {intro && <span class="media__scan" aria-hidden="true" />}
 
     {
       marks && (
@@ -407,10 +419,11 @@ const devNotes = [
   .media[data-loop-state='error'] .media__toggle {
     display: none;
   }
-  /* Touch screens: the preview doesn't autoplay, so "Play demo" is the only control needed */
+  /* Touch screens: the loop autoplays, so the pause button stays visible — and finger-sized */
   @media not ((hover: hover) and (pointer: fine)) {
-    .media:has(.media__corner [data-play-src]) .media__toggle {
-      display: none;
+    .media__toggle {
+      width: 40px;
+      height: 40px;
     }
   }
 
@@ -494,6 +507,25 @@ const devNotes = [
   .media__end-btn svg {
     width: 14px;
     height: 14px;
+  }
+  .media__end-btn--accent {
+    background: var(--accent);
+    color: var(--bg);
+    box-shadow: none;
+  }
+  .media__end-btn--accent:hover {
+    background: #d6e8c4;
+  }
+  @media (max-width: 560px) {
+    .media__end {
+      gap: 0.5rem;
+      padding: 0.75rem;
+    }
+    .media__end-btn {
+      min-height: 38px;
+      padding: 0 0.85rem;
+      font-size: 0.8125rem;
+    }
   }
   .media__end-btn--light {
     background: var(--ink);

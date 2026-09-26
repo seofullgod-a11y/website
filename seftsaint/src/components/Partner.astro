@@ -1,14 +1,24 @@
 ---
 /** Partner / investors — content lives in src/data/site.ts → partner */
 import { site } from '../data/site';
+import { ui } from '../data/ui';
+import Media from './Media.astro';
+import { partnerMailto, promote } from '../lib/partner';
 
 const p = site.partner;
 const [line1, line2] = p.headline;
-const mailto = site.email ? `mailto:${site.email}?subject=${encodeURIComponent(p.emailSubject)}` : '';
+const mailto = partnerMailto();
+const countUp = promote('countUp');
 ---
 
 <div class="partner">
+  <span class="partner__rule" aria-hidden="true" data-reveal></span>
+
   <div class="partner__intro" data-reveal>
+    <p class="partner__kicker mono">
+      <span class="partner__dot" aria-hidden="true"></span>
+      {p.heroLink}
+    </p>
     <h3 class="partner__title">
       <span>{line1}</span>
       {line2 && <span class="serif-italic">{line2}</span>}
@@ -19,7 +29,7 @@ const mailto = site.email ? `mailto:${site.email}?subject=${encodeURIComponent(p
     <div class="partner__cta">
       {
         mailto && (
-          <a class="btn-light" href={mailto}>
+          <a class="btn-accent" href={mailto}>
             {p.ctaEmail}
             <span class="arrow arrow--e" aria-hidden="true">→</span>
           </a>
@@ -30,10 +40,55 @@ const mailto = site.email ? `mailto:${site.email}?subject=${encodeURIComponent(p
         <span class="visually-hidden">(opens in a new tab)</span>
       </a>
     </div>
-    {site.email && <p class="partner__email mono">{site.email}</p>}
+    {
+      site.email && (
+        <p class="partner__email">
+          <span class="mono partner__address">{site.email}</span>
+          <button
+            type="button"
+            class="copy"
+            data-copy={site.email}
+            data-copied-label={p.ctaCopied}
+            data-announce={ui.partner.copiedAnnounce}
+            hidden
+          >
+            <svg class="copy__icon" viewBox="0 0 16 16" aria-hidden="true">
+              <rect x="5.5" y="5.5" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.3" fill="none" />
+              <path d="M3.5 10.5v-7h7" stroke="currentColor" stroke-width="1.3" fill="none" />
+            </svg>
+            <svg class="copy__done" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="1.5" fill="none" />
+            </svg>
+            <span data-copy-label>{p.ctaCopy}</span>
+          </button>
+          <span class="visually-hidden" role="status" data-copy-status></span>
+        </p>
+      )
+    }
   </div>
 
   <div class="partner__side" data-reveal style="--reveal-delay:60ms">
+    {
+      p.media && (
+        <figure class="partner__figure">
+          <Media
+            item={p.media}
+            mode="preview"
+            title={p.mediaTitle}
+            meta={p.mediaMeta}
+            sizes="(min-width: 1440px) 620px, (min-width: 1000px) 44vw, 100vw"
+          />
+          <figcaption class="partner__made">
+            <span class="partner__made-dot" aria-hidden="true" />
+            <span class="partner__made-text">
+              {p.madeOn}
+              {p.madeOnNote && <span class="partner__made-note"> — {p.madeOnNote}</span>}
+            </span>
+          </figcaption>
+        </figure>
+      )
+    }
+
     <dl class="needs">
       {
         p.needs.map((n) => (
@@ -44,39 +99,90 @@ const mailto = site.email ? `mailto:${site.email}?subject=${encodeURIComponent(p
         ))
       }
     </dl>
+  </div>
 
-    <div class="proof">
-      <ul class="proof__list" role="list">
-        {
-          p.proof.map((x) => (
-            <li class="proof__item">
-              <span class="proof__value">{x.value}</span>
-              <span class="proof__label">{x.label}</span>
-            </li>
-          ))
-        }
-      </ul>
-      {p.proofNote && <p class="proof__note">{p.proofNote}</p>}
-    </div>
+  <div class="proof" data-reveal style="--reveal-delay:100ms">
+    <ul class="proof__list" role="list">
+      {
+        p.proof.map((x) => (
+          <li class="proof__item">
+            <span class="proof__value">
+              <span aria-hidden="true" data-count={countUp ? x.value : undefined}>{x.value}</span>
+              <span class="visually-hidden">{x.value}</span>
+            </span>
+            <span class="proof__label">{x.label}</span>
+          </li>
+        ))
+      }
+    </ul>
+    {p.proofNote && <p class="proof__note">{p.proofNote}</p>}
   </div>
 </div>
 
 <style>
+  /* A raised panel — the one section on the page that asks for something */
   .partner {
+    position: relative;
     display: grid;
-    gap: 3rem var(--gap);
+    gap: 2.5rem var(--gap);
+    padding: clamp(1.5rem, 1rem + 2.5vw, 3.5rem);
+    background: var(--bg-raised);
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 1px var(--line);
+    overflow: hidden;
   }
   @media (min-width: 1000px) {
     .partner {
       grid-template-columns: repeat(12, minmax(0, 1fr));
       align-items: start;
+      row-gap: 3.5rem;
     }
     .partner__intro {
-      grid-column: 1 / span 6;
+      grid-column: 1 / span 5;
     }
     .partner__side {
-      grid-column: 8 / -1;
+      grid-column: 7 / -1;
     }
+    .proof {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* Accent line that draws across the top edge when the panel scrolls in */
+  .partner__rule {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--accent), rgb(198 220 178 / 0.25) 55%, transparent);
+    transform-origin: 0 50%;
+  }
+  :global(.js) .partner__rule[data-reveal] {
+    opacity: 1;
+    transform: scaleX(0);
+    transition: transform 500ms var(--ease);
+  }
+  :global(.js) .partner__rule[data-reveal]:global(.is-in) {
+    transform: scaleX(1);
+  }
+
+  .partner__kicker {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+  }
+  .partner__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  :global([data-fx~='pulse']) .partner__dot {
+    animation: fx-breathe 3.6s ease-in-out infinite;
   }
 
   .partner__title {
@@ -113,35 +219,114 @@ const mailto = site.email ? `mailto:${site.email}?subject=${encodeURIComponent(p
     gap: 0.75rem 1.5rem;
     margin-top: 2rem;
   }
-  .btn-light {
+  .btn-accent {
     display: inline-flex;
     align-items: center;
     gap: 0.6rem;
-    min-height: 44px;
-    padding: 0 1.15rem;
+    min-height: 48px;
+    padding: 0 1.35rem;
     border-radius: 999px;
-    background: var(--ink);
+    background: var(--accent);
     color: var(--bg);
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
     font-weight: 500;
-    transition: background-color var(--t-fast) var(--ease);
+    transition:
+      background-color var(--t-fast) var(--ease),
+      transform var(--t-fast) var(--ease);
   }
-  .btn-light:hover {
-    background: #fff;
+  .btn-accent:hover {
+    background: #d6e8c4;
+  }
+  .btn-accent:hover .arrow--e {
+    transform: translateX(3px);
+  }
+  .btn-accent .arrow--e {
+    transition: transform var(--t-fast) var(--ease);
   }
   .partner__x {
     font-size: 0.875rem;
     min-height: 44px;
   }
+
   .partner__email {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
     margin-top: 0.9rem;
+  }
+  .partner__address {
     color: var(--ink-3);
     text-transform: none;
     user-select: all;
   }
+  .copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 32px;
+    padding: 0 0.7rem;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    color: var(--ink-2);
+    box-shadow: inset 0 0 0 1px var(--line-2);
+    transition:
+      color var(--t-fast) var(--ease),
+      box-shadow var(--t-fast) var(--ease);
+  }
+  .copy[hidden] {
+    display: none;
+  }
+  .copy:hover {
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px rgb(236 233 226 / 0.35);
+  }
+  .copy svg {
+    width: 13px;
+    height: 13px;
+  }
+  .copy__done {
+    display: none;
+  }
+  .copy[data-state='copied'] {
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px rgb(198 220 178 / 0.45);
+  }
+  .copy[data-state='copied'] .copy__icon {
+    display: none;
+  }
+  .copy[data-state='copied'] .copy__done {
+    display: block;
+  }
 
-  /* What would help */
+  /* The work, next to the ask */
+  .partner__figure {
+    margin: 0;
+  }
+  .partner__made {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+  }
+  .partner__made-dot {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    transform: translateY(-1px);
+  }
+  .partner__made-text {
+    color: var(--ink);
+  }
+  .partner__made-note {
+    color: var(--ink-2);
+  }
+
   .needs {
+    margin-top: 1.75rem;
     border-top: 1px solid var(--line);
   }
   .needs__row {
@@ -168,9 +353,6 @@ const mailto = site.email ? `mailto:${site.email}?subject=${encodeURIComponent(p
   }
 
   /* Proof — real numbers only */
-  .proof {
-    margin-top: 2.5rem;
-  }
   .proof__list {
     list-style: none;
     display: grid;
@@ -179,20 +361,20 @@ const mailto = site.email ? `mailto:${site.email}?subject=${encodeURIComponent(p
   }
   .proof__item {
     display: grid;
-    gap: 0.4rem;
-    padding-top: 0.9rem;
+    gap: 0.5rem;
+    padding-top: 1.1rem;
     border-top: 1px solid var(--line-2);
   }
   .proof__value {
-    font-size: clamp(1.75rem, 1.2rem + 1.6vw, 2.5rem);
+    font-size: clamp(2rem, 1.2rem + 3vw, 4rem);
     font-weight: 500;
-    letter-spacing: -0.035em;
+    letter-spacing: -0.04em;
     line-height: 1;
     font-variant-numeric: tabular-nums;
   }
   .proof__label {
     color: var(--ink-2);
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
     line-height: 1.4;
   }
   .proof__note {
@@ -205,10 +387,16 @@ const mailto = site.email ? `mailto:${site.email}?subject=${encodeURIComponent(p
       gap: 0.75rem;
     }
     .proof__value {
-      font-size: 1.5rem;
+      font-size: 1.625rem;
     }
     .proof__label {
       font-size: 0.75rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(.js) .partner__rule[data-reveal] {
+      transform: none;
     }
   }
 </style>
