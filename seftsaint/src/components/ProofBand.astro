@@ -1,0 +1,137 @@
+---
+/**
+ * So far — the numbers, right under the hero. Big, calm, real.
+ * Content: src/data/site.ts → proof (numbers + note) · tools.
+ */
+import { site } from '../data/site';
+import { promote } from '../lib/partner';
+
+interface Props {
+  /** Section number shown before the label, e.g. '01'. */
+  no?: string;
+}
+const { no } = Astro.props;
+const p = site.proof;
+const countUp = promote('countUp');
+---
+
+<section class="pb" aria-labelledby="pb-title">
+  <div class="pb__inner">
+    <h2 id="pb-title" class="eyebrow pb__kicker" data-reveal>
+      {no && <span class="eyebrow__no" aria-hidden="true">{no}</span>}
+      {p.kicker}
+    </h2>
+
+    <dl class="pb__stats">
+      {
+        p.items.map((x, i) => (
+          <div class="pb__item" data-reveal style={`--reveal-delay:${i * 70}ms`}>
+            <dt class="pb__label">
+              <span class="pb__label-main">{x.label}</span>
+              <span class="pb__note">{x.note}</span>
+            </dt>
+            <dd class="pb__value display">
+              <span aria-hidden="true" data-count={countUp ? x.value : undefined}>
+                {x.value}
+              </span>
+              <span class="visually-hidden">{x.value}</span>
+            </dd>
+          </div>
+        ))
+      }
+    </dl>
+
+    <div class="pb__foot" data-reveal style="--reveal-delay:200ms">
+      <p class="pb__built">
+        <span class="eyebrow">{p.builtWith}</span>
+        <span class="pb__tools">
+          {p.tools.map((t) => <span>{t}</span>)}
+        </span>
+      </p>
+      <p class="pb__asof">{p.asOf}</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .pb {
+    border-bottom: 1px solid var(--line);
+  }
+  .pb__inner {
+    max-width: var(--max);
+    margin-inline: auto;
+    padding: clamp(3.5rem, 2.5rem + 3vw, 5.5rem) var(--gutter) clamp(2.5rem, 2rem + 2vw, 3.5rem);
+  }
+
+  .pb__stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2.25rem var(--gap);
+    margin-top: clamp(1.75rem, 1.2rem + 1.5vw, 2.75rem);
+  }
+  @media (min-width: 900px) {
+    .pb__stats {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .pb__item {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+    gap: 0.85rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line-2);
+  }
+  .pb__value {
+    margin: 0;
+    font-size: clamp(3rem, 1.6rem + 4.2vw, 6rem);
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .pb__label {
+    display: grid;
+    gap: 0.2rem;
+  }
+  .pb__label-main {
+    font-size: 1.0625rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .pb__note {
+    font-size: 0.9375rem;
+    color: var(--ink-3);
+  }
+
+  .pb__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    margin-top: clamp(2.25rem, 1.5rem + 2vw, 3.5rem);
+  }
+  .pb__built {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.75rem 2rem;
+  }
+  .pb__built .eyebrow {
+    color: var(--ink-3);
+  }
+  .pb__tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.75rem;
+    font-size: 0.875rem;
+    font-weight: 550;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .pb__asof {
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+</style>

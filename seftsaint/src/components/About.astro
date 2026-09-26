@@ -6,6 +6,10 @@
 import { site } from '../data/site';
 import Arrow from './Arrow.astro';
 
+interface Props {
+  no?: string;
+}
+const { no } = Astro.props;
 const a = site.about;
 const lastLine = a.statement.at(-1);
 const firstLines = a.statement.slice(0, -1);
@@ -14,7 +18,10 @@ const firstLines = a.statement.slice(0, -1);
 <section id="about" class="lab" aria-labelledby="lab-title">
   <div class="lab__grid">
     <div class="lab__main" data-reveal>
-      <p class="eyebrow">{a.kicker}</p>
+      <p class="eyebrow">
+        {no && <span class="eyebrow__no" aria-hidden="true">{no}</span>}
+        {a.kicker}
+      </p>
       <h2 id="lab-title" class="display lab__statement">
         {firstLines.map((l) => <span>{l}</span>)}
         {lastLine && <em>{lastLine}</em>}
@@ -89,7 +96,7 @@ const firstLines = a.statement.slice(0, -1);
     max-width: 50ch;
   }
   .lab__lead {
-    font-size: 1.0625rem;
+    font-size: 1.1875rem;
     line-height: 1.6;
   }
   .lab__body {
@@ -110,7 +117,7 @@ const firstLines = a.statement.slice(0, -1);
   }
   .lab__kit-row dd {
     margin: 0;
-    font-size: 0.9375rem;
+    font-size: 1rem;
     line-height: 1.55;
   }
   .lab__connect {
@@ -125,7 +132,7 @@ const firstLines = a.statement.slice(0, -1);
     gap: 0.6rem;
     font-family: var(--font-display);
     font-size: clamp(1.75rem, 1.4rem + 1vw, 2.25rem);
-    font-weight: 340;
+    font-weight: var(--w-serif);
     letter-spacing: -0.02em;
   }
   .lab__handle :global(.arrow-icon) {

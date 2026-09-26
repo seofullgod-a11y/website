@@ -28,7 +28,9 @@ Deploy: ดูหัวข้อ **"ขึ้น GitHub + Railway"** ด้า�
 
 | ต้องการแก้ | ไฟล์ |
 |---|---|
-| ข้อความหน้าแรกทุกส่วน (เรียงตามหน้าเว็บ) | `src/data/site.ts` → `hero`, `featured`, `signal`, `notes`, `about`, `partner`, `closing` |
+| ข้อความหน้าแรกทุกส่วน (เรียงตามหน้าเว็บ) | `src/data/site.ts` → `hero`, `proof`, `featured`, `about`, `story`, `partner`, `closing` |
+| **ขนาดและความหนาของตัวอักษร** | `src/styles/global.css` → `:root`: `--w-display` (หัวข้อใหญ่), `--w-display-em` (บรรทัดตัวเอียง), `--w-serif` (หัวข้อเล็ก), `--fs-label` / `--w-label` (ตัวพิมพ์ใหญ่เล็ก ๆ, ปุ่ม, เมนู), `--text-base` (ตัวอักษรเนื้อหา) |
+| ยอดวิว/ไลก์ของแต่ละ build | `src/data/updates.ts` → `stats` (+ วันที่ใน `site.ts` → `story.statsAsOf`) |
 | ชื่อ, ลิงก์ X, อีเมล, meta/SEO | `src/data/site.ts` |
 | ปุ่ม เมนู ชื่อ section และข้อความเล็ก ๆ ทุกจุด | `src/data/ui.ts` |
 | ผลงาน | `src/data/projects.ts` |
@@ -38,7 +40,7 @@ Deploy: ดูหัวข้อ **"ขึ้น GitHub + Railway"** ด้า�
 | ส่วน Partner (นักลงทุน), อีเมลติดต่อ | `src/data/site.ts` → `partner`, `email` |
 | จุดที่ชวนพาร์ทเนอร์ทั่วเว็บ (การ์ดมุมจอ, ปุ่มท้ายวิดีโอ ฯลฯ) | `src/data/site.ts` → `partner.promote` |
 | บรรทัดสั้นของงานเด่น, สถานะสั้น | `src/data/projects.ts` → `oneLiner`, `statusShort` |
-| ข้อความสั้นใน Lab notes | `src/data/updates.ts` → `excerpt` ของแต่ละรายการ |
+| ข้อความสั้นของแต่ละบท (The story so far) | `src/data/updates.ts` → `excerpt` ของแต่ละรายการ |
 | ภาพจอกว้างของ build ล่าสุด (ไม่มี HUD) | `src/data/updates.ts` → `media.wide` |
 
 **เปลี่ยนเป็นภาษาไทย:** แปลข้อความใน `site.ts`, `ui.ts`, `projects.ts` และ `updates.ts`
@@ -107,7 +109,11 @@ Newsreader ไม่มีตัวอักษรไทย ถ้าเปล�
   - ไฟล์: `…-last-update-hero.mp4` 1920×986, 7.2 วินาที, 5.9MB และ `…-hero-tall.mp4` 720×900, 2.1MB
   - ตัดจากช่วง 1:03–1:11 ครอปให้ HUD ของเกมหลุดเฟรม และต่อหัวท้ายให้วนแบบไม่มีรอยตัด
 - **Featured world:** แถบภาพจอกว้าง ใช้ลูกศรหรือปุ่ม ← → ไล่ดูทั้ง 4 build ตั้งแต่ Godot ถึง Last update
-- **Lab notes:** รายการที่มีวิดีโอมีปุ่ม ▶ Watch และทุกรายการมีลิงก์ On X
+- **The story so far:**
+  - แต่ละ build เป็นหนึ่งบท (Chapter 01–04) พร้อมภาพ ยอดวิว ยอดไลก์ และแถบเทียบยอดวิว
+  - บทที่ยอดวิวสูงสุดขึ้นป้าย "Most viewed" เอง
+  - บทสุดท้าย "Chapter 05 — The next world" พาไปส่วน Partner
+  - บทที่มีวิดีโอมีปุ่ม ▶ Watch และทุกบทมีลิงก์ On X
 - **หน้าโปรเจกต์:** hover แล้ว preview จะเล่น กด ▶ เพื่อเล่นเดโมเต็มในกรอบ พอจบจะมีปุ่ม Watch again และ More on X
 - เล่นได้ทีละวิดีโอเดียว และหยุดเองเมื่อเลื่อนพ้นหรือสลับแท็บ
 - ถ้าผู้ชมเปิด reduced motion หรือ Data Saver ไว้ preview จะไม่เล่นเอง และจะไม่โหลดวิดีโอจนกว่าจะกด
@@ -152,7 +158,7 @@ Newsreader ไม่มีตัวอักษรไทย ถ้าเปล�
 |---|---|---|
 | **การ์ดมุมจอ** (มือถือจะเป็นแถบเล็กด้านล่าง) | ขึ้นหลังผู้ชมเลื่อนผ่านงานเด่น, ดูเดโมอย่างน้อย 6 วินาที หรือดูวิดีโอในหน้าโปรเจกต์จนจบ ถ้ากด × จะหายไป 7 วัน (`nudge.snoozeDays`) ถ้าได้เห็นส่วน Partner แล้วจะไม่ขึ้นอีกในการเข้าชมนั้น และจะหลบเองตอนส่วน Partner อยู่บนจอ | `nudge` |
 | **ปุ่ม Let's talk** มุมขวาบน | ทุกหน้า | `headerPill` |
-| **แถบ Signal** "Open to partners, investors, collaborators." | ใต้งานเด่น | (`partner.enabled`) |
+| **บทที่ 05 "The next world"** ท้าย The story so far | ตลอด | (`partner.enabled`) |
 | **ปุ่ม "Back the next world"** | ตอนวิดีโอเดโมเล่นจบ ทั้งในหน้าต่างเล่นวิดีโอและในหน้าโปรเจกต์ | `afterVideo` |
 | **กล่องใต้สถานะ Paused** ในหน้าโปรเจกต์ | เฉพาะโปรเจกต์ที่สถานะเป็น `paused` | `projectNote` |
 | **ปุ่ม Write to me** ในส่วนปิดท้าย | ทุกหน้า (ถ้าปิด จะเป็นลิงก์อีเมลธรรมดา) | `footer` |
@@ -233,7 +239,7 @@ preview ควรอยู่ราว 2–5MB ส่วนเดโมเต็
 **ข้อมูลที่ควรยืนยัน**
 - ข้อความในส่วน Partner (`partner.lead`, `partner.body`, `partner.unlocks`) เป็นวิสัยทัศน์ที่ผมเขียนจากสิ่งที่คุณบอก ควรอ่านอีกรอบให้ตรงกับแผนจริง
 - ข้อความ "Made on a 16GB MacBook" และ "The latest demo was made on a 16GB MacBook" มาจากโพสต์ 25 ก.ย. ที่บอกว่า MacBook 16GB เริ่มไม่ไหวกับ Unreal ถ้าเครื่องที่ใช้ทำไม่ใช่เครื่องนี้ ให้แก้ใน `site.ts` → `partner.madeOn` และ `partner.nudge.text`
-- ตัวเลขในแถบ Signal และส่วน Partner นับจาก 4 โพสต์บน X ณ 26 ก.ย. 2026
+- ตัวเลขทั้งหมด (แถบ So far, ยอดวิวรายบท และส่วน Partner) นับจากโพสต์บน X ณ 26 ก.ย. 2026 ถ้าอัปเดตตัวเลข ให้แก้วันที่ใน `proof.asOf`, `story.statsAsOf` และ `partner.proofNote` ด้วย
 - ชื่อโปรเจกต์: โพสต์ไม่ได้ระบุชื่อ จึงใช้ "Forest Concept" เป็นชื่อชั่วคราว (`workingTitle: true`)
 - ส่วน Partner: ยอดวิวและยอดไลก์นับจาก 4 โพสต์บน X ณ 26 ก.ย. 2026 ถ้าจะอัปเดตตัวเลข ให้เปลี่ยนวันที่ใน `proofNote` ด้วย
 - ข้อความ Hero, About และ Partner ควรอ่านอีกรอบให้ตรงกับน้ำเสียงของคุณ
@@ -247,7 +253,8 @@ preview ควรอยู่ราว 2–5MB ส่วนเดโมเต็
 src/
   data/        ← เนื้อหาทั้งหมด (แก้ตรงนี้เป็นหลัก)
   assets/media ← ภาพผลงาน (ระบบปรับขนาดให้)
-  components/  ← หน้าแรก: Hero → FeaturedWorld → SignalBar → LabNotes → About (The lab) → Partner → Footer (ปิดท้าย)
+  components/  ← หน้าแรก: Hero → ProofBand (So far) → FeaturedWorld → About (The lab) → Story (บท 01–05) → Partner → Footer (ปิดท้าย)
+                 (SignalBar กับ LabNotes เหลือไว้เป็นไฟล์ที่ชี้ไปยังของใหม่ เพื่อให้ build ผ่านแม้ไฟล์เก่ายังค้างใน GitHub)
                  อื่น ๆ: Header (+ เมนูมือถือ), Media (ภาพ/วิดีโอ), Lightbox, PartnerNudge (การ์ดมุมจอ), Arrow, ...
   pages/       ← index, work/[slug], 404
   scripts/     ← site.ts (header, fade-in, วิดีโอ, หน้าต่างเล่นวิดีโอ) + fx.ts (เอฟเฟกต์)

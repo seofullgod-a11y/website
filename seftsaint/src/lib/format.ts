@@ -68,3 +68,10 @@ export function formatRange(start: string, end?: string): string {
     year: 'numeric',
   }).formatRange(new Date(start), new Date(end));
 }
+
+/** 575200 → "575.2K" · 5800 → "5.8K" · 435 → "435" · 1250000 → "1.3M" */
+export function formatCount(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, '')}K`;
+  return String(n);
+}

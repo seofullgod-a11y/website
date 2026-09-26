@@ -47,6 +47,8 @@ export const site = {
     intro: 'Original games and 3D worlds — built in real engines, with AI in the loop, and shared in public as they take shape.',
     ctaWork: 'Explore the work',
     ctaWatch: 'Watch the latest build',
+    /** One quiet line of proof under the buttons. Real numbers only. */
+    proofLine: ['930K+ views on X', '4 public builds', '12 days'],
     /**
      * Full-screen footage. Real in-engine capture, cropped so the game HUD is out of frame.
      * `imageTall` / `loopTall` are the phone versions (portrait). Loops are muted.
@@ -73,21 +75,39 @@ export const site = {
     words: ['Godot → Unreal', 'Four builds', 'Twelve days'],
   },
 
-  /* ── 3. SIGNAL (under the featured world) ────────────────── */
-  signal: {
-    label: 'Built with',
+  /* ── 2. SO FAR (numbers, right under the hero) ────────────── */
+  proof: {
+    kicker: 'So far',
+    /** Only real numbers. Update `asOf` whenever you change them. */
+    items: [
+      { value: '930K+', label: 'views on X', note: 'across four public builds' },
+      { value: '8.7K+', label: 'likes', note: 'on those same four posts' },
+      { value: '4', label: 'public builds', note: 'Godot, then Unreal' },
+      { value: '12', label: 'days', note: 'from first pass to last build' },
+    ],
+    builtWith: 'Built with',
     tools: ['Unreal Engine', 'Godot', 'Blender', 'Meshy'],
-    /** Only facts. Second line is set in italic. */
-    statement: ['Four public builds in twelve days.', '930K+ views on X.'],
-    open: ['Open to', 'partners,', 'investors,', 'collaborators.'],
+    asOf: 'Counts from the four build posts on X, as of 26 Sep 2026.',
   },
 
-  /* ── 4. LAB NOTES ────────────────────────────────────────── */
-  notes: {
-    kicker: 'Lab notes',
-    headline: ['Every step,', 'in public.'],
-    intro: 'Short notes from the work as it happens — first passes, engine switches, and the things I pause.',
-    all: 'All notes on X',
+  /* ── 4. THE STORY SO FAR (chapters = updates.ts, oldest first) ── */
+  story: {
+    kicker: 'The story so far',
+    /** Second line is set in italic. */
+    headline: ['Four builds.', 'Twelve days.'],
+    intro: 'Every step was posted in public as it happened. This is how one forest went from a first pass in Godot to a lit world in Unreal — and where it stopped.',
+    chapter: 'Chapter',
+    mostViewed: 'Most viewed',
+    views: 'views',
+    likes: 'likes',
+    /** Date the view/like counts in updates.ts were read. */
+    statsAsOf: 'View and like counts from X, as of 26 Sep 2026.',
+    /** The last, open chapter — leads into the partner section. */
+    next: {
+      title: 'The next world',
+      text: 'It stopped at the hardware, not the ideas. Chapter five starts with the right machine — or the right partner.',
+      cta: 'Back the next world',
+    },
   },
 
   /* ── 5. THE LAB (about) ──────────────────────────────────── */
@@ -127,6 +147,8 @@ export const site = {
       'In twelve days, one forest went from a first pass in Godot to a lit, living world in Unreal — shared in public at every step, and seen more than 930,000 times on X.',
       'The ideas aren’t the limit. The hardware is. Backing at this stage goes straight into the work.',
     ],
+    /** Dim footage behind the section (inside src/assets/media/). '' = none. */
+    backdrop: 'forest-concept/2026-09-25-last-update-wide.jpg',
     unlocksTitle: 'What backing unlocks',
     unlocks: [
       { title: 'Hardware', text: 'A MacBook Pro or Mac Studio with the memory Unreal needs — so the worlds can look the way they’re meant to.' },
@@ -135,11 +157,11 @@ export const site = {
     ],
     /** Only real numbers. Update `proofNote` (the date) whenever you change them. */
     proof: [
-      { value: '930K+', label: 'views on four public builds' },
-      { value: '8.7K+', label: 'likes on those posts' },
-      { value: '4', label: 'builds in twelve days' },
+      { value: '575K+', label: 'views on a single build — the move to Unreal' },
+      { value: '4', label: 'public builds, each shared as it happened' },
+      { value: '1', label: 'person behind every one of them' },
     ],
-    proofNote: 'Counts from the four build posts on X, as of 26 Sep 2026.',
+    proofNote: 'Counts from X, as of 26 Sep 2026.',
     ctaTalk: 'Let’s talk',
     emailSubject: 'Partnership — seftsaint',
     /** Pre-filled email text — makes it easy for someone to write the first message. */

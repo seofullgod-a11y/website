@@ -88,6 +88,7 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
       }
     </div>
     <div class="hero__shade" aria-hidden="true"></div>
+    <div class="hero__grain" aria-hidden="true"></div>
   </div>
 
   <div class="hero__content">
@@ -106,15 +107,11 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
     </h1>
     <p class="hero__intro" data-intro="up" style="--d:800ms">{h.intro}</p>
     <div class="hero__actions" data-intro="up" style="--d:950ms">
-      <a class="link-line" href="#work">
-        {h.ctaWork}
-        <Arrow dir="s" />
-      </a>
       {
         latestVideo ? (
           <button
             type="button"
-            class="link-line hero__watch"
+            class="btn-solid hero__watch"
             data-play-src={latestVideo}
             data-play-poster={latestPoster}
             data-play-title={latest?.title}
@@ -131,7 +128,7 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
           </button>
         ) : (
           latestPost && (
-            <a class="link-line" href={latestPost} target="_blank" rel="noopener">
+            <a class="btn-solid" href={latestPost} target="_blank" rel="noopener">
               {h.ctaWatch}
               <Arrow dir="ne" />
               <span class="visually-hidden">on X (opens in a new tab)</span>
@@ -139,7 +136,24 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
           )
         )
       }
+      <a class="link-line hero__explore" href="#work">
+        {h.ctaWork}
+        <Arrow dir="s" />
+      </a>
     </div>
+    {
+      h.proofLine && h.proofLine.length > 0 && (
+        <p class="hero__proof" data-intro="up" style="--d:1100ms">
+          <span class="status-dot" aria-hidden="true" />
+          {h.proofLine.map((x, i) => (
+            <>
+              {i > 0 && <span class="hero__proof-sep" aria-hidden="true">·</span>}
+              <span>{x}</span>
+            </>
+          ))}
+        </p>
+      )
+    }
   </div>
 
   <p class="hero__caption eyebrow" data-intro="up" style="--d:1500ms">
@@ -237,9 +251,12 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
     /* The left stays dark for the words; the world opens up to the right */
     .hero__shade {
       background:
-        linear-gradient(90deg, rgb(11 12 12 / 0.94) 0%, rgb(11 12 12 / 0.78) 24%, rgb(11 12 12 / 0.22) 50%, rgb(11 12 12 / 0) 68%),
+        radial-gradient(38% 34% at 100% 0%, rgb(11 12 12 / 0.62), rgb(11 12 12 / 0) 100%),
+        radial-gradient(34% 40% at 100% 100%, rgb(11 12 12 / 0.7), rgb(11 12 12 / 0) 100%),
+        linear-gradient(90deg, rgb(11 12 12 / 0.94) 0%, rgb(11 12 12 / 0.8) 24%, rgb(11 12 12 / 0.25) 50%, rgb(11 12 12 / 0) 68%),
         linear-gradient(180deg, rgb(11 12 12 / 0.65) 0%, rgb(11 12 12 / 0) 20%),
-        linear-gradient(0deg, var(--bg) 0%, rgb(11 12 12 / 0.4) 12%, rgb(11 12 12 / 0) 34%);
+        linear-gradient(0deg, var(--bg) 0%, rgb(11 12 12 / 0.45) 14%, rgb(11 12 12 / 0) 36%),
+        radial-gradient(130% 100% at 55% 45%, rgb(0 0 0 / 0) 60%, rgb(0 0 0 / 0.35) 100%);
     }
   }
   @media (max-width: 1023px) {
@@ -248,6 +265,16 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
         linear-gradient(180deg, rgb(11 12 12 / 0.7) 0%, rgb(11 12 12 / 0) 22%),
         linear-gradient(0deg, var(--bg) 4%, rgb(11 12 12 / 0.86) 36%, rgb(11 12 12 / 0.35) 56%, rgb(11 12 12 / 0) 72%);
     }
+  }
+
+  /* Film grain + a soft vignette: the footage reads like film, not a screen capture */
+  .hero__grain {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.16;
+    mix-blend-mode: overlay;
   }
 
   /* ── Words ── */
@@ -286,17 +313,17 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
     padding-left: 0.38em;
   }
   .hero__line--2 em {
-    font-weight: 300;
+    font-weight: var(--w-display-em);
     letter-spacing: -0.03em;
   }
   .hero__intro {
     margin-top: clamp(1.5rem, 1rem + 1.5vw, 2.25rem);
     margin-left: clamp(0rem, -1rem + 3.5vw, 3.6rem);
     max-width: 34ch;
-    font-size: clamp(1.0625rem, 0.95rem + 0.4vw, 1.3125rem);
+    font-size: clamp(1.125rem, 0.98rem + 0.5vw, 1.4375rem);
     line-height: 1.5;
     color: var(--ink);
-    opacity: 0.86;
+    text-shadow: 0 1px 16px rgb(0 0 0 / 0.5);
   }
   .hero__actions {
     display: flex;
@@ -307,21 +334,38 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
     margin-left: clamp(0rem, -1rem + 3.5vw, 3.6rem);
   }
   .hero__watch {
-    gap: 0.9rem;
-    justify-content: flex-start;
+    gap: 0.8rem;
+    padding-left: 0.5rem;
+  }
+  .hero__explore {
+    min-width: 13rem;
+  }
+  .hero__proof {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.75rem;
+    margin-top: 1.75rem;
+    margin-left: clamp(0rem, -1rem + 3.5vw, 3.6rem);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--ink);
+    text-shadow: 0 1px 12px rgb(0 0 0 / 0.6);
+  }
+  .hero__proof .status-dot {
+    margin-right: 0.35rem;
+  }
+  .hero__proof-sep {
+    color: var(--ink-3);
   }
   .hero__watch-icon {
     display: grid;
     place-items: center;
-    width: 26px;
-    height: 26px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    box-shadow: inset 0 0 0 1px var(--line-2);
-    transition: background-color var(--t) var(--ease);
-  }
-  .hero__watch:hover .hero__watch-icon {
-    background: var(--ink);
-    color: var(--bg);
+    background: var(--bg);
+    color: var(--ink);
   }
   .hero__watch-icon svg {
     width: 9px;
@@ -472,11 +516,16 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
       padding-left: 0.2em;
     }
     .hero__intro,
-    .hero__actions {
+    .hero__actions,
+    .hero__proof {
       margin-left: 0;
     }
     .hero__actions {
-      gap: 0.25rem 2rem;
+      gap: 0.75rem 2rem;
+    }
+    .hero__proof {
+      margin-top: 1.25rem;
+      font-size: 0.875rem;
     }
   }
 

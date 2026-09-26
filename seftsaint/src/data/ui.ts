@@ -12,7 +12,7 @@ export const ui = {
   nav: {
     work: 'Work',
     journal: 'Journal',
-    notes: 'Notes',
+    notes: 'Story',
     about: 'About',
     partner: 'Partners',
     x: 'X',

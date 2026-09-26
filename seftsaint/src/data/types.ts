@@ -105,6 +105,11 @@ export interface Update {
   body: string[];
   /** One short line for the lab notes on the home page. Falls back to the first sentence of `body`. */
   excerpt?: string;
+  /**
+   * Public numbers from the original post (only real counts, copied from X).
+   * The date they were read lives in site.ts → story.statsAsOf.
+   */
+  stats?: { views: number; likes: number };
   /** slug of the related project (optional). */
   project?: string;
   /** Short label used in the project's progress strip, e.g. 'Godot'. */

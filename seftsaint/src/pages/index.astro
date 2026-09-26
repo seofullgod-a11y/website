@@ -3,8 +3,8 @@ import Base from '../layouts/Base.astro';
 import Hero from '../components/Hero.astro';
 import FeaturedWorld from '../components/FeaturedWorld.astro';
 import ProjectList from '../components/ProjectList.astro';
-import SignalBar from '../components/SignalBar.astro';
-import LabNotes from '../components/LabNotes.astro';
+import ProofBand from '../components/ProofBand.astro';
+import Story from '../components/Story.astro';
 import About from '../components/About.astro';
 import Partner from '../components/Partner.astro';
 import { site } from '../data/site';
@@ -28,8 +28,11 @@ const jsonLd = {
   <!-- 1. The world -->
   <Hero project={featured} />
 
-  <!-- 2. The way in -->
-  {featured && <FeaturedWorld project={featured} />}
+  <!-- 2. It's real: the numbers -->
+  <ProofBand no="01" />
+
+  <!-- 3. The way in -->
+  {featured && <FeaturedWorld project={featured} no="02" />}
   {
     others.length > 0 && (
       <div class="container more-work">
@@ -38,17 +41,14 @@ const jsonLd = {
     )
   }
 
-  <!-- 3. At a glance -->
-  <SignalBar />
+  <!-- 4. Who -->
+  <About no="03" />
 
-  <!-- 4. Proof of work -->
-  <LabNotes />
-
-  <!-- 5. Who -->
-  <About />
+  <!-- 5. How it happened — ends on an open chapter -->
+  <Story no="04" />
 
   <!-- 6. The ask -->
-  {site.partner.enabled && <Partner />}
+  {site.partner.enabled && <Partner no="05" />}
 </Base>
 
 <style>

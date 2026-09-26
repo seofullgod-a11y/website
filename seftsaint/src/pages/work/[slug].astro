@@ -406,7 +406,7 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
   h1 {
     font-family: var(--font-display);
     font-size: clamp(3.25rem, 1.4rem + 6vw, 8rem);
-    font-weight: 320;
+    font-weight: var(--w-display);
     letter-spacing: -0.035em;
     line-height: 0.92;
   }
@@ -496,7 +496,7 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
     color: var(--ink);
     font-family: var(--font-display);
     font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
-    font-weight: 330;
+    font-weight: 400;
     line-height: 1.28;
     letter-spacing: -0.015em;
   }
@@ -583,7 +583,7 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
   .tl__title {
     font-family: var(--font-display);
     font-size: clamp(1.625rem, 1.3rem + 1vw, 2.25rem);
-    font-weight: 330;
+    font-weight: var(--w-serif);
     color: var(--ink);
     letter-spacing: -0.02em;
     line-height: 1.15;
@@ -687,7 +687,7 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
     border-radius: 999px;
     background: var(--ink);
     color: var(--bg);
-    font-size: 0.6875rem;
+    font-size: var(--fs-label);
     font-weight: 500;
     letter-spacing: 0.18em;
     text-transform: uppercase;
@@ -782,7 +782,7 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
   .p-nav__title {
     font-family: var(--font-display);
     font-size: clamp(1.75rem, 1.3rem + 1.4vw, 2.5rem);
-    font-weight: 330;
+    font-weight: var(--w-serif);
     letter-spacing: -0.02em;
     transition: color var(--t-fast) var(--ease);
   }

@@ -1,0 +1,507 @@
+---
+/**
+ * The story so far — the builds as chapters, oldest first, each with what it did on X.
+ * Ends on an open chapter that hands over to the partner section.
+ * Content: updates.ts (chapters, excerpt, stats) · site.ts → story.
+ */
+import { Picture, getImage } from 'astro:assets';
+import { site } from '../data/site';
+import { ui } from '../data/ui';
+import { now } from '../data/updates';
+import { getUpdates } from '../lib/content';
+import { resolveImage, resolveVideo } from '../lib/media';
+import { formatDate, formatCount } from '../lib/format';
+import { partnerHref } from '../lib/partner';
+import Arrow from './Arrow.astro';
+
+interface Props {
+  no?: string;
+}
+const { no } = Astro.props;
+const s = site.story;
+const [h1, h2] = s.headline;
+
+const chapters = await Promise.all(
+  [...getUpdates()].reverse().map(async (u, i) => {
+    const img = resolveImage(u.media?.image);
+    const video = resolveVideo(u.media?.video);
+    const poster = video && img ? (await getImage({ src: img, width: 1280, format: 'webp', quality: 80 })).src : '';
+    const excerpt = u.excerpt ?? (u.body[0]?.split(/(?<=\.)\s/)[0] ?? '');
+    return { u, img, video, poster, excerpt, no: String(i + 1).padStart(2, '0') };
+  }),
+);
+const maxViews = Math.max(0, ...chapters.map((c) => c.u.stats?.views ?? 0));
+const nextNo = String(chapters.length + 1).padStart(2, '0');
+const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0, 2);
+---
+
+<section id="story" class="story" aria-labelledby="story-title" data-nudge-trigger>
+  <div class="story__inner">
+    <header class="story__head">
+      <div data-reveal>
+        <p class="eyebrow">
+          {no && <span class="eyebrow__no" aria-hidden="true">{no}</span>}
+          {s.kicker}
+        </p>
+        <h2 id="story-title" class="display story__title">
+          <span>{h1}</span>
+          {h2 && <em>{h2}</em>}
+        </h2>
+      </div>
+      <div class="story__side" data-reveal style="--reveal-delay:80ms">
+        <p class="story__intro">{s.intro}</p>
+        <div class="story__now">
+          <p class="story__now-head">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span class="eyebrow">{ui.notes.now}</span>
+            <time class="story__now-date" datetime={now.updated}>{formatDate(now.updated)}</time>
+          </p>
+          <dl class="story__now-list">
+            {
+              nowItems.map((it) => (
+                <div>
+                  <dt>{it.label}</dt>
+                  <dd>{it.text}</dd>
+                </div>
+              ))
+            }
+          </dl>
+        </div>
+      </div>
+    </header>
+
+    <ol class="chapters" role="list">
+      {
+        chapters.map(({ u, img, video, poster, excerpt, no }) => {
+          const views = u.stats?.views ?? 0;
+          const top = views > 0 && views === maxViews;
+          return (
+            <li class:list={['chapter', { 'chapter--top': top }]} data-reveal>
+              <div class="chapter__meta">
+                <p class="eyebrow chapter__no">
+                  {s.chapter} {no}
+                </p>
+                <time class="chapter__date" datetime={u.date}>
+                  {formatDate(u.date)}
+                </time>
+              </div>
+
+              <a class="chapter__thumb" href={u.project ? `/work/${u.project}/#${u.id}` : (u.sourceUrl ?? '#')} tabindex="-1" aria-hidden="true">
+                {img && (
+                  <Picture
+                    src={img}
+                    alt=""
+                    formats={['avif', 'webp']}
+                    widths={[320, 480, 720].filter((w) => w <= img.width)}
+                    sizes="(min-width: 1024px) 260px, 100vw"
+                    loading="lazy"
+                    class="chapter__img"
+                  />
+                )}
+              </a>
+
+              <div class="chapter__main">
+                <h3 class="chapter__title">
+                  <a href={u.project ? `/work/${u.project}/#${u.id}` : (u.sourceUrl ?? '#')}>{u.title}</a>
+                </h3>
+                {excerpt && <p class="chapter__excerpt">{excerpt}</p>}
+                {u.tools && u.tools.length > 0 && <p class="chapter__tools">{u.tools.slice(0, 3).join(' · ')}</p>}
+              </div>
+
+              <div class="chapter__side">
+                {u.stats && (
+                  <div class="chapter__stats">
+                    {top && <p class="chapter__badge">{s.mostViewed}</p>}
+                    <p class="chapter__views">
+                      <strong>{formatCount(u.stats.views)}</strong> {s.views}
+                      <span class="chapter__likes">
+                        · {formatCount(u.stats.likes)} {s.likes}
+                      </span>
+                    </p>
+                    <span class="chapter__bar" aria-hidden="true">
+                      <span style={`--w:${maxViews ? (views / maxViews).toFixed(3) : 0}`} />
+                    </span>
+                  </div>
+                )}
+                <div class="chapter__links">
+                  {video && (
+                    <button
+                      type="button"
+                      class="chapter__link"
+                      data-play-src={video}
+                      data-play-poster={poster}
+                      data-play-title={u.title}
+                      data-play-meta={`${formatDate(u.date)} · ${u.label ?? u.title}`}
+                      data-play-post={u.sourceUrl ?? u.media?.sourceUrl}
+                      aria-haspopup="dialog"
+                    >
+                      <svg viewBox="0 0 16 16" aria-hidden="true">
+                        <path d="M5.5 3.5v9l7-4.5z" fill="currentColor" />
+                      </svg>
+                      {ui.notes.watch}
+                      <span class="visually-hidden">: {u.title}</span>
+                    </button>
+                  )}
+                  {u.sourceUrl && (
+                    <a class="chapter__link" href={u.sourceUrl} target="_blank" rel="noopener">
+                      {ui.notes.onX}
+                      <Arrow dir="ne" />
+                      <span class="visually-hidden">: {u.title} (opens in a new tab)</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            </li>
+          );
+        })
+      }
+
+      {
+        site.partner.enabled && (
+          <li class="chapter chapter--next" data-reveal>
+            <div class="chapter__meta">
+              <p class="eyebrow chapter__no">
+                {s.chapter} {nextNo}
+              </p>
+              <span class="chapter__date">—</span>
+            </div>
+            <div class="chapter__main chapter__main--next">
+              <h3 class="chapter__title">
+                <em>{s.next.title}</em>
+              </h3>
+              <p class="chapter__excerpt">{s.next.text}</p>
+            </div>
+            <div class="chapter__side">
+              <a class="btn-line" href={partnerHref}>
+                {s.next.cta}
+                <Arrow dir="e" />
+              </a>
+            </div>
+          </li>
+        )
+      }
+    </ol>
+    <p class="story__asof">{s.statsAsOf}</p>
+  </div>
+</section>
+
+<style>
+  .story__inner {
+    max-width: var(--max);
+    margin-inline: auto;
+    padding: clamp(5rem, 3rem + 6vw, 9rem) var(--gutter) 0;
+  }
+
+  /* Head: title left, intro + now right */
+  .story__head {
+    display: grid;
+    gap: 2rem var(--gap);
+    margin-bottom: clamp(2.5rem, 2rem + 2vw, 4rem);
+  }
+  @media (min-width: 1024px) {
+    .story__head {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      align-items: end;
+    }
+    .story__head > :first-child {
+      grid-column: 1 / span 6;
+    }
+    .story__side {
+      grid-column: 8 / -1;
+    }
+  }
+  .story__title {
+    margin-top: 1.25rem;
+    font-size: clamp(2.75rem, 1.5rem + 4vw, 5.75rem);
+    line-height: 0.95;
+  }
+  .story__title span,
+  .story__title em {
+    display: block;
+  }
+  .story__title em {
+    color: var(--ink-2);
+    padding-left: 0.3em;
+  }
+  .story__intro {
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: var(--ink-2);
+    max-width: 44ch;
+  }
+  .story__now {
+    margin-top: 1.75rem;
+    padding: 1.1rem 1.25rem 1.2rem;
+    background: var(--bg-raised);
+    border-radius: 3px;
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .story__now-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .story__now-head .eyebrow {
+    color: var(--ink);
+  }
+  .story__now-date {
+    margin-left: auto;
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+  .story__now-list {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 0.9rem;
+  }
+  .story__now-list dt {
+    font-size: 0.6875rem;
+    font-weight: 550;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .story__now-list dd {
+    margin: 0.15rem 0 0;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  /* Chapters */
+  .chapters {
+    list-style: none;
+    border-top: 1px solid var(--line-2);
+  }
+  .chapter {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    padding-block: clamp(1.5rem, 1.2rem + 1vw, 2.25rem);
+    border-bottom: 1px solid var(--line);
+  }
+  @media (min-width: 900px) {
+    .chapter {
+      grid-template-columns: 9rem 13rem minmax(0, 1fr) 15rem;
+      gap: 0 clamp(1.25rem, 0.5rem + 1.5vw, 2.5rem);
+      align-items: start;
+    }
+  }
+  .chapter::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -1px;
+    height: 1px;
+    background: var(--ink);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform 700ms var(--ease);
+  }
+  .chapter:hover::before {
+    transform: scaleX(1);
+  }
+
+  .chapter__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 1rem;
+  }
+  @media (min-width: 900px) {
+    .chapter__meta {
+      display: grid;
+      gap: 0.35rem;
+      padding-top: 0.35rem;
+    }
+  }
+  .chapter__no {
+    color: var(--ink);
+  }
+  .chapter__date {
+    font-size: 0.875rem;
+    color: var(--ink-3);
+  }
+
+  .chapter__thumb {
+    display: block;
+    aspect-ratio: 16 / 9;
+    border-radius: 2px;
+    overflow: hidden;
+    background: var(--frame);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .chapter__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: saturate(0.9) brightness(0.92);
+    transition:
+      transform 900ms var(--ease),
+      filter 600ms var(--ease);
+  }
+  .chapter:hover .chapter__img {
+    transform: scale(1.04);
+    filter: none;
+  }
+  @media (max-width: 899px) {
+    .chapter__thumb {
+      max-width: 28rem;
+    }
+  }
+
+  .chapter__title {
+    font-family: var(--font-display);
+    font-size: clamp(1.625rem, 1.3rem + 1vw, 2.25rem);
+    font-weight: var(--w-serif);
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+  }
+  .chapter__title a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .chapter__title em {
+    font-weight: var(--w-display-em);
+  }
+  .chapter__excerpt {
+    margin-top: 0.6rem;
+    max-width: 48ch;
+    font-size: 1.0625rem;
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+  .chapter__tools {
+    margin-top: 0.75rem;
+    font-size: 0.6875rem;
+    font-weight: 550;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .chapter__side {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 0.9rem;
+    align-content: start;
+  }
+  @media (min-width: 900px) {
+    .chapter__side {
+      padding-top: 0.35rem;
+    }
+  }
+  .chapter__badge {
+    justify-self: start;
+    margin-bottom: 0.1rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 550;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--bg);
+    background: var(--ink);
+  }
+  .chapter__stats {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .chapter__views {
+    font-size: 0.9375rem;
+    color: var(--ink-2);
+  }
+  .chapter__views strong {
+    font-family: var(--font-display);
+    font-size: 1.625rem;
+    font-weight: var(--w-serif);
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-right: 0.15rem;
+  }
+  .chapter__likes {
+    margin-left: 0.3rem;
+    color: var(--ink-3);
+  }
+  /* One series, emphasis: the most-viewed build in ivory, the rest in grey */
+  .chapter__bar {
+    position: relative;
+    display: block;
+    height: 4px;
+    border-radius: 0 4px 4px 0;
+    background: rgb(235 230 220 / 0.07);
+    overflow: hidden;
+  }
+  .chapter__bar > span {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: calc(var(--w) * 100%);
+    border-radius: 0 4px 4px 0;
+    background: var(--ink-faint);
+    transform-origin: 0 50%;
+    transition: transform 1100ms cubic-bezier(0.16, 1, 0.3, 1) 150ms;
+  }
+  .chapter--top .chapter__bar > span {
+    background: var(--ink);
+  }
+  :global(.js) .chapter:not(:global(.is-in)) .chapter__bar > span {
+    transform: scaleX(0);
+  }
+  .chapter__links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 1.25rem;
+  }
+  .chapter__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 40px;
+    font-size: var(--fs-label);
+    font-weight: var(--w-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--ink-2);
+    transition: color var(--t-fast) var(--ease);
+  }
+  .chapter__link:hover {
+    color: var(--ink);
+  }
+  .chapter__link svg {
+    width: 9px;
+    height: 9px;
+  }
+
+  /* The open chapter */
+  .chapter--next {
+    border-bottom: 1px dashed var(--line-2);
+  }
+  @media (min-width: 900px) {
+    .chapter--next {
+      grid-template-columns: 9rem minmax(0, 1fr) auto;
+      align-items: center;
+    }
+  }
+  .chapter--next .chapter__title em {
+    color: var(--ink);
+  }
+  .chapter--next::before {
+    display: none;
+  }
+
+  .story__asof {
+    margin-top: 1rem;
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chapter__bar > span {
+      transition: none;
+    }
+  }
+</style>

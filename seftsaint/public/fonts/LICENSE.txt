@@ -6,4 +6,4 @@ Fonts in this folder are licensed under the SIL Open Font License 1.1 (https://o
 - Newsreader — Copyright 2020 The Newsreader Project Authors (https://github.com/productiontype/Newsreader)
 
 Files were taken from the Fontsource packages (latin / thai subsets).
-Newsreader was subset to Latin and limited to weights 280–480, optical sizes 24–72.
+Newsreader was subset to Latin and limited to weights 320–600, optical sizes 24–72.

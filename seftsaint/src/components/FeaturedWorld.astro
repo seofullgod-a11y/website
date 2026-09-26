@@ -16,8 +16,10 @@ import Arrow from './Arrow.astro';
 
 interface Props {
   project: Project;
+  /** Section number shown before the label, e.g. '02'. */
+  no?: string;
 }
-const { project: p } = Astro.props;
+const { project: p, no } = Astro.props;
 const f = site.featured;
 const href = `/work/${p.slug}/`;
 
@@ -33,7 +35,10 @@ const shortNote = p.statusShort ?? '';
 <section id="work" class="world" aria-labelledby="world-title">
   <div class="world__grid">
     <div class="world__text" data-reveal>
-      <p class="eyebrow">{f.kicker}</p>
+      <p class="eyebrow">
+        {no && <span class="eyebrow__no" aria-hidden="true">{no}</span>}
+        {f.kicker}
+      </p>
       <h2 id="world-title" class="display world__title">{p.title}</h2>
       {p.workingTitle && <p class="world__wt eyebrow">{ui.project.workingTitle}</p>}
       <p class="world__line">{p.oneLiner ?? p.summary}</p>
@@ -52,6 +57,10 @@ const shortNote = p.statusShort ?? '';
       builds.length > 0 && (
         <div class="world__stage" data-reveal style="--reveal-delay:80ms" data-builds data-default={last}>
           <a class="world__frame" href={`${href}#${builds[last].u.id}`} data-build-link aria-label={`${p.title} — ${builds[last].u.title}`}>
+            <span class="world__enter" aria-hidden="true">
+              {f.cta}
+              <Arrow dir="e" />
+            </span>
             {builds.map((b, i) => (
               <Picture
                 src={b.img}
@@ -134,8 +143,9 @@ const shortNote = p.statusShort ?? '';
 
   .world__title {
     margin-top: 1.25rem;
-    font-size: clamp(2.75rem, 1.6rem + 3.2vw, 4.75rem);
-    line-height: 0.95;
+    font-size: clamp(3rem, 1.6rem + 3.8vw, 5.5rem);
+    line-height: 0.92;
+    letter-spacing: -0.03em;
   }
   .world__wt {
     margin-top: 0.75rem;
@@ -145,7 +155,7 @@ const shortNote = p.statusShort ?? '';
     margin-top: 1.25rem;
     max-width: 34ch;
     color: var(--ink-2);
-    font-size: 1rem;
+    font-size: 1.125rem;
     line-height: 1.6;
   }
   .world__status {
@@ -154,7 +164,7 @@ const shortNote = p.statusShort ?? '';
     align-items: center;
     gap: 0.35rem 0.75rem;
     margin-top: 1.5rem;
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
     color: var(--ink-2);
   }
   .world__status-label {
@@ -211,6 +221,41 @@ const shortNote = p.statusShort ?? '';
   .world__frame:hover .world__pic.is-active .world__img {
     transform: scale(1.015);
   }
+  /* Hover hint on the strip */
+  .world__enter {
+    position: absolute;
+    right: clamp(1rem, 0.5rem + 2vw, 2rem);
+    bottom: clamp(1rem, 0.5rem + 1.5vw, 1.75rem);
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 1.1rem;
+    border-radius: 999px;
+    background: rgb(11 12 12 / 0.55);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow: inset 0 0 0 1px rgb(235 230 220 / 0.2);
+    font-size: var(--fs-label);
+    font-weight: var(--w-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    opacity: 0;
+    transform: translateY(6px);
+    transition:
+      opacity var(--t) var(--ease),
+      transform var(--t) var(--ease);
+  }
+  .world__frame:hover .world__enter,
+  .world__frame:focus-visible .world__enter {
+    opacity: 1;
+    transform: none;
+  }
+  @media (hover: none) {
+    .world__enter {
+      display: none;
+    }
+  }
   .world__words {
     position: absolute;
     left: clamp(1rem, 0.5rem + 2vw, 2.25rem);
@@ -252,7 +297,7 @@ const shortNote = p.statusShort ?? '';
     align-items: baseline;
     gap: 1rem;
     min-width: 0;
-    font-size: 0.9375rem;
+    font-size: 1rem;
   }
   .world__caption time {
     color: var(--ink-3);
