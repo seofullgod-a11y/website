@@ -32,6 +32,7 @@ Deploy: ดูหัวข้อ **"ขึ้น GitHub + Railway"** ด้า�
 | ผลงาน | `src/data/projects.ts` |
 | Journal และกล่อง "Now" | `src/data/updates.ts` |
 | สี ฟอนต์ และระยะห่าง | `src/styles/global.css` (ดูตัวแปรใน `:root`) |
+| เปิด/ปิดเอฟเฟกต์ | `src/data/effects.ts` |
 
 **เปลี่ยนเป็นภาษาไทย:** แปลข้อความใน `site.ts`, `ui.ts`, `projects.ts` และ `updates.ts`
 จากนั้นตั้ง `lang: 'th'` และ `locale: 'th-TH'` ใน `site.ts` (วันที่จะเป็น พ.ศ. เอง)
@@ -87,6 +88,28 @@ ffmpeg -ss 5 -i input.mov -frames:v 1 -q:v 2 2026-09-25-last-update.jpg
 
 ตอนรัน `npm run dev` หรือ `npm run build` terminal จะแสดงรายชื่อไฟล์ที่ยังขาด
 และในโหมด dev จะมีป้ายสีเหลืองบนภาพที่เป็นภาพชั่วคราวหรือยังไม่มีวิดีโอ ป้ายนี้ไม่แสดงบนเว็บจริง
+
+---
+
+## เอฟเฟกต์และลูกเล่น
+
+เปิดหรือปิดทีละตัวได้ใน `src/data/effects.ts` โดยเปลี่ยนค่าเป็น `false`
+
+| ชื่อ | ทำอะไร |
+|---|---|
+| `evolution` | กรอบใหญ่ของงานเด่น: เลื่อนเมาส์จากซ้ายไปขวาเพื่อไล่ดูทุกช่วงของโปรเจกต์ บนมือถือแตะแถบด้านล่างแทน และเมื่อ hover ภาพเล็ก กรอบใหญ่จะเปลี่ยนตาม |
+| `compare` | หน้าโปรเจกต์ ส่วน "Then & now": ลากเส้นแบ่งเพื่อเทียบเฟรมแรกกับเฟรมล่าสุด ใช้ปุ่มลูกศรบนคีย์บอร์ดได้ |
+| `hoverPreview` | ชี้ที่แถวในรายการ Progress หรือ Original posts แล้วจะมีภาพเล็กลอยตามเมาส์ |
+| `parallax` | ภาพ Hero และภาพปก ขยับเบา ๆ ตามเมาส์ เหมือนมองผ่านหน้าต่าง และขอบ viewfinder จะหุบเข้า |
+| `lensLight` | แสงนุ่ม ๆ บนพื้นหลังที่ตามเมาส์ |
+| `decode` | ป้ายตัวอักษร mono สลับตัวอักษรแวบหนึ่งตอน hover ข้อความจริงยังอยู่สำหรับ screen reader |
+| `scrollProgress` | เส้นบาง ๆ ใต้ header บอกว่าอ่านไปถึงไหนแล้ว |
+| `pulse` | จุดหน้าชื่อ seftsaint หายใจช้า ๆ |
+
+ทุกเอฟเฟกต์:
+- ปิดเองเมื่อผู้ชมตั้งค่าลดการเคลื่อนไหว
+- เอฟเฟกต์ที่ต้องใช้เมาส์จะไม่ทำงานบนมือถือ
+- ถ้า JavaScript ไม่ทำงาน เว็บยังใช้งานได้ปกติ
 
 ---
 
@@ -169,7 +192,7 @@ src/
   assets/media ← ภาพผลงาน (ระบบปรับขนาดให้)
   components/  ← Hero, FeaturedProject, Journal, Media (ภาพ/วิดีโอ), ...
   pages/       ← index, work/[slug], 404
-  scripts/     ← JS ฝั่งเบราว์เซอร์ (header, fade-in, จัดการวิดีโอ) ~2KB
+  scripts/     ← site.ts (header, fade-in, วิดีโอ) + fx.ts (เอฟเฟกต์)
   styles/      ← global.css (สี, ฟอนต์, ตัวแปร)
 server.mjs     ← server สำหรับ production (npm start)
 railway.json   ← ค่าตั้ง Railway

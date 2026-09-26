@@ -146,6 +146,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   overflow-x: clip;
+  /* Own stacking context so the grain + lens layers (z-index: -1) sit above the body background */
+  isolation: isolate;
 }
 /* Barely-there film grain for depth. Static, no animation. */
 body::before {
@@ -364,6 +366,109 @@ a:focus-visible .arrow--w {
   }
 }
 
+/* ── Effects (see src/data/effects.ts) ─────────────────────── */
+
+/* Lens light: a soft glow that follows the cursor over the background */
+.fx-lens {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    560px circle at var(--lx, 50%) var(--ly, 30%),
+    rgb(198 220 178 / 0.06),
+    rgb(198 220 178 / 0.02) 40%,
+    transparent 70%
+  );
+  transition: opacity 600ms var(--ease);
+}
+.fx-lens.is-on {
+  opacity: 1;
+}
+
+/* Window parallax on hero / cover frames (values driven by JS) */
+.media[data-parallax] .media__img,
+.media[data-parallax] .media__video {
+  transform: translate3d(var(--mx, 0px), var(--my, 0px), 0) scale(var(--ms, 1));
+  transition: opacity var(--t-slow) var(--ease); /* movement is smoothed in JS */
+}
+/* Crop marks draw in slightly when you look closer */
+.mark {
+  transition:
+    transform var(--t-slow) var(--ease),
+    border-color var(--t-slow) var(--ease);
+}
+.media:hover .mark--tl {
+  transform: translate(4px, 4px);
+}
+.media:hover .mark--tr {
+  transform: translate(-4px, 4px);
+}
+.media:hover .mark--bl {
+  transform: translate(4px, -4px);
+}
+.media:hover .mark--br {
+  transform: translate(-4px, -4px);
+}
+.media:hover .mark {
+  border-color: var(--ink);
+}
+
+/* Floating preview that follows the cursor over list rows */
+.fx-preview {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 60;
+  width: 260px;
+  pointer-events: none;
+  transform: translate3d(var(--fx, -9999px), var(--fy, 0px), 0);
+}
+.fx-preview__inner {
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--frame);
+  box-shadow:
+    0 0 0 1px rgb(236 233 226 / 0.1),
+    0 18px 50px rgb(0 0 0 / 0.55);
+  opacity: 0;
+  transform: scale(0.94);
+  transform-origin: 0 50%;
+  transition:
+    opacity 200ms var(--ease),
+    transform 240ms var(--ease);
+}
+.fx-preview.is-on .fx-preview__inner {
+  opacity: 1;
+  transform: none;
+}
+.fx-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Decode: the visible copy is aria-hidden, a hidden copy keeps the real text for screen readers */
+.fx-decode-vis {
+  white-space: pre;
+}
+
+/* Wordmark dot breathes slowly */
+@keyframes fx-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgb(198 220 178 / 0.16);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgb(198 220 178 / 0.04);
+  }
+}
+[data-fx~='pulse'] .wordmark__dot {
+  animation: fx-breathe 3.6s ease-in-out infinite;
+}
+
 /* ── Reduced motion ────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -379,5 +484,9 @@ a:focus-visible .arrow--w {
   .js [data-reveal] {
     opacity: 1;
     transform: none;
+  }
+  .fx-lens,
+  .fx-preview {
+    display: none;
   }
 }

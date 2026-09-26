@@ -74,6 +74,17 @@ export const ui = {
     unavailable: 'Video unavailable',
   },
 
+  fx: {
+    /** Evolution viewer (home page) */
+    stages: 'Stages',
+    showStage: 'Show stage',
+    scrubHint: 'Move across to scrub',
+    /** Compare slider (project page) */
+    compareHeading: 'Then & now',
+    compareLabel: 'Compare the first and the latest frame',
+    compareHint: 'Drag the divider',
+  },
+
   journal: {
     intro: 'Short notes on what I’m making, testing, pausing and coming back to.',
     viewPost: 'View post',

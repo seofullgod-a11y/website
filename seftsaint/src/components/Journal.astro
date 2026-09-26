@@ -19,8 +19,8 @@ const projectTitle = new Map(getProjects().map((p) => [p.slug, p.title]));
 <div class="journal">
   <aside class="now" aria-labelledby="now-title" data-reveal>
     <div class="now__inner">
-      <p class="now__head mono">
-        <span id="now-title" class="now__title"><span class="now__dot" aria-hidden="true"></span>{ui.sections.now}</span>
+      <p class="now__head mono" data-decode-area>
+        <span id="now-title" class="now__title"><span class="now__dot" aria-hidden="true"></span><span data-decode>{ui.sections.now}</span></span>
         <span class="now__updated">
           {ui.journal.updated} <time datetime={now.updated}>{formatDate(now.updated)}</time>
         </span>

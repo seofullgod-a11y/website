@@ -8,9 +8,9 @@ interface Props {
 const { index, title, id, aside } = Astro.props;
 ---
 
-<div class="section-head mono">
+<div class="section-head mono" data-decode-area>
   {index && <span class="section-head__index" aria-hidden="true">{index}</span>}
-  <h2 class="section-head__title" id={id}>{title}</h2>
+  <h2 class="section-head__title" id={id}><span data-decode>{title}</span></h2>
   {aside && <span class="section-head__aside">{aside}</span>}
   <slot />
 </div>

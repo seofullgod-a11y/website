@@ -20,7 +20,7 @@ const [line1, line2] = site.hero.headline;
 <section class="hero container" aria-labelledby="hero-title">
   <div class="hero__grid">
     <div class="hero__text">
-      <p class="hero__kicker mono">{site.hero.kicker}</p>
+      <p class="hero__kicker mono" data-decode-area><span data-decode>{site.hero.kicker}</span></p>
       <h1 id="hero-title" class="hero__title">
         <span class="hero__line">{line1}</span>
         {line2 && <span class="hero__line serif-italic">{line2}</span>}
@@ -50,9 +50,10 @@ const [line1, line2] = site.hero.headline;
             vtName={`cover-${project.slug}`}
             sizes="(min-width: 1440px) 776px, (min-width: 1024px) 56vw, 100vw"
             aspectSmall="4 / 3"
+            parallax
           />
-          <a class="hero__caption" href={`/work/${project.slug}/`}>
-            <span class="mono hero__caption-label">{ui.hero.latest}</span>
+          <a class="hero__caption" href={`/work/${project.slug}/`} data-decode-area>
+            <span class="mono hero__caption-label" data-decode>{ui.hero.latest}</span>
             <span class="hero__caption-title">{project.title}</span>
             <StatusTag status={project.status} class="hero__caption-status" />
             {lastDate && (

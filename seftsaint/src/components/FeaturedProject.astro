@@ -4,13 +4,17 @@
  * title + facts, then its progress as an editorial set of frames
  * (newest largest) and a dated rail of every update.
  */
+import { getImage } from 'astro:assets';
 import Media from './Media.astro';
 import MetaList from './MetaList.astro';
+import Evolution from './Evolution.astro';
 import StatusTag from './StatusTag.astro';
 import type { Project } from '../data/types';
 import { ui } from '../data/ui';
 import { getUpdatesFor } from '../lib/content';
 import { formatDateNumeric, formatDate } from '../lib/format';
+import { resolveImage } from '../lib/media';
+import { effects } from '../data/effects';
 
 interface Props {
   project: Project;
@@ -24,6 +28,20 @@ const frames = [...timeline]
   .filter((u) => u.media?.image)
   .slice(0, 4);
 const spread = frames.length >= 3;
+
+// Evolution viewer: every stage with an image, oldest → newest.
+const stages = timeline.filter((u) => resolveImage(u.media?.image));
+const stageIndex = new Map(stages.map((u, i) => [u.id, i]));
+const useEvolution = effects.evolution && spread && stages.length >= 2;
+
+// Small thumbnails for the cursor preview on the progress rail.
+const previews = new Map<string, string>();
+if (effects.hoverPreview) {
+  for (const u of timeline) {
+    const img = resolveImage(u.media?.image);
+    if (img) previews.set(u.id, (await getImage({ src: img, width: 480, format: 'webp', quality: 72 })).src);
+  }
+}
 ---
 
 <article class="feature" aria-labelledby={`feature-${p.slug}`}>
@@ -50,32 +68,44 @@ const spread = frames.length >= 3;
   {
     spread ? (
       <div class:list={['gallery', `gallery--${frames.length}`]}>
-        {frames.map((u, i) => (
-          <a
-            class:list={['gallery__item', `gallery__item--${i + 1}`]}
-            href={`${href}#${u.id}`}
-            data-reveal
-            style={`--reveal-delay:${i * 50}ms`}
-          >
-            <Media
-              item={u.media!}
-              mode="still"
-              class={i === 0 ? 'media--fill' : undefined}
-              sizes={
-                i === 0
-                  ? '(min-width: 1440px) 880px, (min-width: 900px) 64vw, 100vw'
-                  : '(min-width: 1440px) 432px, (min-width: 900px) 32vw, 50vw'
-              }
+        {frames.map((u, i) =>
+          i === 0 && useEvolution ? (
+            <div class="gallery__item gallery__item--1" data-reveal>
+              <Evolution
+                stages={stages}
+                href={href}
+                projectTitle={p.title}
+                sizes="(min-width: 1440px) 880px, (min-width: 900px) 64vw, 100vw"
+              />
+            </div>
+          ) : (
+            <a
+              class:list={['gallery__item', `gallery__item--${i + 1}`]}
+              href={`${href}#${u.id}`}
+              data-reveal
+              data-evo-sync={useEvolution ? stageIndex.get(u.id) : undefined}
+              style={`--reveal-delay:${i * 50}ms`}
             >
-              <figcaption slot="caption" class="gallery__caption">
-                <time class="mono" datetime={u.date}>
-                  {formatDateNumeric(u.date)}
-                </time>
-                <span class="gallery__label">{u.label ?? u.title}</span>
-              </figcaption>
-            </Media>
-          </a>
-        ))}
+              <Media
+                item={u.media!}
+                mode="still"
+                class={i === 0 ? 'media--fill' : undefined}
+                sizes={
+                  i === 0
+                    ? '(min-width: 1440px) 880px, (min-width: 900px) 64vw, 100vw'
+                    : '(min-width: 1440px) 432px, (min-width: 900px) 32vw, 50vw'
+                }
+              >
+                <figcaption slot="caption" class="gallery__caption">
+                  <time class="mono" datetime={u.date}>
+                    {formatDateNumeric(u.date)}
+                  </time>
+                  <span class="gallery__label">{u.label ?? u.title}</span>
+                </figcaption>
+              </Media>
+            </a>
+          ),
+        )}
 
         {frames.length === 4 && (
           <a class="gallery__more" href={href} data-reveal>
@@ -91,14 +121,14 @@ const spread = frames.length >= 3;
 
         {timeline.length > 0 && (
           <nav class="rail" aria-label={`${p.title} — ${ui.project.progress}`} data-reveal>
-            <p class="rail__head mono">
-              <span>{ui.project.progress}</span>
+            <p class="rail__head mono" data-decode-area>
+              <span data-decode>{ui.project.progress}</span>
               <span class="rail__count">{ui.count.update(timeline.length)}</span>
             </p>
             <ol class="rail__list" role="list">
               {timeline.map((u) => (
                 <li>
-                  <a class="rail__item" href={`${href}#${u.id}`}>
+                  <a class="rail__item" href={`${href}#${u.id}`} data-preview-src={previews.get(u.id)}>
                     <time class="mono rail__date" datetime={u.date}>
                       {formatDate(u.date)}
                     </time>
@@ -243,13 +273,22 @@ const spread = frames.length >= 3;
       aspect-ratio: auto;
       min-height: 320px;
     }
+    /* Same for the evolution viewer */
+    .gallery__item--1 > :global(.evo) {
+      flex: 1;
+    }
+    .gallery__item--1 :global(.evo__frame) {
+      aspect-ratio: auto;
+      min-height: 320px;
+    }
   }
 
   .gallery__caption {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 0.9rem;
-    margin-top: 0.8rem;
+    margin-top: 0.35rem;
+    min-height: 44px;
     font-size: 0.875rem;
   }
   .gallery__caption time {
@@ -265,6 +304,17 @@ const spread = frames.length >= 3;
 
   .gallery__single {
     display: block;
+  }
+
+  /* Small frame currently shown in the evolution viewer */
+  .gallery__item :global(.media__frame) {
+    transition: box-shadow var(--t) var(--ease);
+  }
+  .gallery__item.is-synced :global(.media__frame) {
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .gallery__item.is-synced .gallery__label {
+    color: var(--ink);
   }
 
   /* Fills the empty cell on small screens so the 2-up grid stays even */

@@ -1,0 +1,274 @@
+---
+/**
+ * Evolution viewer — one frame, every stage of a project.
+ * Mouse: move across the frame to scrub from the first stage (left) to the latest (right).
+ * Touch / keyboard: the segment buttons under the frame.
+ * Leaving the frame returns to the latest stage.
+ */
+import { Picture } from 'astro:assets';
+import type { Update } from '../data/types';
+import { ui } from '../data/ui';
+import { resolveImage } from '../lib/media';
+import { formatDateNumeric } from '../lib/format';
+
+interface Props {
+  /** Oldest → newest. Only entries with an image are used. */
+  stages: Update[];
+  /** Project URL, e.g. /work/forest-concept/ */
+  href: string;
+  projectTitle: string;
+  sizes?: string;
+  class?: string;
+}
+const { stages: all, href, projectTitle, sizes, class: className } = Astro.props;
+
+const stages = all
+  .map((u) => ({ u, img: resolveImage(u.media?.image) }))
+  .filter((s): s is { u: Update; img: NonNullable<ReturnType<typeof resolveImage>> } => !!s.img);
+const last = stages.length - 1;
+const label = (u: Update) => u.label ?? u.title;
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+{
+  stages.length > 0 && (
+    <div class:list={['evo', className]} data-evo data-default={last} data-project={projectTitle}>
+      <a
+        class="evo__link"
+        href={`${href}#${stages[last].u.id}`}
+        data-evo-link
+        data-base={href}
+        aria-label={`${stages[last].u.title} — ${projectTitle}`}
+      >
+        <div class="evo__frame">
+          {stages.map((s, i) => (
+            <Picture
+              src={s.img}
+              alt={s.u.media?.alt ?? ''}
+              formats={['avif', 'webp']}
+              widths={[480, 768, 1024, 1280].filter((w) => w <= s.img.width)}
+              sizes={sizes}
+              loading="lazy"
+              class="evo__img"
+              pictureAttributes={{
+                class: `evo__pic${i === last ? ' is-active' : ''}`,
+                'data-evo-pic': String(i),
+                'data-id': s.u.id,
+                'data-title': s.u.title,
+                'data-date': formatDateNumeric(s.u.date),
+                'data-iso': s.u.date,
+                'data-label': label(s.u),
+              }}
+            />
+          ))}
+
+          <div class="evo__hud mono" aria-hidden="true">
+            <span data-evo-count>
+              {pad(last + 1)} / {pad(stages.length)}
+            </span>
+            <span class="evo__hint">{ui.fx.scrubHint}</span>
+          </div>
+          <div class="evo__track" aria-hidden="true">
+            {stages.map((_, i) => (
+              <span class:list={['evo__seg', { 'is-active': i === last }]} data-evo-seg={i} />
+            ))}
+          </div>
+        </div>
+      </a>
+
+      <div class="evo__caption">
+        <p class="evo__now" aria-live="polite">
+          <time class="mono" data-evo-date datetime={stages[last].u.date}>
+            {formatDateNumeric(stages[last].u.date)}
+          </time>
+          <span class="evo__label" data-evo-label>
+            {label(stages[last].u)}
+          </span>
+        </p>
+        <div class="evo__steps" role="group" aria-label={ui.fx.stages}>
+          {stages.map((s, i) => (
+            <button
+              type="button"
+              class="evo__step"
+              data-evo-step={i}
+              aria-pressed={i === last ? 'true' : 'false'}
+              aria-label={`${ui.fx.showStage}: ${label(s.u)}, ${formatDateNumeric(s.u.date)}`}
+            >
+              <span class="evo__step-bar" aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+<style>
+  .evo {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .evo__link {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    color: inherit;
+  }
+  .evo__frame {
+    position: relative;
+    flex: 1;
+    aspect-ratio: 16 / 9;
+    min-height: 0;
+    background: var(--frame);
+    border-radius: var(--radius);
+    overflow: clip;
+    isolation: isolate;
+    cursor: ew-resize;
+  }
+  @media (hover: none) {
+    .evo__frame {
+      cursor: pointer;
+    }
+  }
+  .evo__frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px rgb(236 233 226 / 0.06);
+    pointer-events: none;
+  }
+
+  .evo__pic {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 240ms var(--ease);
+  }
+  .evo__pic.is-active {
+    opacity: 1;
+  }
+  .evo__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 700ms var(--ease);
+  }
+  .evo__link:hover .evo__img {
+    transform: scale(1.015);
+  }
+
+  /* HUD — only while hovering / focused */
+  .evo__hud {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    z-index: 4;
+    display: flex;
+    justify-content: space-between;
+    color: var(--ink);
+    text-shadow: 0 1px 8px rgb(0 0 0 / 0.6);
+    opacity: 0;
+    transform: translateY(-4px);
+    transition:
+      opacity var(--t) var(--ease),
+      transform var(--t) var(--ease);
+    pointer-events: none;
+  }
+  .evo__hint {
+    color: var(--ink-2);
+  }
+  .evo__track {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    z-index: 4;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity var(--t) var(--ease);
+    pointer-events: none;
+  }
+  .evo__seg {
+    flex: 1;
+    height: 2px;
+    border-radius: 2px;
+    background: rgb(236 233 226 / 0.28);
+    transition: background-color var(--t-fast) var(--ease);
+  }
+  .evo__seg.is-active {
+    background: var(--accent);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .evo__link:hover .evo__hud,
+    .evo__link:focus-visible .evo__hud {
+      opacity: 1;
+      transform: none;
+    }
+    .evo__link:hover .evo__track,
+    .evo__link:focus-visible .evo__track {
+      opacity: 1;
+    }
+  }
+  @media not ((hover: hover) and (pointer: fine)) {
+    .evo__hint {
+      display: none;
+    }
+  }
+
+  /* Caption + stage buttons */
+  .evo__caption {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.35rem;
+    min-height: 44px;
+  }
+  .evo__now {
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    font-size: 0.875rem;
+    min-width: 0;
+  }
+  .evo__now time {
+    color: var(--ink-3);
+  }
+  .evo__label {
+    color: var(--ink-2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .evo__steps {
+    display: flex;
+    flex: none;
+  }
+  .evo__step {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 44px;
+  }
+  .evo__step-bar {
+    width: 22px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--line-2);
+    transition:
+      background-color var(--t-fast) var(--ease),
+      width var(--t) var(--ease);
+  }
+  .evo__step:hover .evo__step-bar {
+    background: var(--ink-2);
+  }
+  .evo__step[aria-pressed='true'] .evo__step-bar {
+    background: var(--accent);
+    width: 28px;
+  }
+</style>

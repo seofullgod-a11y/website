@@ -14,6 +14,7 @@ import { Picture } from 'astro:assets';
 import type { MediaItem } from '../data/types';
 import { resolveMedia } from '../lib/media';
 import { ui } from '../data/ui';
+import { effects } from '../data/effects';
 
 interface Props {
   item: MediaItem;
@@ -28,6 +29,8 @@ interface Props {
   marks?: boolean;
   /** view-transition-name for page-to-page morphing. Must be unique per page. */
   vtName?: string;
+  /** Subtle cursor parallax (if enabled in src/data/effects.ts). */
+  parallax?: boolean;
   class?: string;
 }
 
@@ -39,6 +42,7 @@ const {
   aspectSmall,
   marks = false,
   vtName,
+  parallax = false,
   class: className,
 } = Astro.props;
 
@@ -68,6 +72,7 @@ const devNotes = [
   style={style}
   data-media={hasVideo ? mode : undefined}
   data-state="idle"
+  data-parallax={parallax && effects.parallax && m.image ? '' : undefined}
 >
   <div class="media__frame">
     {

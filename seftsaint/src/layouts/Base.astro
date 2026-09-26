@@ -4,6 +4,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { site } from '../data/site';
 import { ui } from '../data/ui';
+import { effects, enabledEffects } from '../data/effects';
 
 interface Props {
   /** Page title — the site name is appended automatically (except on home). */
@@ -27,7 +28,7 @@ const handle = site.handle.startsWith('@') ? site.handle : `@${site.handle}`;
 ---
 
 <!doctype html>
-<html lang={site.lang}>
+<html lang={site.lang} data-fx={enabledEffects || undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -66,6 +67,7 @@ const handle = site.handle.startsWith('@') ? site.handle : `@${site.handle}`;
   </head>
   <body>
     <a class="skip-link" href="#main">{ui.skipToContent}</a>
+    {effects.lensLight && <div class="fx-lens" aria-hidden="true" />}
     <Header />
     <main id="main" tabindex="-1">
       <slot />
@@ -73,6 +75,7 @@ const handle = site.handle.startsWith('@') ? site.handle : `@${site.handle}`;
     <Footer />
     <script>
       import '../scripts/site.ts';
+      import '../scripts/fx.ts';
     </script>
   </body>
 </html>

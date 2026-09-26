@@ -4,6 +4,8 @@ import Base from '../../layouts/Base.astro';
 import Media from '../../components/Media.astro';
 import MetaList from '../../components/MetaList.astro';
 import StatusTag from '../../components/StatusTag.astro';
+import Compare from '../../components/Compare.astro';
+import { effects } from '../../data/effects';
 import type { Project, ProjectSection } from '../../data/types';
 import { site } from '../../data/site';
 import { ui } from '../../data/ui';
@@ -32,6 +34,12 @@ const pad = (n: number) => String(n).padStart(2, '0');
 const sections: ProjectSection[] = p.sections ?? [];
 const [firstSection, ...restSections] = sections;
 
+// Then & now: first and latest update that both have an image.
+const withImages = updates.filter((u) => resolveImage(u.media?.image));
+const compareFrom = withImages[0];
+const compareTo = withImages.at(-1);
+const showCompare = effects.compare && withImages.length >= 2 && compareFrom !== compareTo;
+
 const sources = [
   ...updates.filter((u) => u.sourceUrl).map((u) => ({ url: u.sourceUrl!, date: u.date, title: u.title })),
 ];
@@ -45,10 +53,20 @@ const og = coverImage
 const hasBody =
   sections.length > 0 ||
   total > 0 ||
+  showCompare ||
   (p.gallery?.length ?? 0) > 0 ||
   !!p.statusNote ||
   sources.length > 0 ||
   (p.links?.length ?? 0) > 0;
+
+// Small thumbnails for the cursor preview on the sources list.
+const previews = new Map<string, string>();
+if (effects.hoverPreview) {
+  for (const u of updates) {
+    const img = resolveImage(u.media?.image);
+    if (img) previews.set(u.sourceUrl ?? u.id, (await getImage({ src: img, width: 480, format: 'webp', quality: 72 })).src);
+  }
+}
 
 const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd()}…` : p.summary;
 ---
@@ -82,6 +100,7 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
         vtName={`cover-${p.slug}`}
         sizes="(min-width: 1440px) 1328px, 100vw"
         aspectSmall="4 / 3"
+        parallax
       />
     </div>
 
@@ -94,8 +113,8 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
       {
         firstSection && (
           <section id={firstSection.id} class="p-section" aria-labelledby={`h-${firstSection.id}`}>
-            <h2 id={`h-${firstSection.id}`} class="p-section__head mono">
-              {firstSection.heading}
+            <h2 id={`h-${firstSection.id}`} class="p-section__head mono" data-decode-area>
+              <span data-decode>{firstSection.heading}</span>
             </h2>
             <div class="p-section__content prose" data-reveal>
               {firstSection.paragraphs?.map((t) => <p>{t}</p>)}
@@ -112,10 +131,23 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
       }
 
       {
+        showCompare && compareFrom && compareTo && (
+          <section id="then-and-now" class="p-section p-section--wide" aria-labelledby="h-compare">
+            <h2 id="h-compare" class="p-section__head mono" data-decode-area>
+              <span data-decode>{ui.fx.compareHeading}</span>
+            </h2>
+            <div class="p-section__content" data-reveal>
+              <Compare before={compareFrom} after={compareTo} />
+            </div>
+          </section>
+        )
+      }
+
+      {
         total > 0 && (
           <section id="progress" class="p-section p-section--wide" aria-labelledby="h-progress">
-            <h2 id="h-progress" class="p-section__head mono">
-              {ui.project.progress}
+            <h2 id="h-progress" class="p-section__head mono" data-decode-area>
+              <span data-decode>{ui.project.progress}</span>
               <span class="p-section__count">{ui.count.update(total)}</span>
             </h2>
             <div class="p-section__content">
@@ -164,8 +196,8 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
       {
         restSections.map((s) => (
           <section id={s.id} class="p-section" aria-labelledby={`h-${s.id}`}>
-            <h2 id={`h-${s.id}`} class="p-section__head mono">
-              {s.heading}
+            <h2 id={`h-${s.id}`} class="p-section__head mono" data-decode-area>
+              <span data-decode>{s.heading}</span>
             </h2>
             <div class="p-section__content prose" data-reveal>
               {s.paragraphs?.map((t) => (
@@ -194,7 +226,7 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
       {
         p.gallery && p.gallery.length > 0 && (
           <section id="media" class="p-section p-section--wide" aria-labelledby="h-media">
-            <h2 id="h-media" class="p-section__head mono">
+            <h2 id="h-media" class="p-section__head mono" data-decode-area>
               {ui.project.gallery}
             </h2>
             <div class="p-section__content gallery-grid">
@@ -215,8 +247,8 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
       {
         p.statusNote && (
           <section id="status" class="p-section" aria-labelledby="h-status">
-            <h2 id="h-status" class="p-section__head mono">
-              {ui.project.status}
+            <h2 id="h-status" class="p-section__head mono" data-decode-area>
+              <span data-decode>{ui.project.status}</span>
             </h2>
             <div class="p-section__content status-block" data-reveal>
               <StatusTag status={p.status} />
@@ -229,14 +261,20 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
       {
         (sources.length > 0 || (p.links && p.links.length > 0)) && (
           <section id="sources" class="p-section" aria-labelledby="h-sources">
-            <h2 id="h-sources" class="p-section__head mono">
-              {sources.length > 0 ? ui.project.sources : ui.project.links}
+            <h2 id="h-sources" class="p-section__head mono" data-decode-area>
+              <span data-decode>{sources.length > 0 ? ui.project.sources : ui.project.links}</span>
             </h2>
             <div class="p-section__content">
               <ul class="sources" role="list">
                 {sources.map((s) => (
                   <li>
-                    <a class="sources__item" href={s.url} target="_blank" rel="noopener">
+                    <a
+                      class="sources__item"
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener"
+                      data-preview-src={previews.get(s.url)}
+                    >
                       <time class="mono" datetime={s.date}>
                         {formatDate(s.date)}
                       </time>
