@@ -30,7 +30,7 @@ const objectives: readonly string[] = p.nudge.objectives ?? [];
       {thumb && (
         <a class="nudge__media" href={partnerHref} tabindex="-1" aria-hidden="true" data-nudge-cta>
           <img src={thumb.src} width={360} height={158} alt="" loading="lazy" decoding="async" />
-          <span class="nudge__made mono">{p.madeOn}</span>
+          {p.madeOn && <span class="nudge__made mono">{p.madeOn}</span>}
         </a>
       )}
       <div class="nudge__body">
@@ -129,7 +129,7 @@ const objectives: readonly string[] = p.nudge.objectives ?? [];
     bottom: 8px;
     padding: 0.2rem 0.5rem;
     border-radius: 999px;
-    background: rgb(13 14 15 / 0.72);
+    background: rgb(12 12 13 / 0.72);
     color: var(--ink);
     font-size: 0.6875rem;
     text-transform: none;
@@ -248,12 +248,12 @@ const objectives: readonly string[] = p.nudge.objectives ?? [];
     place-items: center;
     border-radius: 50%;
     color: var(--ink);
-    background: rgb(13 14 15 / 0.6);
-    box-shadow: inset 0 0 0 1px rgb(236 233 226 / 0.16);
+    background: rgb(12 12 13 / 0.6);
+    box-shadow: inset 0 0 0 1px rgb(233 233 230 / 0.16);
     transition: background-color var(--t-fast) var(--ease);
   }
   .nudge__close:hover {
-    background: rgb(13 14 15 / 0.9);
+    background: rgb(12 12 13 / 0.9);
   }
   .nudge__close svg {
     width: 12px;

@@ -23,6 +23,8 @@ interface Props {
   project: Project;
 }
 const { project: p } = Astro.props;
+// A trailing number in the name ("Ashira1600") is set in blood red, as on the home page.
+const [, titleName, titleMark] = /^(.*?)(\d+)$/.exec(p.title) ?? [null, p.title, ''];
 
 const all = getProjects();
 const i = all.findIndex((x) => x.slug === p.slug);
@@ -88,7 +90,7 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
       </nav>
       <div class="p-head__grid">
         <div class="p-head__title">
-          <h1>{p.title}</h1>
+          <h1>{titleName}{titleMark && <span class="p-head__mark">{titleMark}</span>}</h1>
           <div class="p-head__tags">
             <StatusTag status={p.status} />
             {p.workingTitle && <span class="tag mono">{ui.project.workingTitle}</span>}
@@ -345,6 +347,13 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
     </div>
     )}
 
+    {/* A new project without a write-up yet still gets its devlog (once there are entries) */}
+    {!hasBody && (
+      <div class="container p-body">
+        <Fragment set:html={`<!--devlog:project:${p.slug}--><!--/devlog-->`} />
+      </div>
+    )}
+
     <nav class="container p-nav" aria-label="Project navigation">
       <a class="p-nav__link" href="/#work">
         <span class="mono p-nav__label">
@@ -381,6 +390,12 @@ const description = p.summary.length > 160 ? `${p.summary.slice(0, 157).trimEnd(
 </Base>
 
 <style>
+  .p-head__mark {
+    color: var(--accent);
+    font-style: italic;
+    font-weight: var(--w-display-em);
+    letter-spacing: -0.02em;
+  }
   /* ── Head ── */
   .p-head {
     padding-top: clamp(1.5rem, 0.8rem + 3vw, 3.5rem);

@@ -562,7 +562,7 @@ if (fx.has('scrollProgress')) {
 /* ── For the curious ───────────────────────────────────────── */
 console.log(
   '%c● seftsaint%c  worlds in progress\n%cBuilt with Astro and a lot of AI tokens → https://x.com/seftsaint',
-  'color:#c6dcb2;font:600 13px ui-monospace,monospace',
+  'color:#d51b45;font:600 13px ui-monospace,monospace',
   'color:#ece9e2;font:13px ui-monospace,monospace',
   'color:#8a8883;font:12px ui-monospace,monospace',
 );

@@ -10,7 +10,7 @@ import type { Project } from '../data/types';
 import { site } from '../data/site';
 import { ui } from '../data/ui';
 import { getUpdatesFor } from '../lib/content';
-import { resolveImage } from '../lib/media';
+import { resolveImage, resolveVideo } from '../lib/media';
 import { formatDateNumeric } from '../lib/format';
 import Arrow from './Arrow.astro';
 import { effects } from '../data/effects';
@@ -36,6 +36,12 @@ const shortNote = p.statusShort ?? '';
 const levels = effects.levels && builds.length > 1;
 const nextLevel = levels && site.partner.enabled;
 const cols = builds.length + (nextLevel ? 1 : 0);
+// No public builds yet (a new game): the strip plays the project's own footage instead.
+const cover = builds.length === 0 ? resolveImage(p.cover.image) : undefined;
+const coverPreview = cover ? resolveVideo(p.cover.preview) : undefined;
+const coverVideo = cover ? resolveVideo(p.cover.video) : undefined;
+// A trailing number in the name ("Ashira1600") is set in red, like the hero.
+const [, titleName, titleMark] = /^(.*?)(\d+)$/.exec(p.title) ?? [null, p.title, ''];
 ---
 
 <section id="work" class="world" aria-labelledby="world-title" data-hud={f.kicker} data-hud-no={no}>
@@ -45,7 +51,7 @@ const cols = builds.length + (nextLevel ? 1 : 0);
         {no && <span class="eyebrow__no" aria-hidden="true">{no}</span>}
         <span data-decode>{f.kicker}</span>
       </p>
-      <h2 id="world-title" class="display world__title">{p.title}</h2>
+      <h2 id="world-title" class="display world__title">{titleName}{titleMark && <span class="world__mark">{titleMark}</span>}</h2>
       {p.workingTitle && <p class="world__wt eyebrow">{ui.project.workingTitle}</p>}
       <p class="world__line">{p.oneLiner ?? p.summary}</p>
       <p class="world__status" data-decode-area>
@@ -58,6 +64,82 @@ const cols = builds.length + (nextLevel ? 1 : 0);
         <Arrow dir="e" />
       </a>
     </div>
+
+    {
+      cover && (
+        <div class="world__stage" data-reveal style="--reveal-delay:80ms">
+          <a
+            class="world__frame"
+            href={href}
+            aria-label={`${p.title} — ${f.cta}`}
+            data-decode-area
+            data-loop={coverPreview ? 'view' : undefined}
+            data-loop-state={coverPreview ? 'idle' : undefined}
+          >
+            <span class="world__enter" aria-hidden="true">
+              <span data-decode>{f.cta}</span>
+              <Arrow dir="e" />
+            </span>
+            <Picture
+              src={cover}
+              alt={p.cover.alt}
+              formats={['avif', 'webp']}
+              widths={[640, 960, 1280, 1600, 2240].filter((w) => w <= cover.width)}
+              sizes="(min-width: 1520px) 1000px, (min-width: 1024px) 66vw, 100vw"
+              loading="lazy"
+              class="world__img"
+              style={p.cover.focus ? `object-position:${p.cover.focus}` : undefined}
+              pictureAttributes={{ class: 'world__pic is-active' }}
+            />
+            {coverPreview && (
+              <video
+                class="world__video media__loop"
+                data-src={coverPreview}
+                muted
+                loop
+                playsinline
+                preload="none"
+                disablepictureinpicture
+                aria-hidden="true"
+                tabindex="-1"
+                style={p.cover.focus ? `object-position:${p.cover.focus}` : undefined}
+              />
+            )}
+            <span class="render" data-render aria-hidden="true" />
+            <ul class="world__words eyebrow" role="list" aria-hidden="true">
+              {f.words.map((w) => (
+                <li>
+                  <span data-decode>{w}</span>
+                </li>
+              ))}
+            </ul>
+          </a>
+          <div class="world__bar world__bar--cover">
+            <p class="world__caption">
+              <span class="mono world__caption-kind">{f.footage}</span>
+              <span class="world__caption-title">{p.title}</span>
+            </p>
+            {coverVideo && (
+              <button
+                type="button"
+                class="link-line world__watch"
+                data-play-src={coverVideo}
+                data-play-poster=""
+                data-play-title={p.title}
+                data-play-meta={`${f.footage} · ${p.title}`}
+                aria-haspopup="dialog"
+                data-decode-area
+              >
+                <span data-decode>{f.watch}</span>
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M5.5 3.5v9l7-4.5z" fill="currentColor" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+      )
+    }
 
     {
       builds.length > 0 && (
@@ -204,6 +286,12 @@ const cols = builds.length + (nextLevel ? 1 : 0);
     }
   }
 
+  .world__mark {
+    color: var(--accent);
+    font-style: italic;
+    font-weight: var(--w-display-em);
+    letter-spacing: -0.02em;
+  }
   .world__title {
     margin-top: 1.25rem;
     font-size: clamp(2.25rem, 1.3rem + 2.4vw, 3.75rem);
@@ -258,8 +346,8 @@ const cols = builds.length + (nextLevel ? 1 : 0);
     position: absolute;
     inset: 0;
     z-index: 2;
-    background: linear-gradient(90deg, rgb(11 12 12 / 0.55) 0%, rgb(11 12 12 / 0) 38%);
-    box-shadow: inset 0 0 0 1px rgb(235 230 220 / 0.06);
+    background: linear-gradient(90deg, rgb(9 9 10 / 0.7) 0%, rgb(9 9 10 / 0) 42%);
+    box-shadow: inset 0 0 0 1px rgb(233 233 230 / 0.06);
     pointer-events: none;
   }
   .world__pic {
@@ -270,6 +358,35 @@ const cols = builds.length + (nextLevel ? 1 : 0);
   }
   .world__pic.is-active {
     opacity: 1;
+  }
+  /* The new game's own footage, looping in the strip */
+  .world__video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 700ms var(--ease);
+  }
+  .world__frame[data-loop-state='playing'] .world__video,
+  .world__frame[data-loop-state='paused'] .world__video {
+    opacity: 1;
+  }
+  .world__bar--cover {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .world__caption-kind {
+    color: var(--ink-3);
+    flex: none;
+    font-size: 0.8125rem;
+  }
+  .world__watch {
+    min-width: 13rem;
+  }
+  .world__watch svg {
+    width: 9px;
+    height: 9px;
   }
   .world__img {
     width: 100%;
@@ -295,10 +412,10 @@ const cols = builds.length + (nextLevel ? 1 : 0);
     gap: 0.75rem;
     padding: 0.7rem 1.1rem;
     border-radius: 999px;
-    background: rgb(11 12 12 / 0.55);
+    background: rgb(9 9 10 / 0.55);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
-    box-shadow: inset 0 0 0 1px rgb(235 230 220 / 0.2);
+    box-shadow: inset 0 0 0 1px rgb(233 233 230 / 0.2);
     font-size: var(--fs-label);
     font-weight: var(--w-label);
     letter-spacing: var(--ls-label);
@@ -448,7 +565,7 @@ const cols = builds.length + (nextLevel ? 1 : 0);
   }
   .level[aria-pressed='true'] .level__node {
     background: var(--ink);
-    box-shadow: 0 0 0 4px rgb(235 230 220 / 0.14);
+    box-shadow: 0 0 0 4px rgb(233 233 230 / 0.14);
   }
   .level:not([aria-pressed='true']):hover .level__node {
     box-shadow: inset 0 0 0 1px var(--ink-2);

@@ -29,9 +29,9 @@ export const site = {
   timeZone: 'Asia/Bangkok',
 
   meta: {
-    title: 'seftsaint — Worlds in progress',
+    title: 'seftsaint — Ashira1600, in development',
     description:
-      'seftsaint is a one-person worldbuilding lab: original games and 3D worlds built in real engines, with AI in the loop, shared in public. Open to partners and investors.',
+      'seftsaint is a one-person worldbuilding lab: original games and 3D worlds built in real engines, with AI in the loop, shared in public. Now building Ashira1600. Open to partners and investors.',
     /** 1200×630 image in /public */
     ogImage: '/og.jpg',
   },
@@ -41,38 +41,46 @@ export const site = {
 
   /* ── 1. HERO ─────────────────────────────────────────────── */
   hero: {
-    kicker: 'A worldbuilding lab',
-    /** Two lines. The second line is set in italic. */
-    headline: ['Worlds', 'in progress.'],
+    kicker: 'New game — in development',
+    /**
+     * The game's name, set big. `title` is drawn in bone white, `mark` in blood red
+     * right after it (together they read "Ashira1600").
+     */
+    title: 'Ashira',
+    mark: '1600',
     intro: 'Original games and 3D worlds — built in real engines, with AI in the loop, and shared in public as they take shape.',
     ctaWork: 'Explore the work',
-    ctaWatch: 'Watch the latest build',
-    /** One quiet line of proof under the buttons. Real numbers only. */
-    proofLine: ['930K+ views on X', '4 public builds', '12 days'],
+    ctaWatch: 'Watch Ashira1600',
+    /** One quiet line of proof under the buttons. Real numbers only (these are from the last world). */
+    proofLine: ['Last world', '930K+ views on X', '4 builds in 12 days'],
     /**
-     * Full-screen footage. Real in-engine capture, cropped so the game HUD is out of frame.
-     * `imageTall` / `loopTall` are the phone versions (portrait). Loops are muted.
+     * Full-screen footage from the game. `imageTall` / `loopTall` are the phone versions
+     * (portrait). Loops are muted. The "Watch" button plays the featured project's video.
      */
     media: {
-      image: 'forest-concept/2026-09-25-last-update-hero.jpg',
-      imageTall: 'forest-concept/2026-09-25-last-update-hero-tall.jpg',
-      loop: 'forest-concept/2026-09-25-last-update-hero.mp4',
-      loopTall: 'forest-concept/2026-09-25-last-update-hero-tall.mp4',
-      alt: 'In-engine footage: a hooded traveller walks a sunlit path through a pine forest, rays of light falling between the trees.',
-      focus: '50% 50%',
+      image: 'ashira1600/2026-10-09-ashira1600-hero.jpg',
+      imageTall: 'ashira1600/2026-10-09-ashira1600-hero-tall.jpg',
+      loop: 'ashira1600/2026-10-09-ashira1600-hero.mp4',
+      loopTall: 'ashira1600/2026-10-09-ashira1600-hero-tall.mp4',
+      alt: 'Footage from Ashira1600: a masked swordswoman in black stands on a white, snow-covered battlefield among fallen pale figures and red blood.',
+      focus: '40% 30%',
     },
     /** Top-right label on the footage — what you're looking at. */
-    caption: ['In-engine footage', 'Unreal Engine — 25.09.2026'],
+    caption: ['In-game footage', 'Ashira1600 — 09.10.2026'],
     /** Bottom-right words. */
     words: ['Build', 'Test', 'Share', 'Repeat'],
   },
 
   /* ── 2. FEATURED WORLD ───────────────────────────────────── */
   featured: {
-    kicker: 'Featured world',
+    kicker: 'Now building',
     cta: 'Enter the world',
     /** Stacked words over the strip. */
-    words: ['Godot → Unreal', 'Four builds', 'Twelve days'],
+    words: ['New game', 'In development', '2026'],
+    /** Under the footage: a button that plays the full clip with sound. */
+    watch: 'Watch the footage',
+    /** Label before the date under the footage. */
+    footage: 'In-game footage',
   },
 
   /* ── 2. SO FAR (numbers, right under the hero) ────────────── */
@@ -80,7 +88,7 @@ export const site = {
     kicker: 'So far',
     /** Only real numbers. Update `asOf` whenever you change them. */
     items: [
-      { value: '930K+', label: 'views on X', note: 'across four public builds' },
+      { value: '930K+', label: 'views on X', note: 'across the four Forest Concept builds' },
       { value: '8.7K+', label: 'likes', note: 'on those same four posts' },
       { value: '4', label: 'public builds', note: 'Godot, then Unreal' },
       { value: '12', label: 'days', note: 'from first pass to last build' },
@@ -92,7 +100,9 @@ export const site = {
 
   /* ── 4. THE STORY SO FAR (chapters = updates.ts, oldest first) ── */
   story: {
-    kicker: 'The story so far',
+    kicker: 'The last world',
+    /** Link to the previous world's own page, next to the intro. */
+    projectLink: 'Forest Concept',
     /** Second line is set in italic. */
     headline: ['Four builds.', 'Twelve days.'],
     intro: 'Every step was posted in public as it happened. This is how one forest went from a first pass in Godot to a lit world in Unreal — and where it stopped.',
@@ -104,8 +114,10 @@ export const site = {
     statsAsOf: 'View and like counts from X, as of 26 Sep 2026.',
     /** The last, open chapter — leads into the partner section. */
     next: {
-      title: 'The next world',
-      text: 'It stopped at the hardware, not the ideas. Chapter five starts with the right machine — or the right partner.',
+      title: 'Ashira1600',
+      /** Small label in place of the date. */
+      when: 'In development',
+      text: 'The forest stopped at the hardware, not the ideas. Chapter five has started — the right machine, or the right partner, decides how far it goes.',
       cta: 'Back the next world',
     },
   },
@@ -148,7 +160,7 @@ export const site = {
       'The ideas aren’t the limit. The hardware is. Backing at this stage goes straight into the work.',
     ],
     /** Dim footage behind the section (inside src/assets/media/). '' = none. */
-    backdrop: 'forest-concept/2026-09-25-last-update-wide.jpg',
+    backdrop: 'ashira1600/2026-10-09-ashira1600-hero.jpg',
     unlocksTitle: 'What backing unlocks',
     unlocks: [
       { title: 'Hardware', text: 'A MacBook Pro or Mac Studio with the memory Unreal needs — so the worlds can look the way they’re meant to.' },
@@ -181,10 +193,11 @@ export const site = {
 
     /** Still used by the corner card. Real footage from the latest build. */
     media: {
-      image: 'forest-concept/2026-09-25-last-update-rays.jpg',
-      alt: 'A hooded character walks a forest trail through shafts of morning light, a small glowing bird flying beside them.',
+      image: 'ashira1600/2026-10-09-ashira1600.jpg',
+      alt: 'Ashira1600: a swordswoman in black cuts through pale figures on a white battlefield, blood spraying across the snow.',
     },
-    madeOn: 'Made on a 16GB MacBook',
+    /** Small tag on the corner card's image. '' = none (the image is now Ashira1600, not the MacBook-made forest). */
+    madeOn: '',
 
     /**
      * Where else on the site the partner invitation shows up.
@@ -209,7 +222,7 @@ export const site = {
     nudge: {
       kicker: 'New quest',
       title: 'Back the next world.',
-      text: 'The latest build was made on a 16GB MacBook — and it’s hit its limit.',
+      text: 'The last world outgrew a 16GB MacBook. The next one needs more.',
       /** The quest's goals, shown as open checkboxes. Keep them true. [] = none. */
       objectives: ['Hardware that keeps up with Unreal', 'A partner for the next world'],
       cta: 'See how',

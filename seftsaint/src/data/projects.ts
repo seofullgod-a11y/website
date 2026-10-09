@@ -36,6 +36,24 @@ import type { Project } from './types';
 
 export const projects: Project[] = [
   {
+    slug: 'ashira1600',
+    title: 'Ashira1600',
+    // Name only for now — no genre or story details until they're announced.
+    summary: 'The next world from seftsaint. In development — more soon.',
+    types: ['Game'],
+    status: 'in-progress',
+    featured: true,
+    order: 1,
+    cover: {
+      image: 'ashira1600/2026-10-09-ashira1600.jpg',
+      // Short muted loop (plays when visible) + the full clip with sound (plays on click).
+      preview: 'ashira1600/2026-10-09-ashira1600-preview.mp4',
+      video: 'ashira1600/2026-10-09-ashira1600.mp4',
+      alt: 'A swordswoman in black cuts through pale figures on a white, snow-covered battlefield, blood spraying across the snow.',
+      focus: '50% 40%',
+    },
+  },
+  {
     slug: 'forest-concept',
     // No official name was given in the posts — "the concept" is how it's described.
     // Rename freely; the URL stays the same unless you change `slug`.
@@ -49,7 +67,7 @@ export const projects: Project[] = [
     statusShort: 'The hardware hit its limit',
     statusNote:
       'This was my last update on this one. My 16GB MacBook started to struggle with Unreal, so I’m thinking about going back to Godot and making a different game instead.',
-    featured: true,
+    order: 2,
     period: { start: '2026-09-14', end: '2026-09-25', label: 'Shared on X' },
     tools: ['Godot', 'Unreal Engine', 'Blender', 'Codex', 'Meshy'],
     ai: ['GPT-6 Astra', 'GPT-6 Luna', 'Opus 5.5'],

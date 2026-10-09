@@ -1,7 +1,8 @@
 ---
 /**
- * Hero — full-bleed, in-engine footage with the statement over it.
- * Copy + media: src/data/site.ts → hero. The "Watch" button plays the latest build.
+ * Hero — full-bleed footage from the game, the name set big at the bottom.
+ * Copy + media: src/data/site.ts → hero. The "Watch" button plays the featured
+ * project's latest build — or, when it has no builds yet, its own clip (projects.ts → cover.video).
  */
 import { getImage } from 'astro:assets';
 import { site } from '../data/site';
@@ -18,7 +19,6 @@ interface Props {
 }
 const { project } = Astro.props;
 const h = site.hero;
-const [line1, line2] = h.headline;
 
 // Poster: wide for screens, portrait for phones (art direction)
 const wide = resolveImage(h.media.image);
@@ -43,6 +43,21 @@ const latestVideo = resolveVideo(latest?.media?.video);
 const latestImg = resolveImage(latest?.media?.image);
 const latestPoster = latestVideo && latestImg ? (await getImage({ src: latestImg, width: 1280, format: 'webp', quality: 80 })).src : '';
 const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
+// No builds yet → the project's own clip
+const coverVideo = !latestVideo ? resolveVideo(project?.cover.video) : undefined;
+const coverImg = coverVideo ? resolveImage(project?.cover.image) : undefined;
+const coverPoster = coverImg ? (await getImage({ src: coverImg, width: 1280, format: 'webp', quality: 80 })).src : '';
+const watch = latestVideo
+  ? {
+      src: latestVideo,
+      poster: latestPoster,
+      title: latest?.title,
+      meta: latest ? `${formatDate(latest.date)} · ${latest.label ?? latest.title}` : undefined,
+      post: latestPost || undefined,
+    }
+  : coverVideo
+    ? { src: coverVideo, poster: coverPoster, title: project?.title, meta: h.caption.join(' · '), post: project?.cover.sourceUrl }
+    : null;
 ---
 
 <section
@@ -93,33 +108,29 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
   </div>
 
   <div class="hero__content">
+    <div class="hero__head">
     <p class="eyebrow eyebrow--rule hero__kicker" data-intro="up" style="--d:200ms" data-decode-area data-decode-reveal>
       <span data-decode>{h.kicker}</span>
     </p>
     <h1 id="hero-title" class="display hero__title">
-      <span class="hero__line" data-intro="rise" style="--d:300ms"><span>{line1}</span></span>
-      {
-        line2 && (
-          <span class="hero__line hero__line--2" data-intro="rise" style="--d:440ms">
-            <span>
-              <em>{line2}</em>
-            </span>
-          </span>
-        )
-      }
+      <span class="hero__line" data-intro="rise" style="--d:300ms">
+        <span>{h.title}<span class="hero__mark">{h.mark}</span></span>
+      </span>
     </h1>
+    </div>
+    <div class="hero__aside">
     <p class="hero__intro" data-intro="up" style="--d:800ms">{h.intro}</p>
     <div class="hero__actions" data-intro="up" style="--d:950ms">
       {
-        latestVideo ? (
+        watch ? (
           <button
             type="button"
             class="btn-solid hero__watch"
-            data-play-src={latestVideo}
-            data-play-poster={latestPoster}
-            data-play-title={latest?.title}
-            data-play-meta={latest ? `${formatDate(latest.date)} · ${latest.label ?? latest.title}` : undefined}
-            data-play-post={latestPost || undefined}
+            data-play-src={watch.src}
+            data-play-poster={watch.poster}
+            data-play-title={watch.title}
+            data-play-meta={watch.meta}
+            data-play-post={watch.post}
             aria-haspopup="dialog"
             data-decode-area
           >
@@ -158,6 +169,7 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
         </p>
       )
     }
+    </div>
   </div>
 
   <p class="hero__caption eyebrow" data-intro="up" style="--d:1500ms" data-decode-area data-decode-reveal>
@@ -231,12 +243,13 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
   .hero {
     position: relative;
     isolation: isolate;
-    /* Fills the screen; on very tall screens it stops near the footage's own shape (≈1.95:1) */
+    /* Fills the screen; on very tall screens it stops near the footage's own shape */
     min-height: max(620px, min(100svh, 62vw));
     margin-top: calc(-1 * var(--header-h));
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     overflow: clip;
+    background: var(--bg);
   }
 
   /* ── Footage ── */
@@ -263,7 +276,8 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
   .hero__video {
     object-fit: cover;
     object-position: var(--focus, 50% 50%);
-    filter: brightness(1.12) saturate(1.04);
+    /* The game's world is snow-white — pulled down a touch so it sits inside a black site */
+    filter: brightness(0.9) contrast(1.06);
   }
   .hero__video {
     opacity: 0;
@@ -273,54 +287,57 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
   .hero[data-loop-state='paused'] .hero__video {
     opacity: 1;
   }
-  /* Keep the statement readable and the edges quiet */
+  /*
+   * The white world sits in a black frame: the page's black closes in from the bottom
+   * (where the name is), the top (under the header) and the corners.
+   */
   .hero__shade {
     position: absolute;
     inset: 0;
     background:
-      linear-gradient(180deg, rgb(11 12 12 / 0.65) 0%, rgb(11 12 12 / 0) 20%),
-      linear-gradient(0deg, var(--bg) 0%, rgb(11 12 12 / 0.4) 12%, rgb(11 12 12 / 0) 34%);
-  }
-  @media (min-width: 1024px) {
-    /* The left stays dark for the words; the world opens up to the right */
-    .hero__shade {
-      background:
-        radial-gradient(38% 34% at 100% 0%, rgb(11 12 12 / 0.62), rgb(11 12 12 / 0) 100%),
-        radial-gradient(34% 40% at 100% 100%, rgb(11 12 12 / 0.7), rgb(11 12 12 / 0) 100%),
-        linear-gradient(90deg, rgb(11 12 12 / 0.94) 0%, rgb(11 12 12 / 0.8) 24%, rgb(11 12 12 / 0.25) 50%, rgb(11 12 12 / 0) 68%),
-        linear-gradient(180deg, rgb(11 12 12 / 0.65) 0%, rgb(11 12 12 / 0) 20%),
-        linear-gradient(0deg, var(--bg) 0%, rgb(11 12 12 / 0.45) 14%, rgb(11 12 12 / 0) 36%),
-        radial-gradient(130% 100% at 55% 45%, rgb(0 0 0 / 0) 60%, rgb(0 0 0 / 0.35) 100%);
-    }
+      radial-gradient(40% 32% at 100% 0%, rgb(9 9 10 / 0.6), rgb(9 9 10 / 0) 100%),
+      linear-gradient(180deg, rgb(9 9 10 / 0.75) 0%, rgb(9 9 10 / 0.2) 13%, rgb(9 9 10 / 0) 24%),
+      linear-gradient(0deg, var(--bg) 0%, rgb(9 9 10 / 0.95) 18%, rgb(9 9 10 / 0.8) 34%, rgb(9 9 10 / 0.45) 50%, rgb(9 9 10 / 0) 66%),
+      linear-gradient(90deg, rgb(9 9 10 / 0.6) 0%, rgb(9 9 10 / 0) 34%),
+      linear-gradient(270deg, rgb(9 9 10 / 0.55) 0%, rgb(9 9 10 / 0) 36%),
+      radial-gradient(130% 105% at 50% 30%, rgb(0 0 0 / 0) 52%, rgb(0 0 0 / 0.55) 100%);
   }
   @media (max-width: 1023px) {
     .hero__shade {
       background:
-        linear-gradient(180deg, rgb(11 12 12 / 0.7) 0%, rgb(11 12 12 / 0) 22%),
-        linear-gradient(0deg, var(--bg) 4%, rgb(11 12 12 / 0.86) 36%, rgb(11 12 12 / 0.35) 56%, rgb(11 12 12 / 0) 72%);
+        linear-gradient(180deg, rgb(9 9 10 / 0.75) 0%, rgb(9 9 10 / 0) 20%),
+        linear-gradient(0deg, var(--bg) 6%, rgb(9 9 10 / 0.93) 34%, rgb(9 9 10 / 0.5) 52%, rgb(9 9 10 / 0) 68%),
+        radial-gradient(140% 90% at 50% 30%, rgb(0 0 0 / 0) 55%, rgb(0 0 0 / 0.45) 100%);
     }
   }
 
-  /* Film grain + a soft vignette: the footage reads like film, not a screen capture */
+  /* Film grain: the footage reads like film, not a screen capture */
   .hero__grain {
     position: absolute;
     inset: 0;
     pointer-events: none;
     background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-    opacity: 0.16;
+    opacity: 0.14;
     mix-blend-mode: overlay;
   }
 
-  /* ── Words ── */
+  /* ── Words: the name on the left, the rest to its right, both on the ground line ── */
   .hero__content {
     width: 100%;
     max-width: var(--max);
     margin-inline: auto;
-    padding: calc(var(--header-h) + 2.5rem) var(--gutter) 5.5rem;
+    padding: calc(var(--header-h) + 2.5rem) var(--gutter) 6.25rem;
+  }
+  @media (min-width: 1024px) {
+    .hero__content {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 27rem);
+      align-items: end;
+      gap: 2rem 4rem;
+    }
   }
   @media (max-width: 1023px) {
     .hero {
-      align-items: flex-end;
       min-height: max(560px, 100svh);
     }
     .hero__content {
@@ -328,14 +345,19 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
     }
   }
   .hero__kicker {
-    margin-bottom: clamp(1.25rem, 0.8rem + 1.5vw, 2rem);
+    margin-bottom: clamp(1rem, 0.7rem + 1vw, 1.5rem);
     color: var(--ink-2);
     text-shadow: 0 1px 12px rgb(0 0 0 / 0.55);
+  }
+  .hero__kicker::before {
+    background: var(--accent);
+    opacity: 1;
   }
   .hero__title {
     font-size: clamp(2.75rem, 1rem + 5.6vw, 6.75rem);
     line-height: 0.9;
-    letter-spacing: -0.035em;
+    letter-spacing: -0.04em;
+    white-space: nowrap;
   }
   .hero__line {
     display: block;
@@ -343,48 +365,53 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
   .hero__line > span {
     display: block;
   }
-  .hero__line--2 {
-    padding-left: 0.38em;
-  }
-  .hero__line--2 em {
+  /* "1600" — the mark in blood red */
+  .hero__mark {
+    color: var(--accent);
+    font-style: italic;
     font-weight: var(--w-display-em);
-    letter-spacing: -0.03em;
+    letter-spacing: -0.02em;
+    margin-left: 0.02em;
   }
   .hero__intro {
-    margin-top: clamp(1.5rem, 1rem + 1.5vw, 2.25rem);
-    margin-left: clamp(0rem, -1rem + 3.5vw, 3.6rem);
-    max-width: 34ch;
-    font-size: clamp(1rem, 0.94rem + 0.25vw, 1.1875rem);
-    line-height: 1.5;
-    color: var(--ink);
+    max-width: 36ch;
+    font-size: clamp(1rem, 0.94rem + 0.2vw, 1.125rem);
+    line-height: 1.55;
+    color: var(--ink-2);
     text-shadow: 0 1px 16px rgb(0 0 0 / 0.5);
+  }
+  @media (max-width: 1023px) {
+    .hero__intro {
+      margin-top: 1.5rem;
+    }
   }
   .hero__actions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.75rem 2.5rem;
-    margin-top: clamp(2rem, 1.4rem + 1.5vw, 3rem);
-    margin-left: clamp(0rem, -1rem + 3.5vw, 3.6rem);
+    gap: 0.75rem 2rem;
+    margin-top: clamp(1.5rem, 1.2rem + 1vw, 2.25rem);
   }
   .hero__watch {
     gap: 0.8rem;
     padding-left: 0.5rem;
   }
   .hero__explore {
-    min-width: 13rem;
+    min-width: 12rem;
   }
   .hero__proof {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.35rem 0.75rem;
-    margin-top: 1.75rem;
-    margin-left: clamp(0rem, -1rem + 3.5vw, 3.6rem);
-    font-size: 0.875rem;
+    margin-top: 1.5rem;
+    font-size: 0.8125rem;
     font-weight: 500;
-    color: var(--ink);
+    color: var(--ink-2);
     text-shadow: 0 1px 12px rgb(0 0 0 / 0.6);
+  }
+  .hero__proof > span:nth-child(2) {
+    color: var(--ink-3);
   }
   .hero__proof .status-dot {
     margin-right: 0.35rem;
@@ -432,6 +459,7 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
     background: var(--line-2);
   }
   .hero__words {
+    display: none !important; /* quiet now — the name and the footage carry the hero */
     position: absolute;
     right: var(--gutter);
     bottom: 5.25rem;
@@ -556,8 +584,8 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
       box-shadow var(--t-fast) var(--ease);
   }
   .hero__toggle:hover {
-    background: rgb(235 230 220 / 0.08);
-    box-shadow: inset 0 0 0 1px rgb(235 230 220 / 0.4);
+    background: rgb(233 233 230 / 0.08);
+    box-shadow: inset 0 0 0 1px rgb(233 233 230 / 0.4);
   }
   .hero__toggle svg {
     width: 12px;
@@ -577,6 +605,11 @@ const latestPost = latest?.sourceUrl ?? latest?.media?.sourceUrl ?? '';
   }
 
   @media (max-width: 760px) {
+    /* The phone cut is framed upright with black headroom — keep it centred */
+    .hero__poster img,
+    .hero__video {
+      object-position: 50% 50%;
+    }
     .hero__caption {
       top: calc(var(--header-h) + 1rem);
     }

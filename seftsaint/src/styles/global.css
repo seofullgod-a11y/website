@@ -75,28 +75,34 @@
   unicode-range: U+02D7, U+0303, U+0331, U+0E01-0E5B, U+200C-200D, U+25CC;
 }
 
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
 :root {
   color-scheme: dark;
 
-  /* Surfaces — near-black, a touch warm */
-  --bg: #0b0c0c;
-  --bg-raised: #111213;
-  --bg-sunken: #080909;
-  --frame: #151617;
+  /* Surfaces — ink black (Ashira1600: black figure, white world, red) */
+  --bg: #09090a;
+  --bg-raised: #111113;
+  --bg-sunken: #060607;
+  --frame: #141416;
 
-  /* Ink — ivory, monochrome by default */
-  --ink: #ebe6dc;            /* warm ivory */
-  --ink-2: #b8b4ab;          /* body / secondary  (≈ 9:1 on --bg) */
-  --ink-3: #928e86;          /* metadata           (≈ 6:1 on --bg) */
-  --ink-faint: #5f5c57;      /* decorative only (index numbers, rules) */
+  /* Ink — bone white, monochrome by default */
+  --ink: #e9e9e6;            /* bone white (a little cooler, like the game's snow) */
+  --ink-2: #b3b4b5;          /* body / secondary  (≈ 9:1 on --bg) */
+  --ink-3: #8b8c8f;          /* metadata           (≈ 6:1 on --bg) */
+  --ink-faint: #5a5b5e;      /* decorative only (index numbers, rules) */
 
   /* Lines */
-  --line: rgb(235 230 220 / 0.09);
-  --line-2: rgb(235 230 220 / 0.18);
+  --line: rgb(233 233 230 / 0.09);
+  --line-2: rgb(233 233 230 / 0.18);
 
-  /* The one accent — pale sage. Status dots only. */
-  --accent: #c6dcb2;
-  --accent-dim: rgb(198 220 178 / 0.16);
+  /* The one accent — blood red, taken from the game. Small marks only: dots, numbers,
+     rules, the "1600", hover. Never body text. */
+  --accent: #d51b45;
+  --accent-dim: rgb(213 27 69 / 0.16);
 
   /* Type */
   --font-sans: 'Geist', 'IBM Plex Sans Thai', 'Sukhumvit Set', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
@@ -306,9 +312,9 @@ ol {
   text-transform: uppercase;
   color: var(--ink-2);
 }
-/* "01 — Label": section number before the eyebrow text */
+/* "01 — Label": section number before the eyebrow text, in blood red */
 .eyebrow__no {
-  color: var(--ink);
+  color: var(--accent);
   margin-right: 0.9em;
   font-variant-numeric: tabular-nums;
 }
@@ -386,8 +392,10 @@ ol {
   text-transform: uppercase;
   transition: background-color var(--t) var(--ease);
 }
+/* Hover: the blade goes red */
 .btn-solid:hover {
-  background: #fff;
+  background: var(--accent);
+  color: #fff;
 }
 /* Text CTA with a long hairline underneath */
 .link-line {
@@ -402,7 +410,7 @@ ol {
   letter-spacing: var(--ls-label);
   text-transform: uppercase;
   color: var(--ink);
-  background-image: linear-gradient(var(--line-2), var(--line-2)), linear-gradient(currentColor, currentColor);
+  background-image: linear-gradient(var(--line-2), var(--line-2)), linear-gradient(var(--accent), var(--accent));
   background-size:
     100% 1px,
     0% 1px;
@@ -546,8 +554,8 @@ a:focus-visible .arrow--w {
   opacity: 0;
   background: radial-gradient(
     560px circle at var(--lx, 50%) var(--ly, 30%),
-    rgb(198 220 178 / 0.06),
-    rgb(198 220 178 / 0.02) 40%,
+    rgb(213 27 69 / 0.06),
+    rgb(213 27 69 / 0.02) 40%,
     transparent 70%
   );
   transition: opacity 600ms var(--ease);
@@ -600,7 +608,7 @@ a:focus-visible .arrow--w {
   overflow: hidden;
   background: var(--frame);
   box-shadow:
-    0 0 0 1px rgb(236 233 226 / 0.1),
+    0 0 0 1px rgb(233 233 230 / 0.1),
     0 18px 50px rgb(0 0 0 / 0.55);
   opacity: 0;
   transform: scale(0.94);
@@ -646,11 +654,11 @@ a:focus-visible .arrow--w {
 }
 .render__tile {
   position: relative;
-  background-color: rgb(11 12 12 / 0.92);
-  box-shadow: inset 0 0 0 0.5px rgb(235 230 220 / 0.08);
+  background-color: rgb(9 9 10 / 0.92);
+  box-shadow: inset 0 0 0 0.5px rgb(233 233 230 / 0.08);
 }
 .render__tile::before {
-  --c: rgb(235 230 220 / 0.85);
+  --c: rgb(213 27 69 / 0.9);
   --s: 7px;
   content: '';
   position: absolute;
@@ -683,14 +691,14 @@ a:focus-visible .arrow--w {
 @keyframes fx-tile {
   0%,
   30% {
-    background-color: rgb(11 12 12 / 0.92);
+    background-color: rgb(9 9 10 / 0.92);
   }
   62% {
-    background-color: rgb(11 12 12 / 0.4);
+    background-color: rgb(9 9 10 / 0.4);
   }
   100% {
-    background-color: rgb(11 12 12 / 0);
-    box-shadow: inset 0 0 0 0.5px rgb(235 230 220 / 0);
+    background-color: rgb(9 9 10 / 0);
+    box-shadow: inset 0 0 0 0.5px rgb(233 233 230 / 0);
   }
 }
 @keyframes fx-tile-mark {
@@ -710,10 +718,10 @@ a:focus-visible .arrow--w {
 @keyframes fx-breathe {
   0%,
   100% {
-    box-shadow: 0 0 0 3px rgb(198 220 178 / 0.16);
+    box-shadow: 0 0 0 3px rgb(213 27 69 / 0.16);
   }
   50% {
-    box-shadow: 0 0 0 6px rgb(198 220 178 / 0.04);
+    box-shadow: 0 0 0 6px rgb(213 27 69 / 0.04);
   }
 }
 [data-fx~='pulse'] .wordmark__dot {

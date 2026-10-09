@@ -32,6 +32,10 @@ const chapters = await Promise.all(
 );
 const maxViews = Math.max(0, ...chapters.map((c) => c.u.stats?.views ?? 0));
 const nextNo = String(chapters.length + 1).padStart(2, '0');
+// The open chapter is the new game: a trailing number in its name is set in red.
+const [, nextName, nextMark] = /^(.*?)(\d+)$/.exec(s.next.title) ?? [null, s.next.title, ''];
+// The world these chapters belong to (link next to the intro)
+const storyProject = chapters[0]?.u.project;
 const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0, 2);
 ---
 
@@ -50,6 +54,14 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
       </div>
       <div class="story__side" data-reveal style="--reveal-delay:80ms">
         <p class="story__intro">{s.intro}</p>
+        {
+          storyProject && s.projectLink && (
+            <a class="link-line story__project" href={`/work/${storyProject}/`} data-decode-area>
+              <span data-decode>{s.projectLink}</span>
+              <Arrow dir="e" />
+            </a>
+          )
+        }
         <div class="story__now">
           <p class="story__now-head" data-decode-area data-decode-reveal>
             <span class="status-dot" aria-hidden="true"></span>
@@ -165,11 +177,16 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
               <p class="eyebrow chapter__no">
                 <span data-decode>{`${s.chapter} ${nextNo}`}</span>
               </p>
-              <span class="chapter__date">—</span>
+              <span class="chapter__date chapter__date--now">
+                <span class="status-dot" aria-hidden="true" />
+                {s.next.when}
+              </span>
             </div>
             <div class="chapter__main chapter__main--next">
               <h3 class="chapter__title">
-                <em>{s.next.title}</em>
+                <a href="/#work">
+                  {nextName}{nextMark && <span class="chapter__mark">{nextMark}</span>}
+                </a>
               </h3>
               <p class="chapter__excerpt">{s.next.text}</p>
             </div>
@@ -435,7 +452,7 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
     display: block;
     height: 4px;
     border-radius: 0 4px 4px 0;
-    background: rgb(235 230 220 / 0.07);
+    background: rgb(233 233 230 / 0.07);
     overflow: hidden;
   }
   .chapter__bar > span {
@@ -489,8 +506,23 @@ const nowItems = now.items.filter((x) => !x.href?.includes('#partner')).slice(0,
       align-items: center;
     }
   }
-  .chapter--next .chapter__title em {
-    color: var(--ink);
+  .chapter--next .chapter__title {
+    font-style: normal;
+  }
+  .chapter__mark {
+    color: var(--accent);
+    font-style: italic;
+    font-weight: var(--w-display-em);
+  }
+  .chapter__date--now {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--ink-2);
+  }
+  .story__project {
+    margin-top: 1.25rem;
+    min-width: 12rem;
   }
   .chapter--next::before {
     display: none;

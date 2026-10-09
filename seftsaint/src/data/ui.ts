@@ -98,7 +98,7 @@ export const ui = {
     pausePreview: 'Pause preview',
     playPreview: 'Play preview',
     watchOnX: 'Watch on X',
-    playDemo: 'Play demo',
+    playDemo: 'Play video',
     moreOnX: 'More on X',
     replay: 'Watch again',
     close: 'Close',

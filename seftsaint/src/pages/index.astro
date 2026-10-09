@@ -2,7 +2,6 @@
 import Base from '../layouts/Base.astro';
 import Hero from '../components/Hero.astro';
 import FeaturedWorld from '../components/FeaturedWorld.astro';
-import ProjectList from '../components/ProjectList.astro';
 import ProofBand from '../components/ProofBand.astro';
 import Story from '../components/Story.astro';
 import About from '../components/About.astro';
@@ -14,7 +13,6 @@ import { getProjects } from '../lib/content';
 
 const projects = getProjects();
 const featured = projects.find((p) => p.featured) ?? projects[0];
-const others = projects.filter((p) => p !== featured);
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -34,13 +32,7 @@ const jsonLd = {
 
   <!-- 3. The way in -->
   {featured && <FeaturedWorld project={featured} no="02" />}
-  {
-    others.length > 0 && (
-      <div class="container more-work">
-        <ProjectList projects={others} startIndex={2} />
-      </div>
-    )
-  }
+  {/* Earlier projects are told in "The last world" (Story) further down */}
 
   <!-- 4. What changed lately — the devlog (posted from /studio) -->
   <DevlogLatest no="03" />
@@ -48,15 +40,10 @@ const jsonLd = {
   <!-- 5. Who -->
   <About no="04" />
 
-  <!-- 6. How it happened — ends on an open chapter -->
+  <!-- 6. The last world (Forest Concept) — ends on the open chapter: Ashira1600 -->
   <Story no="05" />
 
   <!-- 7. The ask -->
   {site.partner.enabled && <Partner no="06" />}
 </Base>
 
-<style>
-  .more-work {
-    padding-bottom: 4rem;
-  }
-</style>

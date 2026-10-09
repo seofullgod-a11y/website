@@ -19,16 +19,17 @@ import type { NowItem, Update } from './types';
  */
 
 export const now: { updated: string; items: NowItem[] } = {
-  updated: '2026-09-25',
+  updated: '2026-10-09',
   items: [
     {
-      label: 'Paused',
-      text: 'Forest Concept — Unreal is getting heavy on my 16GB MacBook.',
-      href: '/work/forest-concept/',
+      label: 'Building',
+      text: 'Ashira1600 — a new game, in development.',
+      href: '/#work',
     },
     {
-      label: 'Next',
-      text: 'Thinking about going back to Godot to make a different game.',
+      label: 'Paused',
+      text: 'Forest Concept — Unreal got heavy on my 16GB MacBook.',
+      href: '/work/forest-concept/',
     },
     {
       label: 'Looking for',
