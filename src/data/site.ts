@@ -1,0 +1,329 @@
+/**
+ * ─────────────────────────────────────────────────────────────
+ *  YOUR DETAILS + PAGE COPY
+ *  Change your name, links and the words on the home page here.
+ *  Buttons / section labels live in ui.ts.
+ *  Projects → projects.ts · Journal + "Now" → updates.ts
+ * ─────────────────────────────────────────────────────────────
+ */
+
+export const site = {
+  /** Display name — used in the wordmark, titles and footer. */
+  name: 'seftsaint',
+  handle: '@seftsaint',
+  xUrl: 'https://x.com/seftsaint',
+  /** Contact email — shown in Partner + Connect. Set to '' to hide it everywhere. */
+  email: 'seftsaint1@gmail.com',
+
+  /**
+   * Your live URL once deployed, e.g. 'https://seftsaint.com' (no trailing slash).
+   * Needed for canonical links and absolute social-preview images.
+   * Leave '' on Railway to use its generated *.up.railway.app domain automatically.
+   */
+  url: '',
+
+  /**
+   * What the site is right now.
+   *  'contact' — one black page: the game's name, a short line, a form and your contact
+   *              details (copy below in `contact`). Every other page sends visitors back to it;
+   *              /studio keeps working so you can still post devlog updates for later.
+   *  'full'    — the whole site: hero, work, devlog, story, partners.
+   * Change it, upload, and Railway rebuilds.
+   */
+  mode: 'contact' as 'contact' | 'full',
+
+  /** <html lang>. Use 'th' if you switch the copy to Thai. */
+  lang: 'en',
+  /** Date format. 'en-GB' → 25 Sep 2026 · 'th-TH' → 25 ก.ย. 2569 */
+  locale: 'en-GB',
+  timeZone: 'Asia/Bangkok',
+
+  meta: {
+    title: 'seftsaint — Ashira2093, in development',
+    description:
+      'seftsaint is a one-person worldbuilding lab: original games and 3D worlds built in real engines, with AI in the loop, shared in public. Now building Ashira2093. Open to partners and investors.',
+    /** 1200×630 image in /public */
+    ogImage: '/og.jpg',
+  },
+
+  /** Small spaced capitals next to the wordmark (wide screens only). */
+  disciplines: ['Games', '3D', 'AI', 'Worlds'],
+
+  /* ── 1. HERO ─────────────────────────────────────────────── */
+  hero: {
+    kicker: 'New game — in development',
+    /**
+     * The game's name, set big. `title` is drawn in bone white, `mark` in blood red
+     * right after it (together they read "Ashira2093").
+     */
+    title: 'Ashira',
+    mark: '2093',
+    intro: 'Original games and 3D worlds — built in real engines, with AI in the loop, and shared in public as they take shape.',
+    ctaWork: 'Explore the work',
+    ctaWatch: 'Watch Ashira2093',
+    /** One quiet line of proof under the buttons. Real numbers only (these are from the last world). */
+    proofLine: ['Last world', '930K+ views on X', '4 builds in 12 days'],
+    /**
+     * Full-screen footage from the game. `imageTall` / `loopTall` are the phone versions
+     * (portrait). Loops are muted. The "Watch" button plays the featured project's video.
+     */
+    media: {
+      image: 'ashira1600/2026-10-09-ashira1600-hero.jpg',
+      imageTall: 'ashira1600/2026-10-09-ashira1600-hero-tall.jpg',
+      loop: 'ashira1600/2026-10-09-ashira1600-hero.mp4',
+      loopTall: 'ashira1600/2026-10-09-ashira1600-hero-tall.mp4',
+      alt: 'Footage from Ashira2093: a masked swordswoman in black stands on a white, snow-covered battlefield among fallen pale figures and red blood.',
+      focus: '40% 30%',
+    },
+    /** Top-right label on the footage — what you're looking at. */
+    caption: ['In-game footage', 'Ashira2093 — 09.10.2026'],
+    /** Bottom-right words. */
+    words: ['Build', 'Test', 'Share', 'Repeat'],
+  },
+
+  /* ── 2. FEATURED WORLD ───────────────────────────────────── */
+  featured: {
+    kicker: 'Now building',
+    cta: 'Enter the world',
+    /** Stacked words over the strip. */
+    words: ['New game', 'In development', '2026'],
+    /** Under the footage: a button that plays the full clip with sound. */
+    watch: 'Watch the footage',
+    /** Label before the date under the footage. */
+    footage: 'In-game footage',
+  },
+
+  /* ── 2. SO FAR (numbers, right under the hero) ────────────── */
+  proof: {
+    kicker: 'So far',
+    /** Only real numbers. Update `asOf` whenever you change them. */
+    items: [
+      { value: '930K+', label: 'views on X', note: 'across the four Forest Concept builds' },
+      { value: '8.7K+', label: 'likes', note: 'on those same four posts' },
+      { value: '4', label: 'public builds', note: 'Godot, then Unreal' },
+      { value: '12', label: 'days', note: 'from first pass to last build' },
+    ],
+    builtWith: 'Built with',
+    tools: ['Unreal Engine', 'Godot', 'Blender', 'Meshy'],
+    asOf: 'Counts from the four build posts on X, as of 26 Sep 2026.',
+  },
+
+  /* ── 4. THE STORY SO FAR (chapters = updates.ts, oldest first) ── */
+  story: {
+    kicker: 'The last world',
+    /** Link to the previous world's own page, next to the intro. */
+    projectLink: 'Forest Concept',
+    /** Second line is set in italic. */
+    headline: ['Four builds.', 'Twelve days.'],
+    intro: 'Every step was posted in public as it happened. This is how one forest went from a first pass in Godot to a lit world in Unreal — and where it stopped.',
+    chapter: 'Chapter',
+    mostViewed: 'Most viewed',
+    views: 'views',
+    likes: 'likes',
+    /** Date the view/like counts in updates.ts were read. */
+    statsAsOf: 'View and like counts from X, as of 26 Sep 2026.',
+    /** The last, open chapter — leads into the partner section. */
+    next: {
+      title: 'Ashira2093',
+      /** Small label in place of the date. */
+      when: 'In development',
+      text: 'The forest stopped at the hardware, not the ideas. Chapter five has started — the right machine, or the right partner, decides how far it goes.',
+      cta: 'Back the next world',
+    },
+  },
+
+  /* ── 5. THE LAB (about) ──────────────────────────────────── */
+  about: {
+    kicker: 'The lab',
+    /** Last line is set in italic. */
+    statement: ['One person.', 'Real engines.', 'AI in the loop.'],
+    lead: 'I make games, 3D scenes and experiments, using AI as a tool inside a real pipeline — Unreal, Godot, Blender — to build the things I imagine.',
+    body: [
+      'Everything is shared while it’s still taking shape: first passes, engine switches, and the things I pause and come back to.',
+    ],
+    toolkit: [
+      { label: 'Engines', items: ['Unreal Engine', 'Godot'] },
+      { label: '3D', items: ['Blender', 'Meshy'] },
+      { label: 'AI', items: ['GPT-6 Astra', 'GPT-6 Luna', 'Opus 5.5', 'Codex'] },
+    ],
+  },
+
+  connect: {
+    heading: 'Follow along',
+    text: 'Follow the work on X, or write to me directly.',
+  },
+
+  /* ── 6. PARTNERS & INVESTORS ─────────────────────────────── */
+  /**
+   * Keep it factual: what you're building, what would help, how to reach you.
+   * Set `enabled: false` to hide the section and every invitation around the site.
+   */
+  partner: {
+    enabled: true,
+    kicker: 'For partners & investors',
+    /** Used for small links around the site. */
+    heroLink: 'Open to partners & investors',
+    headline: ['Back the', 'next world.'],
+    lead: 'This is early — and it’s moving fast.',
+    body: [
+      'In twelve days, one forest went from a first pass in Godot to a lit, living world in Unreal — shared in public at every step, and seen more than 930,000 times on X.',
+      'The ideas aren’t the limit. The hardware is. Backing at this stage goes straight into the work.',
+    ],
+    /** Dim footage behind the section (inside src/assets/media/). '' = none. */
+    backdrop: 'ashira1600/2026-10-09-ashira1600-hero.jpg',
+    unlocksTitle: 'What backing unlocks',
+    unlocks: [
+      { title: 'Hardware', text: 'A MacBook Pro or Mac Studio with the memory Unreal needs — so the worlds can look the way they’re meant to.' },
+      { title: 'Fidelity', text: 'Characters, animation and light at the level the ideas deserve.' },
+      { title: 'Scale', text: 'From public experiments to one complete, original world.' },
+    ],
+    /** Only real numbers. Update `proofNote` (the date) whenever you change them. */
+    proof: [
+      { value: '575K+', label: 'views on a single build — the move to Unreal' },
+      { value: '4', label: 'public builds, each shared as it happened' },
+      { value: '1', label: 'person behind every one of them' },
+    ],
+    proofNote: 'Counts from X, as of 26 Sep 2026.',
+    ctaTalk: 'Let’s talk',
+    emailSubject: 'Partnership — seftsaint',
+    /** Pre-filled email text — makes it easy for someone to write the first message. */
+    emailBody: [
+      'Hi seftsaint,',
+      '',
+      'I saw your work and I’m interested in:',
+      '[ ] investing   [ ] hardware   [ ] partnering on a game',
+      '',
+      'About me:',
+      '',
+    ].join('\n'),
+    ctaEmail: 'Email me',
+    ctaX: 'Message on X',
+    ctaCopy: 'Copy email',
+    ctaCopied: 'Copied',
+
+    /** Still used by the corner card. Real footage from the latest build. */
+    media: {
+      image: 'ashira1600/2026-10-09-ashira1600.jpg',
+      alt: 'Ashira2093: a swordswoman in black cuts through pale figures on a white battlefield, blood spraying across the snow.',
+    },
+    /** Small tag on the corner card's image. '' = none (the image is now Ashira2093, not the MacBook-made forest). */
+    madeOn: '',
+
+    /**
+     * Where else on the site the partner invitation shows up.
+     * Switch any of them off with `false`.
+     */
+    promote: {
+      /** Small card in the corner after someone has seen the work (dismissible, remembered). */
+      nudge: true,
+      /** "Let's talk" button in the header. */
+      headerPill: true,
+      /** A "Back the next world" button when a demo video finishes. */
+      afterVideo: true,
+      /** A short note under a paused project's status. */
+      projectNote: true,
+      /** "Let's talk" in the closing section on every page. */
+      footer: true,
+      /** Numbers count up once when they scroll into view. */
+      countUp: true,
+    },
+
+    /** The corner card — styled like a quest. */
+    nudge: {
+      kicker: 'New quest',
+      title: 'Back the next world.',
+      text: 'The last world outgrew a 16GB MacBook. The next one needs more.',
+      /** The quest's goals, shown as open checkboxes. Keep them true. [] = none. */
+      objectives: ['Hardware that keeps up with Unreal', 'A partner for the next world'],
+      cta: 'See how',
+      /** Days the card stays away after someone closes it. */
+      snoozeDays: 7,
+    },
+
+    /** Under a paused project's status (project pages). */
+    projectNote: {
+      text: 'Paused because the hardware hit its limit. The right machine — or the right partner — is what the next world needs.',
+      cta: 'Back the next world',
+    },
+
+    /** Button on the end screen of a demo video. */
+    afterVideo: 'Back the next world',
+    footerLine: 'Open to partners & investors',
+  },
+
+  /* ── CONTACT PAGE (mode: 'contact') ──────────────────────── */
+  /**
+   * The one-page version: looking for a full-time partner. No footage, no numbers —
+   * just the name, one line, a form and how to reach you.
+   * The form emails you (server/contact.mjs — needs RESEND_API_KEY on Railway, see README).
+   */
+  contact: {
+    meta: {
+      title: 'Ashira2093 — looking for a full-time partner · seftsaint',
+      description:
+        'I’m building a new game, Ashira2093, and I’m looking for a full-time partner to build it with me. Write to me directly.',
+      /** Social preview: black, type only (no footage). */
+      ogImage: '/og-contact.jpg',
+    },
+    kicker: 'Looking for a partner',
+    /** Set big: `title` in bone white, `mark` in blood red right after it. */
+    title: 'Ashira',
+    mark: '2093',
+    lead: 'I’m building a new game, and I’m looking for a full-time partner to build it with me.',
+    status: 'New game — in development',
+
+    direct: {
+      kicker: 'Direct',
+      email: 'Email',
+      x: 'X',
+      copy: 'Copy',
+      copied: 'Copied',
+    },
+
+    form: {
+      kicker: 'Write to me',
+      name: 'Your name',
+      email: 'Your email',
+      emailHint: 'So I can reply',
+      roles: 'How would you partner?',
+      rolesHint: 'Pick any',
+      /** Checkboxes. Rename, add or remove freely. */
+      roleOptions: ['Invest', 'Code & engine', 'Art & 3D', 'Story & design', 'Publishing & business', 'Something else'],
+      message: 'About you',
+      messageHint: 'Who you are, what you’ve made, and why Ashira2093.',
+      link: 'A link',
+      linkHint: 'Portfolio, site or profile — optional',
+      submit: 'Send',
+      sending: 'Sending…',
+      note: 'Goes straight to my inbox. Your details are only used to reply.',
+      /** After sending. {name} and {email} are filled in. */
+      sentTitle: 'Sent.',
+      sentText: 'Thank you, {name} — it’s in my inbox now. Replies come from {email}.',
+      another: 'Write another',
+      errors: {
+        required: 'Please fill this in.',
+        email: 'That email doesn’t look right.',
+        link: 'Links start with http:// or https://',
+        short: 'A few more words, please.',
+        long: 'That’s a little long — please keep it under 4,000 characters.',
+        rate: 'Too many messages from here for now.',
+        failed: 'It didn’t go through.',
+        offline: 'The form isn’t connected yet.',
+      },
+      /** Shown with any error: opens their email app with the message already written. */
+      fallback: 'Send it by email instead',
+      emailSubject: 'Ashira2093 — partner',
+    },
+    footer: 'Ashira2093 is in development.',
+  },
+
+  /* ── 7. CLOSING (bottom of every page) ───────────────────── */
+  closing: {
+    kicker: 'Still in progress',
+    /** Second line is set in italic. */
+    line: ['The map is', 'still being drawn.'],
+    text: 'Follow the next build, or write to me directly.',
+    ctaWrite: 'Write to me',
+    ctaFollow: 'Follow on X',
+  },
+} as const;
