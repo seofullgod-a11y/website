@@ -1,0 +1,156 @@
+---
+/**
+ * The lab — who is behind this, in one statement, plus the toolkit.
+ * Content: src/data/site.ts → about (statement, lead, body, toolkit).
+ */
+import { site } from '../data/site';
+import Arrow from './Arrow.astro';
+
+interface Props {
+  no?: string;
+}
+const { no } = Astro.props;
+const a = site.about;
+const lastLine = a.statement.at(-1);
+const firstLines = a.statement.slice(0, -1);
+---
+
+<section id="about" class="lab" aria-labelledby="lab-title" data-hud={a.kicker} data-hud-no={no}>
+  <div class="lab__grid">
+    <div class="lab__main" data-reveal>
+      <p class="eyebrow" data-decode-area data-decode-reveal>
+        {no && <span class="eyebrow__no" aria-hidden="true">{no}</span>}
+        <span data-decode>{a.kicker}</span>
+      </p>
+      <h2 id="lab-title" class="display lab__statement">
+        {firstLines.map((l) => <span>{l}</span>)}
+        {lastLine && <em>{lastLine}</em>}
+      </h2>
+      <div class="lab__copy">
+        <p class="lab__lead">{a.lead}</p>
+        {a.body.map((t) => <p class="lab__body">{t}</p>)}
+      </div>
+    </div>
+
+    <aside class="lab__side" data-reveal style="--reveal-delay:80ms">
+      <dl class="lab__kit" data-decode-area data-decode-reveal>
+        {
+          a.toolkit.map((g) => (
+            <div class="lab__kit-row">
+              <dt class="eyebrow">
+                <span data-decode>{g.label}</span>
+              </dt>
+              <dd>{g.items.join(' · ')}</dd>
+            </div>
+          ))
+        }
+      </dl>
+      <div class="lab__connect">
+        <a class="lab__handle" href={site.xUrl} target="_blank" rel="noopener me">
+          {site.handle}
+          <Arrow dir="ne" />
+          <span class="visually-hidden">on X (opens in a new tab)</span>
+        </a>
+        {site.email && <a class="lab__mail" href={`mailto:${site.email}`}>{site.email}</a>}
+      </div>
+    </aside>
+  </div>
+</section>
+
+<style>
+  .lab {
+    max-width: var(--max);
+    margin-inline: auto;
+    padding: clamp(3.5rem, 2rem + 4vw, 6.5rem) var(--gutter) 0;
+  }
+  .lab__grid {
+    display: grid;
+    gap: 3rem var(--gap);
+    padding-top: clamp(2.5rem, 2rem + 2vw, 4rem);
+    border-top: 1px solid var(--line);
+  }
+  @media (min-width: 1024px) {
+    .lab__grid {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      align-items: end;
+    }
+    .lab__main {
+      grid-column: 1 / span 8;
+    }
+    .lab__side {
+      grid-column: 9 / -1;
+    }
+  }
+  .lab__statement {
+    margin-top: 1.5rem;
+    font-size: clamp(2rem, 1.2rem + 2.6vw, 3.75rem);
+    line-height: 0.98;
+  }
+  .lab__statement span,
+  .lab__statement em {
+    display: block;
+  }
+  .lab__statement em {
+    color: var(--ink-2);
+  }
+  .lab__copy {
+    margin-top: clamp(1.75rem, 1.2rem + 1.5vw, 2.5rem);
+    max-width: 50ch;
+  }
+  .lab__lead {
+    font-size: 1.0625rem;
+    line-height: 1.6;
+  }
+  .lab__body {
+    margin-top: 0.9rem;
+    color: var(--ink-2);
+  }
+
+  .lab__kit {
+    border-top: 1px solid var(--line);
+  }
+  .lab__kit-row {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    gap: 1rem;
+    align-items: baseline;
+    padding-block: 0.95rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .lab__kit-row dd {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+  .lab__connect {
+    display: grid;
+    justify-items: start;
+    gap: 0.4rem;
+    margin-top: 2rem;
+  }
+  .lab__handle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.375rem, 1.2rem + 0.6vw, 1.75rem);
+    font-weight: var(--w-serif);
+    letter-spacing: -0.02em;
+  }
+  .lab__handle :global(.arrow-icon) {
+    width: 16px;
+    height: 16px;
+    color: var(--ink-3);
+  }
+  .lab__mail {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    transition: color var(--t-fast) var(--ease);
+  }
+  .lab__mail:hover {
+    color: var(--ink);
+  }
+</style>

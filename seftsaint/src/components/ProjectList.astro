@@ -1,0 +1,134 @@
+---
+/** Secondary projects — an editorial index, not a grid of identical cards. */
+import Media from './Media.astro';
+import StatusTag from './StatusTag.astro';
+import type { Project } from '../data/types';
+import { ui } from '../data/ui';
+import { formatMonth } from '../lib/format';
+
+interface Props {
+  projects: Project[];
+  /** Number shown before the first row (the featured project is 01). */
+  startIndex?: number;
+}
+const { projects, startIndex = 2 } = Astro.props;
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+{
+  projects.length > 0 && (
+    <div class="more">
+      <p class="more__head mono">{ui.sections.moreWork}</p>
+      <ol class="more__list" role="list">
+        {projects.map((p, i) => {
+          const date = p.period?.end ?? p.period?.start;
+          return (
+            <li data-reveal style={`--reveal-delay:${i * 40}ms`}>
+              <a class="row" href={`/work/${p.slug}/`}>
+                <span class="row__index mono">{pad(startIndex + i)}</span>
+                <div class="row__thumb">
+                  <Media item={p.cover} mode="still" sizes="(min-width: 900px) 280px, 100vw" />
+                </div>
+                <span class="row__main">
+                  <span class="row__title">{p.title}</span>
+                  <span class="row__summary">{p.summary}</span>
+                </span>
+                <span class="row__meta">
+                  <span class="row__types">{p.types.join(', ')}</span>
+                  <StatusTag status={p.status} />
+                  {date && (
+                    <time class="mono row__date" datetime={date}>
+                      {formatMonth(date)}
+                    </time>
+                  )}
+                </span>
+                <span class="arrow arrow--e row__arrow" aria-hidden="true">
+                  →
+                </span>
+              </a>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  )
+}
+
+<style>
+  .more {
+    margin-top: clamp(4rem, 2.5rem + 5vw, 7rem);
+  }
+  .more__head {
+    color: var(--ink-3);
+    padding-bottom: 0.75rem;
+  }
+  .more__list {
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    padding-block: 1.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .row__index {
+    color: var(--ink-faint);
+  }
+  .row__main {
+    display: grid;
+    gap: 0.4rem;
+  }
+  .row__title {
+    font-size: var(--text-xl);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .row__summary {
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    max-width: 56ch;
+  }
+  .row__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.25rem;
+    font-size: 0.875rem;
+    color: var(--ink-2);
+  }
+  .row__date {
+    color: var(--ink-3);
+  }
+  .row__arrow {
+    display: none;
+  }
+
+  @media (min-width: 900px) {
+    .row {
+      grid-template-columns: 3rem 16rem minmax(0, 1fr) 15rem 1.5rem;
+      align-items: start;
+      gap: var(--gap);
+      padding-block: 1.75rem;
+    }
+    .row__index {
+      padding-top: 0.4rem;
+    }
+    .row__meta {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.6rem;
+      padding-top: 0.35rem;
+    }
+    .row__arrow {
+      display: block;
+      padding-top: 0.3rem;
+      color: var(--ink-3);
+    }
+    .row:hover .row__arrow {
+      color: var(--ink);
+    }
+  }
+</style>

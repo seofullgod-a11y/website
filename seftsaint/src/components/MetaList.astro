@@ -1,0 +1,107 @@
+---
+import StatusTag from './StatusTag.astro';
+import type { Project } from '../data/types';
+import { ui } from '../data/ui';
+import { formatRange } from '../lib/format';
+
+interface Props {
+  project: Project;
+  /** Include the status row (the project page shows it; the home spread shows it elsewhere). */
+  withStatus?: boolean;
+  columns?: boolean;
+}
+const { project, withStatus = false, columns = false } = Astro.props;
+const p = project;
+---
+
+<dl class:list={['meta', { 'meta--columns': columns }]}>
+  {
+    withStatus && (
+      <div class="meta__row">
+        <dt class="mono">{ui.project.status}</dt>
+        <dd>
+          <StatusTag status={p.status} />
+        </dd>
+      </div>
+    )
+  }
+  {
+    p.types.length > 0 && (
+      <div class="meta__row">
+        <dt class="mono">{ui.project.type}</dt>
+        <dd>{p.types.join(', ')}</dd>
+      </div>
+    )
+  }
+  {
+    p.period && (
+      <div class="meta__row">
+        <dt class="mono">{ui.project.timeline}</dt>
+        <dd>
+          <time datetime={p.period.start}>{formatRange(p.period.start, p.period.end)}</time>
+          {p.period.label && <span class="meta__note"> · {p.period.label}</span>}
+        </dd>
+      </div>
+    )
+  }
+  {
+    p.tools && p.tools.length > 0 && (
+      <div class="meta__row">
+        <dt class="mono">{ui.project.builtWith}</dt>
+        <dd>{p.tools.join(', ')}</dd>
+      </div>
+    )
+  }
+  {
+    p.ai && p.ai.length > 0 && (
+      <div class="meta__row">
+        <dt class="mono">{ui.project.ai}</dt>
+        <dd>{p.ai.join(', ')}</dd>
+      </div>
+    )
+  }
+</dl>
+
+<style>
+  .meta {
+    display: grid;
+    border-top: 1px solid var(--line);
+  }
+  .meta__row {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    gap: 1rem;
+    padding-block: 0.7rem;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+  dt {
+    color: var(--ink-3);
+    padding-top: 0.15em;
+  }
+  dd {
+    color: var(--ink);
+    margin: 0;
+  }
+  .meta__note {
+    color: var(--ink-3);
+    white-space: nowrap;
+  }
+
+  @media (min-width: 900px) {
+    .meta--columns {
+      grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+      column-gap: var(--gap);
+      border-top: 0;
+    }
+    .meta--columns .meta__row {
+      grid-template-columns: 1fr;
+      gap: 0.4rem;
+      align-content: start;
+      border-top: 1px solid var(--line);
+      border-bottom: 0;
+      padding-top: 0.85rem;
+    }
+  }
+</style>
