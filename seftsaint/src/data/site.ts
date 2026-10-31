@@ -30,7 +30,7 @@ export const site = {
    *  'full'    — the whole site: hero, work, devlog, story, partners.
    * Change it, upload, and Railway rebuilds.
    */
-  mode: 'contact' as 'contact' | 'full',
+  mode: 'full' as 'contact' | 'full',
 
   /** <html lang>. Use 'th' if you switch the copy to Thai. */
   lang: 'en',
@@ -51,34 +51,59 @@ export const site = {
 
   /* ── 1. HERO ─────────────────────────────────────────────── */
   hero: {
-    kicker: 'New game — in development',
+    kicker: 'A one-person worldbuilding lab',
     /**
-     * The game's name, set big. `title` is drawn in bone white, `mark` in blood red
-     * right after it (together they read "Ashira2093").
+     * Set big. `title` in bone white, `mark` in blood red italic right after it.
+     * (With footage this was the game's name: 'Ashira' + '2093'.)
      */
-    title: 'Ashira',
-    mark: '2093',
+    title: 'Worlds in ',
+    mark: 'progress.',
     intro: 'Original games and 3D worlds — built in real engines, with AI in the loop, and shared in public as they take shape.',
     ctaWork: 'Explore the work',
     ctaWatch: 'Watch Ashira2093',
     /** One quiet line of proof under the buttons. Real numbers only (these are from the last world). */
     proofLine: ['Last world', '930K+ views on X', '4 builds in 12 days'],
     /**
-     * Full-screen footage from the game. `imageTall` / `loopTall` are the phone versions
-     * (portrait). Loops are muted. The "Watch" button plays the featured project's video.
+     * Full-screen footage behind the hero. Leave `image` empty for no footage — then the
+     * `feature` card below sits next to the title instead.
+     * Ashira2093 footage, if you want it back:
+     *   image 'ashira1600/2026-10-09-ashira1600-hero.jpg', imageTall '…-hero-tall.jpg',
+     *   loop 'ashira1600/2026-10-09-ashira1600-hero.mp4', loopTall '…-hero-tall.mp4'
      */
     media: {
-      image: 'ashira1600/2026-10-09-ashira1600-hero.jpg',
-      imageTall: 'ashira1600/2026-10-09-ashira1600-hero-tall.jpg',
-      loop: 'ashira1600/2026-10-09-ashira1600-hero.mp4',
-      loopTall: 'ashira1600/2026-10-09-ashira1600-hero-tall.mp4',
-      alt: 'Footage from Ashira2093: a masked swordswoman in black stands on a white, snow-covered battlefield among fallen pale figures and red blood.',
-      focus: '40% 30%',
+      image: '',
+      imageTall: '',
+      loop: '',
+      loopTall: '',
+      alt: '',
+      focus: '',
     },
-    /** Top-right label on the footage — what you're looking at. */
+    /** Top-right label on the footage (only shown with footage). */
     caption: ['In-game footage', 'Ashira2093 — 09.10.2026'],
     /** Bottom-right words. */
     words: ['Build', 'Test', 'Share', 'Repeat'],
+    /**
+     * A post from X shown as a card next to the title (when there is no footage).
+     * The numbers are copied from X by hand — update `asOf` when you change them.
+     */
+    feature: {
+      kicker: 'Most viewed build',
+      where: 'On X',
+      tag: 'Godot → Unreal',
+      title: 'Moved the forest to Unreal',
+      text: 'New MacBook, new engine. The Godot concept moved to Unreal, with new trees and light.',
+      image: 'forest-concept/2026-09-20-unreal.jpg',
+      alt: 'A small character in a green cap walking along a dirt path through tall grass, with a minimap in the corner.',
+      href: 'https://x.com/seftsaint/status/2101395711015497764',
+      date: '20.09.2026',
+      project: 'Forest Concept',
+      stats: [
+        { value: '595K', label: 'views' },
+        { value: '5.8K', label: 'likes' },
+      ],
+      asOf: 'as of 31 Oct 2026',
+      cta: 'Watch it on X',
+    },
   },
 
   /* ── 2. FEATURED WORLD ───────────────────────────────────── */

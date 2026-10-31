@@ -37,6 +37,21 @@ const sources = {
 const loop = resolveVideo(h.media.loop);
 const loopTall = resolveVideo(h.media.loopTall);
 
+// No footage → a post from X as a card next to the title (site.ts → hero.feature)
+const f = h.feature;
+const cardImg = !wide && f ? resolveImage(f.image) : undefined;
+const card =
+  cardImg && f
+    ? {
+        ...f,
+        width: cardImg.width,
+        height: cardImg.height,
+        src: (await getImage({ src: cardImg, width: Math.min(960, cardImg.width), format: 'jpg', quality: 80 })).src,
+        avif: await set(cardImg, [480, 720, 960, 1280], 'avif'),
+        webp: await set(cardImg, [480, 720, 960, 1280], 'webp'),
+      }
+    : null;
+
 // "Watch the latest build" — the newest update of the featured project
 const latest = project ? getUpdatesFor(project.slug).at(-1) : undefined;
 const latestVideo = resolveVideo(latest?.media?.video);
@@ -61,11 +76,12 @@ const watch = latestVideo
 ---
 
 <section
-  class="hero"
+  class:list={['hero', { 'hero--card': !!card }]}
   aria-labelledby="hero-title"
   data-loop={loop ? 'view' : undefined}
   data-loop-state={loop ? 'idle' : undefined}
 >
+  {wide && (
   <div class="hero__stage" data-intro="stage" style={h.media.focus ? `--focus:${h.media.focus}` : undefined}>
     <div class="hero__parallax" data-hero-parallax>
       {
@@ -106,6 +122,8 @@ const watch = latestVideo
     <div class="hero__shade" aria-hidden="true"></div>
     <div class="hero__grain" aria-hidden="true"></div>
   </div>
+  )}
+  {!wide && <div class="hero__glow" aria-hidden="true"></div>}
 
   <div class="hero__content">
     <div class="hero__head">
@@ -122,7 +140,7 @@ const watch = latestVideo
     <p class="hero__intro" data-intro="up" style="--d:800ms">{h.intro}</p>
     <div class="hero__actions" data-intro="up" style="--d:950ms">
       {
-        watch ? (
+        watch && !card ? (
           <button
             type="button"
             class="btn-solid hero__watch"
@@ -142,7 +160,7 @@ const watch = latestVideo
             <span data-decode>{h.ctaWatch}</span>
           </button>
         ) : (
-          latestPost && (
+          !card && latestPost && (
             <a class="btn-solid" href={latestPost} target="_blank" rel="noopener">
               {h.ctaWatch}
               <Arrow dir="ne" />
@@ -151,7 +169,7 @@ const watch = latestVideo
           )
         )
       }
-      <a class="link-line hero__explore" href="#work" data-decode-area>
+      <a class:list={[card ? 'btn-solid' : 'link-line', 'hero__explore']} href="#work" data-decode-area>
         <span data-decode>{h.ctaWork}</span>
         <Arrow dir="s" />
       </a>
@@ -170,12 +188,60 @@ const watch = latestVideo
       )
     }
     </div>
+    {
+      card && (
+        <figure class="hero-card" data-intro="up" style="--d:600ms">
+          <figcaption class="hero-card__head eyebrow" data-decode-area data-decode-reveal>
+            <span>
+              <span class="status-dot" aria-hidden="true" />
+              <span data-decode>{card.kicker}</span>
+            </span>
+            <span data-decode>{`${card.where} · ${card.date}`}</span>
+          </figcaption>
+          <a class="hero-card__frame" href={card.href} target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">
+            <picture>
+              {card.avif && <source type="image/avif" srcset={card.avif} sizes="(min-width: 1024px) 34rem, 100vw" />}
+              {card.webp && <source type="image/webp" srcset={card.webp} sizes="(min-width: 1024px) 34rem, 100vw" />}
+              <img src={card.src} alt={card.alt} width={card.width} height={card.height} fetchpriority="high" decoding="async" />
+            </picture>
+            <span class="hero-card__play" aria-hidden="true">
+              <svg viewBox="0 0 16 16"><path d="M5.5 3.5v9l7-4.5z" fill="currentColor" /></svg>
+            </span>
+            <span class="hero-card__tag eyebrow">{card.tag}</span>
+          </a>
+          <div class="hero-card__body">
+            <p class="hero-card__project eyebrow">{card.project}</p>
+            <p class="hero-card__title">{card.title}</p>
+            <p class="hero-card__text">{card.text}</p>
+            <div class="hero-card__foot">
+              <p class="hero-card__stats">
+                {card.stats.map((x) => (
+                  <span>
+                    <strong>{x.value}</strong> {x.label}
+                  </span>
+                ))}
+                <span class="hero-card__asof">{card.asOf}</span>
+              </p>
+              <a class="link-line hero-card__cta" href={card.href} target="_blank" rel="noopener" data-decode-area>
+                <span data-decode>{card.cta}</span>
+                <Arrow dir="ne" />
+                <span class="visually-hidden">(opens in a new tab)</span>
+              </a>
+            </div>
+          </div>
+        </figure>
+      )
+    }
   </div>
 
-  <p class="hero__caption eyebrow" data-intro="up" style="--d:1500ms" data-decode-area data-decode-reveal>
-    <span data-decode>{h.caption[0]}</span>
-    <span data-decode>{h.caption[1]}</span>
-  </p>
+  {
+    wide && (
+      <p class="hero__caption eyebrow" data-intro="up" style="--d:1500ms" data-decode-area data-decode-reveal>
+        <span data-decode>{h.caption[0]}</span>
+        <span data-decode>{h.caption[1]}</span>
+      </p>
+    )
+  }
 
   <ul
     class="hero__words eyebrow"
@@ -432,6 +498,217 @@ const watch = latestVideo
     width: 9px;
     height: 9px;
     transform: translateX(1px);
+  }
+
+  /* ── No footage: the title and a post from X, side by side ── */
+  .hero__glow {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(45% 55% at 74% 46%, rgb(233 233 230 / 0.055), rgb(233 233 230 / 0) 70%),
+      radial-gradient(40% 40% at 8% 100%, rgb(213 27 69 / 0.07), rgb(213 27 69 / 0) 70%);
+  }
+  .hero--card {
+    min-height: max(620px, min(100svh, 940px));
+    align-items: center;
+  }
+  .hero--card .hero__content {
+    padding-top: calc(var(--header-h) + clamp(2.5rem, 1rem + 5vh, 5rem));
+    padding-bottom: clamp(6rem, 4rem + 6vh, 8rem);
+  }
+  .hero--card .hero__title {
+    white-space: normal;
+    font-size: clamp(2.75rem, 1rem + 4.6vw, 5.5rem);
+    line-height: 0.95;
+  }
+  .hero--card .hero__mark {
+    margin-left: 0;
+  }
+  .hero--card .hero__explore {
+    min-width: 0;
+  }
+  @media (min-width: 1024px) {
+    .hero--card .hero__content {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 34rem);
+      grid-template-areas:
+        'head card'
+        'aside card';
+      align-items: center;
+      column-gap: clamp(3rem, 6vw, 7rem);
+      row-gap: 0;
+    }
+    .hero--card .hero__head {
+      grid-area: head;
+      align-self: end;
+    }
+    .hero--card .hero__aside {
+      grid-area: aside;
+      align-self: start;
+      margin-top: 1.75rem;
+    }
+    .hero--card .hero-card {
+      grid-area: card;
+    }
+  }
+  @media (max-width: 1023px) {
+    .hero--card {
+      min-height: 0;
+    }
+    .hero__glow {
+      background: radial-gradient(60% 40% at 50% 38%, rgb(233 233 230 / 0.05), rgb(233 233 230 / 0) 70%);
+    }
+    .hero--card .hero__content {
+      display: flex;
+      flex-direction: column;
+    }
+    .hero--card .hero-card {
+      order: 2;
+      margin-top: 2.25rem;
+    }
+    .hero--card .hero__aside {
+      order: 3;
+    }
+  }
+
+  .hero-card {
+    position: relative;
+    margin: 0;
+  }
+  .hero-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.9rem;
+    color: var(--ink-3);
+  }
+  .hero-card__head > span:first-child {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--ink-2);
+  }
+  .hero-card__frame {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 2px;
+    background: var(--frame);
+    box-shadow:
+      0 0 0 1px var(--line),
+      0 40px 80px -40px rgb(0 0 0 / 0.9);
+  }
+  .hero-card__frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.9) contrast(1.05) saturate(0.95);
+    transition: transform 1200ms var(--ease);
+  }
+  .hero-card__frame:hover img {
+    transform: scale(1.03);
+  }
+  .hero-card__frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(0deg, rgb(9 9 10 / 0.7) 0%, rgb(9 9 10 / 0) 38%),
+      linear-gradient(180deg, rgb(9 9 10 / 0.35) 0%, rgb(9 9 10 / 0) 22%);
+    pointer-events: none;
+  }
+  .hero-card__play {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    translate: -50% -50%;
+    color: var(--ink);
+    background: rgb(9 9 10 / 0.5);
+    box-shadow: inset 0 0 0 1px rgb(233 233 230 / 0.35);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    transition:
+      background-color var(--t) var(--ease),
+      scale var(--t) var(--ease);
+  }
+  .hero-card__play svg {
+    width: 14px;
+    height: 14px;
+    translate: 1px 0;
+  }
+  .hero-card__frame:hover .hero-card__play {
+    background: var(--accent);
+    scale: 1.06;
+  }
+  .hero-card__tag {
+    position: absolute;
+    left: 1rem;
+    bottom: 0.85rem;
+    z-index: 1;
+    color: var(--ink);
+  }
+  .hero-card__body {
+    padding-top: 1.25rem;
+  }
+  .hero-card__project {
+    color: var(--ink-3);
+  }
+  .hero-card__title {
+    margin-top: 0.4rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.375rem, 1.2rem + 0.5vw, 1.75rem);
+    font-weight: var(--w-serif);
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+    color: var(--ink);
+  }
+  .hero-card__text {
+    margin-top: 0.6rem;
+    max-width: 44ch;
+    font-size: var(--text-sm);
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+  .hero-card__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    margin-top: 1.1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+  }
+  .hero-card__stats {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 1.25rem;
+    font-size: var(--text-sm);
+    color: var(--ink-3);
+  }
+  .hero-card__stats strong {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 420;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .hero-card__asof {
+    font-size: var(--text-xs);
+    color: var(--ink-3);
+  }
+  .hero-card__cta {
+    gap: 1.5rem;
   }
 
   /* ── Edges: caption, words, scroll ── */
